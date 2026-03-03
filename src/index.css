@@ -1,0 +1,314 @@
+@import "tailwindcss";
+/* @import "tailwindcss/preflight" */
+
+@tailwind utilities;
+
+@font-face {
+  font-family: "AdihausDIN";
+  src: url("/src/assets/fonts/adihausdin_cn.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* @font-face {
+  font-family: "AdihausDIN";
+  src: url("/src/assets/fonts/AdihausDIN-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+} */
+
+.adidas-font {
+  font-family: "AdihausDIN", sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  font-family: "AdihausDIN", sans-serif;
+  letter-spacing: 0.05em;
+  font-size: 20px;
+  background-color: #fff;
+}
+
+.ant-layout {
+  background-color: #fff;
+}
+
+.ant-typography,
+.ant-btn,
+.ant-input,
+.ant-modal,
+.ant-select,
+.ant-select-item,
+.ant-checkbox-label,
+.ant-table-cell,
+.ant-form,
+.ant-form-item-label,
+.ant-form-item-explain,
+.ant-tabs-tab-btn,
+.ant-breadcrumb,
+.ant-dropdown-menu {
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.login-input.ant-input-affix-wrapper {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background-color: #f9fafb;
+  transition: all 0.2s ease;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.login-input .ant-input {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  font-size: 14px;
+  color: #1f2937;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.login-input .ant-input::placeholder {
+  color: #d1d5db;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.login-input.ant-input-affix-wrapper-focused {
+  outline: none;
+  border-color: transparent;
+  box-shadow: 0 0 0 2px #9b9b9b;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.ant-input-affix-wrapper:focus,
+.ant-input:focus {
+  box-shadow: none !important;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.login-button.ant-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  background-color: #000 !important;
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 14px;
+
+  padding: 12px 0;
+  border-radius: 12px;
+  border: none !important;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+  margin-top: 8px;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.login-button.ant-btn:hover {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.login-button.ant-btn:active {
+  transform: scale(0.95);
+}
+
+.permission-tabs .ant-tabs-nav {
+  display: flex;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.permission-tabs .ant-tabs-nav-wrap {
+  justify-content: center;
+}
+
+.permission-tabs .ant-tabs-extra-content {
+  margin-left: auto;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.ant-table-wrapper {
+  height: 100%;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.ant-spin-nested-loading {
+  height: 100%;
+}
+
+.ant-spin-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ant-table {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.ant-table-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.ant-table-body {
+  flex: 1 !important;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.btn-custom.ant-btn {
+  background-color: #000 !important;
+  color: #fff !important;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.btn-custom.ant-btn:hover {
+  background-color: rgba(56, 56, 56, 0.8) !important;
+  border-color: rgba(211, 211, 211, 0.8) !important;
+}
+
+.btn-custom.ant-btn:disabled {
+  border-color: #b6b6b6 !important;
+  background-color: #f5f5f5 !important;
+  color: #b6b6b6 !important;
+}
+
+.actions-btn.ant-btn {
+  border-color: #000;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.actions-btn.ant-btn:hover {
+  border-color: #8f8f8f !important;
+  color: #8f8f8f !important;
+}
+
+.actions-btn.ant-btn:disabled {
+  border-color: #b6b6b6 !important;
+  color: #b6b6b6 !important;
+}
+
+.extra-actions-btn.ant-btn {
+  border-color: #000;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.extra-actions-btn.ant-btn:hover {
+  border-color: #6b757c !important;
+  background-color: #6b757c !important;
+  color: #fff !important;
+}
+
+.extra-actions-btn.ant-btn:disabled {
+  border-color: #b6b6b6 !important;
+  background-color: #f5f5f5 !important;
+  color: #b6b6b6 !important;
+}
+
+.save-button.ant-btn {
+  width: 80px;
+
+  gap: 8px;
+
+  background-color: #000 !important;
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 14px;
+
+  padding: 12px 0;
+  border-radius: 8px;
+  border: none !important;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+  margin-top: 8px;
+  font-family: "AdihausDIN", sans-serif !important;
+}
+
+.save-button.ant-btn:hover {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.save-button.ant-btn:active {
+  transform: scale(0.95);
+}
+
+/* .upload-button.ant-btn {
+  width: 60px;
+
+  gap: 8px;
+
+  font-weight: 600;
+  font-size: 14px;
+
+  padding: 12px 0;
+  border-radius: 8px;
+  border-color: #e2e2e2;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+} */
+
+/* .upload-button.ant-btn:hover {
+  background-color: rgba(190, 190, 190, 0.8) !important;
+  border-color: #e2e2e2;
+}
+
+.upload-button.ant-btn:active {
+  transform: scale(0.95);
+} */
+
+.cancel-modal-btn.ant-btn:hover {
+  border-color: #8c8c8c !important;
+}
+
+.save-modal-btn.ant-btn:hover {
+  background-color: #8c8c8c !important;
+  border-color: #8c8c8c !important;
+}
+
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+* {
+  scrollbar-width: thin;
+}
+
+.custom-selected-row > td {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  color: white;
+}
