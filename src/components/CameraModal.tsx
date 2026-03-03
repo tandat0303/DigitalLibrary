@@ -99,15 +99,17 @@ export default function CameraModal({
             <Button
               type="primary"
               danger
-              shape="circle"
-              size="large"
-              icon={<Camera />}
+              shape="round"
+              // size="large"
+              // icon={<Camera />}
               onClick={cameraOpen ? captureImage : startCamera}
-              style={{
-                width: 48,
-                height: 48,
-              }}
-            />
+              // style={{
+              //   width: 40,
+              //   height: 40,
+              // }}
+            >
+              <Camera />
+            </Button>
           </div>
 
           <canvas ref={canvasRef} style={{ display: "none" }} />

@@ -10,20 +10,39 @@ const { Content } = Layout;
 export default function MainLayout() {
   const location = useLocation();
 
-  // useEffect(() => {
-  //   const path = location.pathname;
+  // const matches = useMatches();
 
-  //   const routeTitleMap: Record<string, string> = {
-  //     "/": "Digital Library",
-  //     "/user-limit": "LYG | User Limit",
-  //     "/users": "LYG | Users",
-  //     "/user-info": "LYG | User Info",
-  //   };
+  // const currentMatch = [...matches].reverse().find((m) => m.handle);
 
-  //   const title = routeTitleMap[path] || "LYG System";
+  // const handle = currentMatch?.handle as
+  //   | { title?: string; hideTitle?: boolean }
+  //   | undefined;
 
-  //   document.title = path === "/login" ? "DL | Login" : title;
-  // });
+  // const pageTitle = handle?.title;
+  // const hideTitle = handle?.hideTitle;
+
+  const routeTitleMap: Record<string, string> = {
+    "/user-limit": "User Limit Mgmt",
+    "/users": "User Mgmt",
+    "/colors": "Colors",
+    "/materials": "Materials",
+    "/high-abrasion": "High Abrasion",
+    "/new-library": "New Library",
+  };
+
+  const getPageTitle = () => {
+    const path = location.pathname;
+
+    if (routeTitleMap[path]) return routeTitleMap[path];
+
+    const matched = Object.keys(routeTitleMap).find((route) =>
+      matchPath(route, path),
+    );
+
+    return matched ? routeTitleMap[matched] : "";
+  };
+
+  const pageTitle = getPageTitle();
 
   const { handleNavigate, loading } = useLoadingNavigate();
 
@@ -31,7 +50,7 @@ export default function MainLayout() {
 
   const isShowInfo = !!matchPath(
     "/show-info/:unique_price_id",
-    location.pathname
+    location.pathname,
   );
 
   const isSpecialLayout = isHome || isShowInfo;
@@ -79,19 +98,27 @@ export default function MainLayout() {
             <Breadcrumb
               separator=">"
               items={breadcrumbItems}
-              style={{ marginBottom: 16, padding: "10px" }}
+              style={{ padding: "10px" }}
               className="bg-gray-200/80"
             />
           )}
         </div>
+
         <Content
           style={{
-            marginTop: 48,
-            height: "calc(100vh - 48px)",
+            // marginTop: 48,
+            // height: "calc(100vh - 48px)",
             overflow: isSpecialLayout ? "hidden" : "auto",
             padding: isSpecialLayout ? 0 : "0px 48px",
           }}
         >
+          {pageTitle && (
+            <div className="pt-3 pb-3">
+              <h1 className="text-3xl font-bold tracking-wide uppercase">
+                {pageTitle}
+              </h1>
+            </div>
+          )}
           <Outlet />
         </Content>
       </Layout>

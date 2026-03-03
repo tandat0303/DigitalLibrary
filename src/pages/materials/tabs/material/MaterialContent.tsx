@@ -192,7 +192,7 @@ export default function MaterialsContent() {
               <AddFilter
                 options={FILTER_OPTIONS}
                 form={form}
-                colSpan={4}
+                // colSpan={4}
                 onChangeActiveCount={setDynamicCount}
               />
             }
@@ -206,19 +206,19 @@ export default function MaterialsContent() {
               </>
             }
           >
-            <Col span={4}>
+            <Col flex="220px">
               <Form.Item name="Material_ID" label="Material ID">
                 <Input />
               </Form.Item>
             </Col>
 
-            <Col span={4}>
+            <Col flex="220px">
               <Form.Item name="Vendor_Code" label="Vendor Code">
                 <Input />
               </Form.Item>
             </Col>
 
-            <Col span={4}>
+            <Col flex="220px">
               <Form.Item name="Classification" label="Classification">
                 <Input />
               </Form.Item>
@@ -267,20 +267,26 @@ export default function MaterialsContent() {
 
                 <Button
                   className="actions-btn"
-                  icon={<Upload className="h-5" />}
+                  // icon={<Upload className="h-5" />}
                   onClick={() => setOpenImport(true)}
-                />
+                >
+                  <Upload />
+                </Button>
 
                 <Button
                   className="actions-btn"
-                  icon={<Download className="h-5" />}
+                  // icon={<Download className="h-5" />}
                   onClick={handleExportExcel}
-                />
+                >
+                  <Download />
+                </Button>
 
                 <Button
                   className="actions-btn"
-                  icon={<QrCode className="h-5" />}
-                />
+                  // icon={<QrCode className="h-5" />}
+                >
+                  <QrCode />
+                </Button>
 
                 <Button
                   className="extra-actions-btn"

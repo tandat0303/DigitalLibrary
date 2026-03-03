@@ -67,9 +67,9 @@ export default function Header() {
     <>
       {loading && <Loading fullScreen overlay />}
 
-      <header className="w-full bg-black text-white flex items-center justify-between box-border px-3 py-2">
+      <header className="w-full bg-black text-white flex items-center justify-between box-border px-1.5 py-1.5">
         <div
-          className="font-semibold tracking-wide text-base cursor-pointer"
+          className="font-semibold tracking-wide text-xl cursor-pointer"
           onClick={() => handleNavigate("/")}
         >
           LYG

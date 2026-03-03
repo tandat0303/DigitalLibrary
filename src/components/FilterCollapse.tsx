@@ -72,23 +72,19 @@ export default function FilterCollapse({
             showArrow: false,
             children: (
               <Form form={form} layout="vertical" onFinish={onFinish}>
-                <Row gutter={[16, 8]} align={isMobile ? "top" : "bottom"}>
+                <Row gutter={24} align={isMobile ? "top" : "bottom"} wrap>
                   {children}
 
+                  {extraFilters}
+
                   {actions && (
-                    <Col>
-                      <Form.Item style={{ marginTop: 30 }}>
+                    <Col flex="none">
+                      <Form.Item>
                         <Space>{actions}</Space>
                       </Form.Item>
                     </Col>
                   )}
                 </Row>
-
-                {extraFilters && (
-                  <div style={{ marginTop: 12, width: "100%" }}>
-                    {extraFilters}
-                  </div>
-                )}
               </Form>
             ),
           },

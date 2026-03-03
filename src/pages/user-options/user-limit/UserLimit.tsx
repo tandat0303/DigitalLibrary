@@ -15,7 +15,7 @@ import FilterCollapse from "../../../components/FilterCollapse";
 export default function UserLimit() {
   const [form] = Form.useForm();
 
-  const [selectedUser, setSelectedUser] = useState<DataType | null>(null);
+  const [selectedUser, setSelectedUser] = useState<DataType | null>(data[0]);
   const [permissionData, setPermissionData] = useState<PermissionType[]>([]);
   const [selectedPermissionKey, setSelectedPermissionKey] = useState<
     string | null

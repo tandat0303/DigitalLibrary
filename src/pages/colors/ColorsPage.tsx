@@ -149,7 +149,7 @@ export default function ColorsPage() {
               <AddFilter
                 options={FILTER_OPTIONS}
                 form={form}
-                colSpan={4}
+                // colSpan={4}
                 onChangeActiveCount={setDynamicCount}
               />
             }
@@ -167,13 +167,13 @@ export default function ColorsPage() {
               </>
             }
           >
-            <Col span={4}>
+            <Col flex="220px">
               <Form.Item name="Color_Name" label="Color Name">
                 <Input />
               </Form.Item>
             </Col>
 
-            <Col span={4}>
+            <Col flex="220px">
               <Form.Item name="Color_Group" label="Color Group">
                 <Input />
               </Form.Item>
@@ -222,9 +222,11 @@ export default function ColorsPage() {
 
                 <Button
                   className="actions-btn"
-                  icon={<Upload className="h-5" />}
+                  // icon={<Upload className="h-5" />}
                   onClick={() => setOpenImport(true)}
-                />
+                >
+                  <Upload />
+                </Button>
               </Space>
 
               <span className="adidas-font">5184 colors</span>

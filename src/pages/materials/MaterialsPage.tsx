@@ -9,6 +9,7 @@ export default function MaterialsPage() {
     <Tabs
       accessKey={activeTab}
       onChange={setActiveTab}
+      size="large"
       items={[
         {
           key: "materials",
