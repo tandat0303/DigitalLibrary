@@ -1,9 +1,12 @@
-import { Button, Col, Form, Input, Modal, Row, Select } from "antd";
+import { Button, Col, Form, Grid, Input, Modal, Row, Select } from "antd";
 import { useEffect, useState } from "react";
 import { AppAlert } from "../../components/ui/AppAlert";
 import type { ColorsModalProps } from "../../types/colors";
 import ImageUploader from "../../components/ImageUploader";
 import { requiredMessage } from "../../lib/helpers";
+import type { Image } from "../../types/images";
+import colorApi from "../../api/colors.api";
+import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
 
 export default function ColorsModal({
   open,
@@ -12,6 +15,12 @@ export default function ColorsModal({
   onCancel,
   onSubmit,
 }: ColorsModalProps) {
+  const { useBreakpoint } = Grid;
+  const screens = useBreakpoint();
+
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -47,6 +56,26 @@ export default function ColorsModal({
     onCancel();
   };
 
+  const handleDeleteExistingImage = async (image: Image) => {
+    try {
+      const res = await colorApi.deleteColorImage(image.ImageID);
+
+      if (res.success) {
+        AppAlert({
+          icon: "success",
+          title: res.message,
+        });
+      }
+    } catch (error) {
+      AppAlert({
+        icon: "error",
+        title: getApiErrorMessage(error),
+      });
+
+      throw error;
+    }
+  };
+
   return (
     <Modal
       title={mode === "create" ? "New Color" : "Edit Color"}
@@ -54,7 +83,7 @@ export default function ColorsModal({
       onCancel={handleClose}
       footer={null}
       destroyOnHidden
-      width={1000}
+      width={isMobile ? "100%" : isTablet ? 700 : 1000}
       mask={{ closable: !loading }}
       centered
     >
@@ -66,82 +95,98 @@ export default function ColorsModal({
       >
         <Form form={form} layout="vertical">
           <Row gutter={24}>
-            <Col span={8}>
-              <Form.Item
-                label="Color Name"
-                name="Color_Name"
-                rules={[{ required: true, message: requiredMessage }]}
+            <Col span={24}>
+              <div
+                style={{
+                  maxHeight: isMobile ? "40vh" : 300,
+                  overflowY: isMobile ? "auto" : "hidden",
+                  overflowX: "hidden",
+                  width: "100%",
+                }}
               >
-                <Input placeholder="Enter your color name" />
-              </Form.Item>
-            </Col>
+                <Row gutter={[24, 1]}>
+                  <Col xs={24} sm={12} lg={8}>
+                    <Form.Item
+                      label="Color Name"
+                      name="ColorName"
+                      rules={[{ required: true, message: requiredMessage }]}
+                    >
+                      <Input placeholder="Enter your color name" />
+                    </Form.Item>
+                  </Col>
 
-            <Col span={8}>
-              <Form.Item
-                label="Color Code"
-                name="Color_Code"
-                rules={[{ required: true }]}
-              >
-                <Input
-                  disabled={mode === "edit"}
-                  placeholder="Enter your color code"
-                />
-              </Form.Item>
-            </Col>
+                  <Col xs={24} sm={12} lg={8}>
+                    <Form.Item
+                      label="Color Code"
+                      name="ColorCode"
+                      rules={[{ required: true }]}
+                    >
+                      <Input
+                        disabled={mode === "edit"}
+                        placeholder="Enter your color code"
+                      />
+                    </Form.Item>
+                  </Col>
 
-            <Col span={8}>
-              <Form.Item
-                label="RGB Value"
-                name="RGB_Value"
-                rules={[{ required: true, message: requiredMessage }]}
-              >
-                <Input placeholder="Enter your rgb value" />
-              </Form.Item>
-            </Col>
+                  <Col xs={24} sm={12} lg={8}>
+                    <Form.Item
+                      label="RGB Value"
+                      name="RGBValue"
+                      rules={[{ required: true, message: requiredMessage }]}
+                    >
+                      <Input placeholder="Enter your rgb value" />
+                    </Form.Item>
+                  </Col>
 
-            <Col span={8}>
-              <Form.Item
-                label="CMYK Value"
-                name="CMYK_Value"
-                rules={[{ required: true, message: requiredMessage }]}
-              >
-                <Input placeholder="Enter your cmyk value" />
-              </Form.Item>
-            </Col>
+                  <Col xs={24} sm={12} lg={8}>
+                    <Form.Item
+                      label="CMYK Value"
+                      name="CMYKValue"
+                      rules={[{ required: true, message: requiredMessage }]}
+                    >
+                      <Input placeholder="Enter your cmyk value" />
+                    </Form.Item>
+                  </Col>
 
-            <Col span={8}>
-              <Form.Item
-                label="Color Group"
-                name="Color_Group"
-                rules={[{ required: true, message: requiredMessage }]}
-              >
-                <Input placeholder="Enter your color group" />
-              </Form.Item>
-            </Col>
+                  <Col xs={24} sm={12} lg={8}>
+                    <Form.Item
+                      label="Color Group"
+                      name="ColorGroup"
+                      rules={[{ required: true, message: requiredMessage }]}
+                    >
+                      <Input placeholder="Enter your color group" />
+                    </Form.Item>
+                  </Col>
 
-            <Col span={8}>
-              <Form.Item
-                label="Color Status"
-                name="Color_Status"
-                rules={[{ required: true, message: requiredMessage }]}
-              >
-                <Select
-                  placeholder="--- Choose option ---"
-                  options={[
-                    { label: "Active", value: "Active" },
-                    { label: "Disabled", value: "Disable" },
-                  ]}
-                />
-              </Form.Item>
+                  <Col xs={24} sm={12} lg={8}>
+                    <Form.Item
+                      label="Color Status"
+                      name="ColorStatus"
+                      // rules={[{ required: true, message: requiredMessage }]}
+                    >
+                      <Select
+                        placeholder="--- Choose option ---"
+                        options={[
+                          { label: "Active", value: true },
+                          { label: "Disabled", value: false },
+                        ]}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </div>
             </Col>
 
             <Col span={24}>
-              <Form.Item label="Reference" name="ColorsImg">
+              <Form.Item label="Reference" name="Images">
                 <ImageUploader
                   max={6}
                   accept={["image/jpeg", "image/png"]}
                   width={380}
                   height={240}
+                  onDeleteExisting={
+                    mode === "edit" ? handleDeleteExistingImage : undefined
+                  }
                 />
               </Form.Item>
             </Col>

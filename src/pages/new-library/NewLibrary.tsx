@@ -150,7 +150,7 @@ export default function NewLibrary() {
 
   const handleSubmit = async (values: any) => {
     if (mode === "create") {
-      if (!values.Unique_Price_ID) return;
+      // if (!values.Unique_Price_ID) return;
 
       const newRecord = {
         ...values,
@@ -206,19 +206,19 @@ export default function NewLibrary() {
               </>
             }
           >
-            <Col span={4}>
+            <Col xs={24} sm={12} md={8} lg={6} xl={4}>
               <Form.Item name="Material_ID" label="Material ID">
                 <Input />
               </Form.Item>
             </Col>
 
-            <Col span={4}>
+            <Col xs={24} sm={12} md={8} lg={6} xl={4}>
               <Form.Item name="Vendor_Code" label="Vendor Code">
                 <Input />
               </Form.Item>
             </Col>
 
-            <Col span={4}>
+            <Col xs={24} sm={12} md={8} lg={6} xl={4}>
               <Form.Item name="Classification" label="Classification">
                 <Input />
               </Form.Item>
@@ -243,14 +243,20 @@ export default function NewLibrary() {
               },
             }}
           >
-            <div className="flex justify-between">
-              <Space style={{ marginBottom: 12 }}>
-                <Button className="actions-btn" onClick={handleCreate}>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between w-full">
+              <Space
+                wrap
+                className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
+              >
+                <Button
+                  className="actions-btn w-full lg:w-auto"
+                  onClick={handleCreate}
+                >
                   NEW MATERIAL
                 </Button>
 
                 <Button
-                  className="actions-btn"
+                  className="actions-btn w-full lg:w-auto"
                   disabled={!selectedRow}
                   onClick={handleEdit}
                 >
@@ -258,7 +264,7 @@ export default function NewLibrary() {
                 </Button>
 
                 <Button
-                  className="actions-btn"
+                  className="actions-btn w-full lg:w-auto"
                   disabled={!selectedRow}
                   onClick={confirmRemove}
                 >
@@ -266,7 +272,7 @@ export default function NewLibrary() {
                 </Button>
 
                 <Button
-                  className="actions-btn"
+                  className="actions-btn w-full lg:w-auto"
                   // icon={<Upload className="h-5" />}
                   onClick={() => setOpenImport(true)}
                 >
@@ -274,7 +280,7 @@ export default function NewLibrary() {
                 </Button>
 
                 <Button
-                  className="actions-btn"
+                  className="actions-btn w-full lg:w-auto"
                   // icon={<Download className="h-5" />}
                   onClick={handleExportExcel}
                 >
@@ -282,20 +288,20 @@ export default function NewLibrary() {
                 </Button>
 
                 <Button
-                  className="actions-btn"
+                  className="actions-btn w-full lg:w-auto"
                   // icon={<QrCode className="h-5" />}
                 >
                   <QrCode />
                 </Button>
 
                 <Button
-                  className="extra-actions-btn"
+                  className="extra-actions-btn w-full lg:w-auto"
                   onClick={() => setOpenCapture(true)}
                 >
                   Detail Material
                 </Button>
                 <Button
-                  className="extra-actions-btn"
+                  className="extra-actions-btn w-full lg:w-auto"
                   disabled={!selectedRow}
                   onClick={() => setOpenUploadAttach(true)}
                 >
@@ -303,10 +309,12 @@ export default function NewLibrary() {
                 </Button>
               </Space>
 
-              <span className="adidas-font">98873 materials</span>
+              <span className="adidas-font text-left lg:text-right">
+                98873 materials
+              </span>
             </div>
 
-            <div style={{ flex: 1 }}>
+            <div className="w-full mt-1">
               <Table
                 bordered
                 columns={columns}
@@ -389,6 +397,7 @@ export default function NewLibrary() {
         imageSize={400}
         emptyImage={EmptyImg}
         labels={["Topside", "Bottomside"]}
+        previewSize={500}
       />
 
       <CameraModal

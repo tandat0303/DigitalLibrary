@@ -69,7 +69,7 @@ export default function Header() {
 
       <header className="w-full bg-black text-white flex items-center justify-between box-border px-1.5 py-1.5">
         <div
-          className="font-semibold tracking-wide text-xl cursor-pointer"
+          className="font-semibold tracking-wide text-base cursor-pointer"
           onClick={() => handleNavigate("/")}
         >
           LYG

@@ -1,4 +1,4 @@
-import { Select } from "antd";
+import { Grid, Select } from "antd";
 import {
   DoubleLeftOutlined,
   LeftOutlined,
@@ -21,6 +21,8 @@ export default function CustomPagination({
   onChange,
   onPageSizeChange,
 }: Props) {
+  const { useBreakpoint } = Grid;
+  const screens = useBreakpoint();
   const totalPages = Math.ceil(total / pageSize);
 
   const generatePages = () => {
@@ -30,7 +32,6 @@ export default function CustomPagination({
     const totalPages = Math.ceil(total / pageSize);
 
     if (totalPages <= 7) {
-      // Nếu ít page thì show hết luôn
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
@@ -66,33 +67,54 @@ export default function CustomPagination({
       style={{
         borderTop: "1px solid #f0f0f0",
         padding: "12px 0",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
       }}
-      className="adidas-font"
+      className="
+        adidas-font
+        flex flex-col gap-3
+        lg:flex-row lg:justify-between lg:items-center
+      "
     >
       <div>
         {(current - 1) * pageSize + 1}-{Math.min(current * pageSize, total)} of{" "}
         {total} items
       </div>
 
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <DoubleLeftOutlined
-          style={{
-            cursor: current === 1 ? "not-allowed" : "pointer",
-            opacity: current === 1 ? 0.4 : 1,
-          }}
-          onClick={() => current !== 1 && onChange(1)}
-        />
+      <div className="flex items-center gap-1 overflow-x-auto pb-1">
+        {screens.md && (
+          <button
+            style={{
+              cursor: current === 1 ? "not-allowed" : "pointer",
+              opacity: current === 1 ? 0.4 : 1,
+              border: "1px solid #d9d9d9",
+              minWidth: 32,
+              height: 32,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 6,
+            }}
+            onClick={() => current !== 1 && onChange(1)}
+          >
+            <DoubleLeftOutlined />
+          </button>
+        )}
 
-        <LeftOutlined
+        <button
           style={{
             cursor: current === 1 ? "not-allowed" : "pointer",
             opacity: current === 1 ? 0.4 : 1,
+            border: "1px solid #d9d9d9",
+            minWidth: 32,
+            height: 32,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 6,
           }}
           onClick={() => current > 1 && onChange(current - 1)}
-        />
+        >
+          <LeftOutlined />
+        </button>
 
         {pages.map((page, index) =>
           page === "..." ? (
@@ -103,6 +125,7 @@ export default function CustomPagination({
             <div
               key={`page-${page}`}
               onClick={() => onChange(page)}
+              className="shrink-0"
               style={{
                 minWidth: 32,
                 height: 32,
@@ -111,7 +134,7 @@ export default function CustomPagination({
                 justifyContent: "center",
                 borderRadius: 6,
                 cursor: "pointer",
-                background: page === current ? "#1677ff" : "#fff",
+                background: page === current ? "#000" : "#fff",
                 color: page === current ? "#fff" : "#000",
                 border: "1px solid #d9d9d9",
               }}
@@ -121,39 +144,60 @@ export default function CustomPagination({
           ),
         )}
 
-        <RightOutlined
+        <button
           style={{
-            cursor: current === totalPages ? "not-allowed" : "pointer",
-            opacity: current === totalPages ? 0.4 : 1,
+            cursor: current === 1 ? "not-allowed" : "pointer",
+            opacity: current === 1 ? 0.4 : 1,
+            border: "1px solid #d9d9d9",
+            minWidth: 32,
+            height: 32,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 6,
           }}
           onClick={() => current < totalPages && onChange(current + 1)}
-        />
+        >
+          <RightOutlined />
+        </button>
 
-        <DoubleRightOutlined
-          style={{
-            cursor: current === totalPages ? "not-allowed" : "pointer",
-            opacity: current === totalPages ? 0.4 : 1,
-          }}
-          onClick={() => current !== totalPages && onChange(totalPages)}
-        />
+        {screens.md && (
+          <button
+            style={{
+              cursor: current === 1 ? "not-allowed" : "pointer",
+              opacity: current === 1 ? 0.4 : 1,
+              border: "1px solid #d9d9d9",
+              minWidth: 32,
+              height: 32,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 6,
+            }}
+            onClick={() => current !== totalPages && onChange(totalPages)}
+          >
+            <DoubleRightOutlined />
+          </button>
+        )}
 
-        <Select
-          className="adidas-font"
-          value={pageSize}
-          style={{ width: 80, marginLeft: 10 }}
-          onChange={(value) => {
-            onPageSizeChange(value);
-            onChange(1);
-          }}
-          options={[
-            { value: 10, label: "10" },
-            { value: 25, label: "25" },
-            { value: 50, label: "50" },
-            { value: 100, label: "100" },
-          ]}
-        />
+        <div className="flex items-center gap-2">
+          <Select
+            value={pageSize}
+            style={{ width: 80, marginLeft: 10 }}
+            onChange={(value) => {
+              onPageSizeChange(value);
+              onChange(1);
+            }}
+            options={[
+              { value: 10, label: "10" },
+              { value: 25, label: "25" },
+              { value: 50, label: "50" },
+              { value: 100, label: "100" },
+            ]}
+          />
 
-        <span className="adidas-font">entries per page</span>
+          <span className="truncate">entries per page</span>
+        </div>
       </div>
     </div>
   );

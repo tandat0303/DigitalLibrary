@@ -11,12 +11,24 @@ import type { ColumnsType } from "antd/es/table";
 import ModuleMgmtModal from "./ModuleMgmtModal";
 import MenuMgmtModal from "./MenuMgmtModal";
 import FilterCollapse from "../../../components/FilterCollapse";
+import CustomPagination from "../../../components/CustomPagination";
 
 export default function UserLimit() {
   const [form] = Form.useForm();
 
   const [selectedUser, setSelectedUser] = useState<DataType | null>(data[0]);
   const [permissionData, setPermissionData] = useState<PermissionType[]>([]);
+
+  const [current, setCurrent] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const total = data.length;
+
+  const paginatedData = data.slice(
+    (current - 1) * pageSize,
+    current * pageSize,
+  );
+
   const [selectedPermissionKey, setSelectedPermissionKey] = useState<
     string | null
   >(null);
@@ -190,13 +202,26 @@ export default function UserLimit() {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={8}>
-          <Card>
+          <Card
+            style={{
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+            styles={{
+              body: {
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+              },
+            }}
+          >
             <Table
               columns={columns}
-              dataSource={data}
-              pagination={{ pageSize: 5 }}
+              dataSource={paginatedData}
+              pagination={false}
               rowKey="account"
-              scroll={{ x: "max-content" }}
+              scroll={{ x: "max-content", y: 500 }}
               onRow={(record) => ({
                 onClick: () => handleSelectUser(record),
               })}
@@ -205,6 +230,14 @@ export default function UserLimit() {
                   ? "custom-selected-row cursor-pointer"
                   : "cursor-pointer"
               }
+            />
+
+            <CustomPagination
+              total={total}
+              current={current}
+              pageSize={pageSize}
+              onChange={setCurrent}
+              onPageSizeChange={setPageSize}
             />
           </Card>
         </Col>

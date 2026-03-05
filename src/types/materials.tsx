@@ -1,5 +1,7 @@
 import type { ColumnsType } from "antd/es/table";
 import { Eye } from "lucide-react";
+import type { Image } from "./images";
+import { resolveImageSrc } from "../lib/helpers";
 
 export interface MaterialsResponse {
   draw: string;
@@ -59,7 +61,7 @@ export interface MaterialsDataType {
   UserDate: string;
   Season: string;
   ID_MaterialImage: string;
-  Images?: string[];
+  Images?: (Image | File)[];
   User_Account: string;
   File_Name: string;
 }
@@ -115,7 +117,7 @@ interface MaterialFormValues {
   UserDate: string;
   Season: string;
   ID_MaterialImage: string;
-  Images?: string[];
+  Images?: (Image | File)[];
   User_Account: string;
   File_Name: string;
 }
@@ -129,7 +131,7 @@ export interface MaterialsModalProps {
 }
 
 export const getMaterialsColumns = (
-  onPreview: (images: string[]) => void,
+  onPreview: (images: (Image | File)[]) => void,
   onView: (record: MaterialsDataType) => void,
 ): ColumnsType<MaterialsDataType> => [
   {
@@ -153,29 +155,44 @@ export const getMaterialsColumns = (
     title: "Image",
     dataIndex: "Images",
     align: "center",
-    onCell: () => ({
-      onClick: (e) => e.stopPropagation(),
-    }),
-    render: (images?: string[]) => {
-      const validImages = Array.isArray(images) ? images.filter(Boolean) : [];
+    // onCell: () => ({
+    //   onClick: (e) => e.stopPropagation(),
+    // }),
+    render: (images?: (Image | File)[]) => {
+      const validImages = Array.isArray(images) ? images : [];
 
       if (!validImages.length) return null;
 
+      console.log(validImages.length);
+
+      const columns = Math.min(2, validImages.length);
+
       return (
-        <div
-          className="flex justify-center gap-2"
-          onClick={() => onPreview(validImages)}
-        >
-          {validImages.slice(0, 2).map((src, index) => (
-            <img
-              key={index}
-              src={src}
-              className="w-16 h-12 object-cover rounded cursor-zoom-in hover:scale-110 hover:shadow-md transition-all duration-200 border border-[#8f8f8f]"
-              // onClick={(e) => e.stopPropagation()}
-              // onLoad={(e) => e.stopPropagation()}
-              // onError={(e) => e.stopPropagation()}
-            />
-          ))}
+        <div className="flex justify-center">
+          <div
+            className="grid gap-2 w-fit cursor-pointer"
+            style={{ gridTemplateColumns: `repeat(${columns}, 64px)` }}
+            onClick={() => onPreview(validImages)}
+          >
+            {validImages.map((img, index) => {
+              const src = resolveImageSrc(img);
+
+              return (
+                <img
+                  key={index}
+                  src={src}
+                  className="w-16 h-12 object-cover rounded cursor-zoom-in hover:scale-110 hover:shadow-md transition-all duration-200 border border-[#8f8f8f]"
+                  onLoad={() => {
+                    if (img instanceof File) {
+                      URL.revokeObjectURL(src);
+                    }
+                  }}
+                  // onClick={(e) => e.stopPropagation()}
+                  // onError={(e) => e.stopPropagation()}
+                />
+              );
+            })}
+          </div>
         </div>
       );
     },

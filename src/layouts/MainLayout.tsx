@@ -93,13 +93,18 @@ export default function MainLayout() {
           {isShowInfo ? <SpecialHeader /> : <Header />}
         </div>
 
-        <div className="mt-10">
+        <div className="mt-9">
           {!isHome && !isShowInfo && (
             <Breadcrumb
               separator=">"
               items={breadcrumbItems}
-              style={{ padding: "10px" }}
-              className="bg-gray-200/80"
+              style={{
+                padding: "6px",
+                paddingLeft: 60,
+                fontSize: 16,
+                fontWeight: "bold",
+              }}
+              className="bg-[#ededed]"
             />
           )}
         </div>
@@ -109,7 +114,7 @@ export default function MainLayout() {
             // marginTop: 48,
             // height: "calc(100vh - 48px)",
             overflow: isSpecialLayout ? "hidden" : "auto",
-            padding: isSpecialLayout ? 0 : "0px 48px",
+            padding: isSpecialLayout ? 0 : "0px 24px",
           }}
         >
           {pageTitle && (

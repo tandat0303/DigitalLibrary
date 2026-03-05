@@ -7,6 +7,7 @@ export default function MaterialsPage() {
 
   return (
     <Tabs
+      className="custom-tabs"
       accessKey={activeTab}
       onChange={setActiveTab}
       size="large"

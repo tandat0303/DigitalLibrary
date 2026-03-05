@@ -26,7 +26,6 @@ export default function AddFilter({
     onChangeActiveCount?.(activeFilters.length);
   }, [activeFilters]);
 
-  // click outside close
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (!dropdownRef.current?.contains(e.target as Node)) {
@@ -58,14 +57,14 @@ export default function AddFilter({
         if (!filter) return null;
 
         return (
-          <Col key={filterValue} flex="220px">
+          <Col key={filterValue} xs={24} sm={12} md={8} lg={6} xl={4}>
             {filter.render()}
           </Col>
         );
       })}
 
       {availableOptions.length > 0 && (
-        <Col flex="220px">
+        <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Form.Item label=" ">
             <div ref={dropdownRef} className="relative adidas-font">
               <div
@@ -91,7 +90,8 @@ export default function AddFilter({
                 <div
                   className="
                     absolute z-50 mt-2
-                    w-[370px]
+                    w-full sm:w-[370px]
+                    max-w-[90vw]
                     bg-white
                     border
                     border-[#dee2e6]
@@ -143,7 +143,7 @@ export default function AddFilter({
       )}
 
       {activeFilters.length > 0 && (
-        <Col flex="120px">
+        <Col xs={10} sm={8} md={6} lg={4} xl={2}>
           <Form.Item label=" ">
             <Button
               type="link"

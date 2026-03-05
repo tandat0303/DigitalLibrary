@@ -128,13 +128,13 @@ export default function Users() {
               </>
             }
           >
-            <Col span={6}>
+            <Col xs={24} md={12} lg={8}>
               <Form.Item name="userAccount" label="User Account">
                 <Input />
               </Form.Item>
             </Col>
 
-            <Col span={6}>
+            <Col xs={24} md={12} lg={8}>
               <Form.Item name="name" label="Name">
                 <Input />
               </Form.Item>
@@ -160,35 +160,43 @@ export default function Users() {
               },
             }}
           >
-            <Space style={{ marginBottom: 12 }}>
-              <Button className="actions-btn" onClick={handleCreate}>
-                NEW USER
-              </Button>
-
-              <Button
-                className="actions-btn"
-                disabled={!selectedRow}
-                onClick={handleEdit}
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between w-full">
+              <Space
+                wrap
+                className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
               >
-                EDIT USER
-              </Button>
+                <Button
+                  className="actions-btn w-full lg:w-auto"
+                  onClick={handleCreate}
+                >
+                  NEW USER
+                </Button>
 
-              <Button
-                className="actions-btn"
-                disabled={!selectedRow}
-                onClick={confirmRemove}
-              >
-                REMOVE USER
-              </Button>
-            </Space>
+                <Button
+                  className="actions-btn w-full lg:w-auto"
+                  disabled={!selectedRow}
+                  onClick={handleEdit}
+                >
+                  EDIT USER
+                </Button>
 
-            <div style={{ flex: 1 }}>
+                <Button
+                  className="actions-btn w-full lg:w-auto"
+                  disabled={!selectedRow}
+                  onClick={confirmRemove}
+                >
+                  REMOVE USER
+                </Button>
+              </Space>
+            </div>
+
+            <div className="w-full mt-1">
               <Table
                 columns={usersDataColumns}
                 dataSource={paginatedData}
                 rowKey="userAccount"
                 pagination={false}
-                scroll={{ y: 500 }}
+                scroll={{ x: "max-content" }}
                 onRow={(record) => ({
                   onClick: () => {
                     handleSelectUSer(record);

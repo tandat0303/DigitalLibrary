@@ -10,6 +10,11 @@ export const AppAlert = ({ icon, title, timer = 2500 }: AlertOptions) => {
   return Swal.fire({
     toast: true,
     position: "top-end",
+    width: 350,
+    padding: "0.5rem",
+    customClass: {
+      popup: "app-alert-popup",
+    },
     icon,
     title,
     showConfirmButton: false,

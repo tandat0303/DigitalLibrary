@@ -15,6 +15,7 @@ import storage from "../lib/storage";
 import { useAppDispatch, useAppSelector } from "../hooks/auth";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { getApiErrorMessage } from "../lib/getApiErrorMsg";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
@@ -39,7 +40,7 @@ export default function Login() {
       if (!accessToken) {
         AppAlert({
           icon: "error",
-          title: "Login failed",
+          title: "Invalid username or password",
         });
 
         return;
@@ -50,10 +51,10 @@ export default function Login() {
       dispatch(setToken(accessToken));
 
       navigate("/", { replace: true });
-    } catch {
+    } catch (error) {
       AppAlert({
         icon: "error",
-        title: "Invalid username or password",
+        title: getApiErrorMessage(error),
       });
     } finally {
       setLoading(false);

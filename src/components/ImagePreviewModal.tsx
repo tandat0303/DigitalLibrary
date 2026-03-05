@@ -1,10 +1,12 @@
-import { Modal } from "antd";
+import { Grid, Modal } from "antd";
 import { useMemo, useState } from "react";
+import type { Image } from "../types/images";
+import { resolveImageSrc } from "../lib/helpers";
 
 interface ImagePreviewModalProps {
   open: boolean;
   onClose: () => void;
-  images?: (string | null)[];
+  images?: (File | Image | null)[];
   columns?: number;
   maxImages?: number;
   imageSize?: number;
@@ -26,13 +28,21 @@ export default function ImagePreviewModal({
   enableHoverPreview = true,
   previewSize = 320,
 }: ImagePreviewModalProps) {
-  const gap = imageSize * 0.12;
+  const { useBreakpoint } = Grid;
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+
+  const allowHoverPreview = enableHoverPreview && !isMobile;
+
+  const responsiveColumns = isMobile ? 2 : columns;
+  const responsiveImageSize = isMobile ? 120 : imageSize;
+  const gap = responsiveImageSize * 0.12;
 
   const [hoverSrc, setHoverSrc] = useState<string | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
 
   const validImages = useMemo(() => {
-    return images.filter(Boolean) as string[];
+    return images.filter(Boolean) as (File | Image)[];
   }, [images]);
 
   const slots = useMemo(() => {
@@ -41,12 +51,18 @@ export default function ImagePreviewModal({
     });
   }, [validImages, maxImages]);
 
-  const modalWidth = columns * imageSize + (columns - 1) * gap + 48;
+  const modalWidth = isMobile
+    ? "95vw"
+    : responsiveColumns * responsiveImageSize +
+      (responsiveColumns - 1) * gap +
+      48;
 
-  const handleMouseEnter = (e: React.MouseEvent, src: string | null) => {
-    if (!enableHoverPreview || !src) return;
+  const handleMouseEnter = (e: React.MouseEvent, file: File | Image) => {
+    if (!allowHoverPreview || !file) return;
 
-    setHoverSrc(src);
+    const url = resolveImageSrc(file);
+
+    setHoverSrc(url);
     setHoverPos({
       x: e.clientX + 20,
       y: e.clientY - previewSize / 2,
@@ -85,7 +101,7 @@ export default function ImagePreviewModal({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${columns}, ${imageSize}px)`,
+              gridTemplateColumns: `repeat(${responsiveColumns}, ${responsiveImageSize}px)`,
               gap,
               justifyContent: "center",
             }}
@@ -100,8 +116,8 @@ export default function ImagePreviewModal({
                 <div
                   key={index}
                   style={{
-                    width: imageSize,
-                    height: imageSize,
+                    width: responsiveImageSize,
+                    height: responsiveImageSize,
                     // borderRadius: imageSize * 0.06,
                     border: "1px solid #ddd",
                     background: "#fafafa",
@@ -117,7 +133,7 @@ export default function ImagePreviewModal({
                 >
                   {src ? (
                     <img
-                      src={src}
+                      src={resolveImageSrc(src)}
                       style={{
                         width: "100%",
                         height: "100%",
@@ -129,8 +145,8 @@ export default function ImagePreviewModal({
                       <img
                         src={emptyImage}
                         style={{
-                          width: imageSize * 0.45,
-                          height: imageSize * 0.45,
+                          width: responsiveImageSize * 0.45,
+                          height: responsiveImageSize * 0.45,
                           objectFit: "contain",
                         }}
                       />
@@ -144,7 +160,7 @@ export default function ImagePreviewModal({
         </div>
       </Modal>
 
-      {enableHoverPreview && hoverSrc && (
+      {allowHoverPreview && hoverSrc && (
         <div
           style={{
             position: "fixed",

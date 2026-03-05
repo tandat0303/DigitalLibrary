@@ -40,9 +40,11 @@ export default function FilterCollapse({
         // justifyContent: "space-between",
         gap: 8,
         width: "100%",
+        fontSize: 22,
+        fontWeight: "bold",
       }}
     >
-      <span style={{ fontWeight: 600 }} className="adidas-font">
+      <span className="adidas-font">
         {title} {visibleFilterCount > 0 && `(${visibleFilterCount})`}
       </span>
 
@@ -56,14 +58,16 @@ export default function FilterCollapse({
         icon={active ? <UpOutlined /> : <DownOutlined />}
         style={{ color: "gray", fontWeight: "bold", padding: 0, marginLeft: 8 }}
       >
-        {active ? "Collapse" : "Expand"}
+        {active ? "COLLAPSE" : "EXPAND"}
       </Button>
     </div>
   );
 
   return (
-    <Card style={{ marginBottom: 16 }} styles={{ body: { paddingBottom: 8 } }}>
+    <div className="mb-4">
       <Collapse
+        bordered={false}
+        ghost
         activeKey={active ? ["1"] : []}
         items={[
           {
@@ -72,7 +76,7 @@ export default function FilterCollapse({
             showArrow: false,
             children: (
               <Form form={form} layout="vertical" onFinish={onFinish}>
-                <Row gutter={24} align={isMobile ? "top" : "bottom"} wrap>
+                <Row gutter={[16, 8]} align={isMobile ? "top" : "bottom"} wrap>
                   {children}
 
                   {extraFilters}
@@ -80,7 +84,7 @@ export default function FilterCollapse({
                   {actions && (
                     <Col flex="none">
                       <Form.Item>
-                        <Space>{actions}</Space>
+                        <Space wrap={isMobile}>{actions}</Space>
                       </Form.Item>
                     </Col>
                   )}
@@ -90,6 +94,6 @@ export default function FilterCollapse({
           },
         ]}
       />
-    </Card>
+    </div>
   );
 }

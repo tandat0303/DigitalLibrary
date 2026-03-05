@@ -1,4 +1,4 @@
-import { Button, Col, Form, Input, Modal, Row } from "antd";
+import { Button, Col, Form, Grid, Input, Modal, Row } from "antd";
 import { useEffect, useState } from "react";
 import { AppAlert } from "../../../../components/ui/AppAlert";
 import ImageUploader from "../../../../components/ImageUploader";
@@ -12,6 +12,12 @@ export default function MaterialModal({
   onCancel,
   onSubmit,
 }: MaterialsModalProps) {
+  const { useBreakpoint } = Grid;
+  const screens = useBreakpoint();
+
+  const isMobile = !screens.md;
+  const isTablet = screens.md && !screens.lg;
+
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +60,11 @@ export default function MaterialModal({
       onCancel={handleClose}
       footer={null}
       destroyOnHidden
-      width={1200}
+      width={isMobile ? "100%" : isTablet ? 900 : 1200}
+      style={{
+        top: isMobile ? 0 : undefined,
+        height: isMobile ? "85vh" : "auto",
+      }}
       mask={{ closable: !loading }}
       centered
     >
@@ -69,15 +79,15 @@ export default function MaterialModal({
             <Col span={24}>
               <div
                 style={{
-                  maxHeight: 300,
+                  maxHeight: isMobile ? "40vh" : 300,
                   overflowY: "auto",
                   overflowX: "hidden",
                   width: "100%",
                   paddingRight: 8,
                 }}
               >
-                <Row gutter={[24, 16]} style={{ margin: 0 }}>
-                  <Col span={6}>
+                <Row gutter={[24, 1]}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Material ID"
                       name="Material_ID"
@@ -87,7 +97,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Vendor Code"
                       name="Vendor_Code"
@@ -97,7 +107,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Supplier"
                       name="Supplier"
@@ -107,7 +117,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Supplier material ID"
                       name="Supplier_Material_ID"
@@ -117,7 +127,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Supplier Material Name"
                       name="Supplier_Material_Name"
@@ -127,7 +137,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Mtl - Supp Lifecycle State"
                       name="Mtl_Supp_Lifecycle_State"
@@ -137,7 +147,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Material Type Level 1"
                       name="Material_Type_Level_1"
@@ -147,7 +157,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Composition"
                       name="Composition"
@@ -157,7 +167,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Classification"
                       name="Classification"
@@ -167,7 +177,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Material Thickness"
                       name="Material_Thickness"
@@ -177,7 +187,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Comparison UOM"
                       name="Comparison_UOM"
@@ -187,7 +197,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Price Remark"
                       name="Price_Remark"
@@ -197,7 +207,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Skin Size"
                       name="Skin_Size"
@@ -207,7 +217,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="QC%"
                       name="QC_Percent"
@@ -217,7 +227,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Leadtime"
                       name="Leadtime"
@@ -227,7 +237,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Sample Leadtime"
                       name="Sample_Leadtime"
@@ -237,7 +247,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Min Qty/ Color"
                       name="Min_Qty_Color"
@@ -247,7 +257,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Min Qty/ Sample"
                       name="Min_Qty_Sample"
@@ -257,7 +267,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Production Location"
                       name="Production_Location"
@@ -267,7 +277,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Terms of Delivery per T1 Country"
                       name="Terms_of_Delivery_per_T1_Country"
@@ -277,7 +287,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Valid From (Price)"
                       name="Valid_From_Price"
@@ -287,7 +297,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Valid To (Price)"
                       name="Valid_To_Price"
@@ -297,7 +307,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Price Type"
                       name="Price_Type"
@@ -307,7 +317,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Color Code (Price)"
                       name="Color_Code_Price"
@@ -317,7 +327,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Color (Price)"
                       name="Color_Price"
@@ -327,7 +337,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Treatment (Price)"
                       name="Treatment_Price"
@@ -337,7 +347,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Width (Price)"
                       name="Width_Price"
@@ -347,7 +357,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Width Uom (Price)"
                       name="Width_Uom_Price"
@@ -357,7 +367,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Length (Price)"
                       name="Length_Price"
@@ -367,7 +377,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Length Uom (Price)"
                       name="Length_Uom_Price"
@@ -377,7 +387,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Thickness (Price)"
                       name="Thickness_Price"
@@ -387,7 +397,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Thickness Uom (Price)"
                       name="Thickness_Uom_Price"
@@ -397,7 +407,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Diameter Inside (Price)"
                       name="Diameter_Inside_Price"
@@ -407,7 +417,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Diameter Inside Uom (Price)"
                       name="Diameter_Inside_Uom_Price"
@@ -417,7 +427,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Weight (Price)"
                       name="Weight_Price"
@@ -427,7 +437,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Weight Uom (Price)"
                       name="Weight_Uom_Price"
@@ -437,7 +447,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Quantity (Price)"
                       name="Quantity_Price"
@@ -447,7 +457,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Quantity Uom (Price)"
                       name="Quantity_Uom_Price"
@@ -457,7 +467,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Uom String (Price)"
                       name="Uom_String_Price"
@@ -467,7 +477,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="SS26 Final Price (USD)"
                       name="SS26_Final_Price_USD"
@@ -477,7 +487,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Comparison Price (Price) (USD)"
                       name="Comparison_Price_Price_USD"
@@ -487,7 +497,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Approved as Final Price Y/N (Price)"
                       name="Approved_As_Final_Price_Y_N_Price"
@@ -497,7 +507,7 @@ export default function MaterialModal({
                     </Form.Item>
                   </Col>
 
-                  <Col span={6}>
+                  <Col xs={24} sm={12} lg={6}>
                     <Form.Item
                       label="Season"
                       name="Season"
@@ -510,7 +520,7 @@ export default function MaterialModal({
               </div>
             </Col>
 
-            <Col span={24}>
+            <Col span={24} className="mt-1">
               <Form.Item name="Images">
                 <ImageUploader
                   max={2}

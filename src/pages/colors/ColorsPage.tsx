@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   Input,
@@ -12,7 +12,6 @@ import {
   Checkbox,
 } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
-import { initialColorsData } from "../../types/samples";
 import CustomPagination from "../../components/CustomPagination";
 import { AppAlert } from "../../components/ui/AppAlert";
 
@@ -20,19 +19,22 @@ import AddFilter from "../../components/AddFilter";
 import { FILTER_OPTIONS } from "../../components/ui/ColorsFilterOption";
 import ImportExcelModal from "../../components/ImportExcelModal";
 import ColorsModal from "./ColorsModal";
-import { sleep } from "../../lib/helpers";
 import FilterCollapse from "../../components/FilterCollapse";
 import { Search, Upload } from "lucide-react";
 import { getColorsColumns, type ColorsDataType } from "../../types/colors";
 import ImagePreviewModal from "../../components/ImagePreviewModal";
 import EmptyImg from "@/assets/nodata.png";
+import colorApi from "../../api/colors.api";
+import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
+import type { Image } from "../../types/images";
 
 export default function ColorsPage() {
   const [form] = Form.useForm();
 
   const [dynamicCount, setDynamicCount] = useState(0);
 
-  const [data, setData] = useState(initialColorsData);
+  const [data, setData] = useState<ColorsDataType[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState<ColorsDataType | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
@@ -40,7 +42,7 @@ export default function ColorsPage() {
 
   const [openImport, setOpenImport] = useState(false);
 
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [previewImages, setPreviewImages] = useState<(Image | File)[]>([]);
   const [openPreview, setOpenPreview] = useState(false);
 
   const columns = getColorsColumns((images) => {
@@ -58,12 +60,36 @@ export default function ColorsPage() {
     current * pageSize,
   );
 
+  const fetchColors = async () => {
+    try {
+      setLoading(true);
+
+      const res = await colorApi.getAllColors();
+
+      setData(
+        res.map((item: ColorsDataType) => ({
+          ...item,
+          key: item.ColorID,
+        })),
+      );
+    } catch (error) {
+      console.log("Failed to fetch error: ", error);
+      AppAlert({ icon: "error", title: "Failed to fetch color" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchColors();
+  }, []);
+
   const handleFilter = (values: any) => {
     console.log("Filter values:", values);
   };
 
   const handleSelectColor = (record: ColorsDataType) => {
-    if (selectedRow?.Color_Code === record.Color_Code) {
+    if (selectedRow?.ColorID === record.ColorID) {
       setSelectedRow(null);
       return;
     }
@@ -83,16 +109,21 @@ export default function ColorsPage() {
     setOpenModal(true);
   };
 
-  const handleDelete = () => {
-    if (!selectedRow) return;
+  const handleDelete = async () => {
+    try {
+      if (!selectedRow) return;
 
-    setData((prev) =>
-      prev.filter((item) => item.Color_Code !== selectedRow.Color_Code),
-    );
+      const res = await colorApi.deleteColor(selectedRow.ColorID);
 
-    setSelectedRow(null);
+      if (res.success) {
+        setSelectedRow(null);
+        AppAlert({ icon: "success", title: res.message });
+      }
 
-    AppAlert({ icon: "success", title: "Color removed successfully" });
+      await fetchColors();
+    } catch (error) {
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
   };
 
   const confirmRemove = () => {
@@ -110,31 +141,87 @@ export default function ColorsPage() {
 
   const handleSubmit = async (values: any) => {
     if (mode === "create") {
-      if (!values.Color_Code) return;
+      try {
+        const formData = new FormData();
 
-      setData((prev) => [
-        ...prev,
-        {
-          ...values,
-          key: values.Color_Code,
-        },
-      ]);
+        formData.append("colorName", values.ColorName);
+        formData.append("colorCode", values.ColorCode);
+        formData.append("rgbValue", values.RGBValue);
+        formData.append("cmykValue", values.CMYKValue);
+        formData.append("colorGroup", values.ColorGroup);
 
-      AppAlert({ icon: "success", title: "Added new color successfully" });
+        // formData.append(
+        //   "colorStatus",
+        //   values.ColorStatus ? "true" : "false"
+        // );
+
+        if (values.Images?.length) {
+          values.Images.forEach((file: File) => {
+            if (file instanceof File) {
+              formData.append("images", file);
+            }
+          });
+        }
+
+        await colorApi.createColor(formData);
+
+        AppAlert({ icon: "success", title: "Added new color successfully" });
+
+        setOpenModal(false);
+        setSelectedRow(null);
+
+        await fetchColors();
+      } catch (error) {
+        AppAlert({
+          icon: "error",
+          title: getApiErrorMessage(error),
+        });
+      }
     } else {
-      setData((prev) =>
-        prev.map((item) =>
-          item.Color_Code === selectedRow?.Color_Code ? values : item,
-        ),
-      );
+      try {
+        if (!selectedRow) return;
 
-      AppAlert({ icon: "success", title: "Color updated successfully" });
+        const formData = new FormData();
+
+        formData.append("colorName", values.ColorName);
+        formData.append("colorCode", values.ColorCode);
+        formData.append("rgbValue", values.RGBValue);
+        formData.append("cmykValue", values.CMYKValue);
+        formData.append("colorGroup", values.ColorGroup);
+
+        if (values.ColorStatus !== undefined) {
+          formData.append("colorStatus", values.ColorStatus ? "true" : "false");
+        }
+
+        const images = (values.Images ?? []).filter(Boolean);
+
+        const newImages = images.filter(
+          (img): img is File => img instanceof File,
+        );
+
+        newImages.forEach((file) => {
+          formData.append("images", file);
+        });
+
+        await colorApi.updateColor(selectedRow.ColorID, formData);
+
+        AppAlert({
+          icon: "success",
+          title: "Color updated successfully",
+        });
+
+        setOpenModal(false);
+        setSelectedRow(null);
+
+        await fetchColors();
+      } catch (error) {
+        console.log(error);
+        AppAlert({
+          icon: "error",
+          title: getApiErrorMessage(error),
+        });
+      }
     }
-
-    await sleep(500);
-
-    setOpenModal(false);
-    setSelectedRow(null);
   };
 
   return (
@@ -167,13 +254,13 @@ export default function ColorsPage() {
               </>
             }
           >
-            <Col flex="220px">
+            <Col xs={24} sm={12} md={8} lg={6} xl={4}>
               <Form.Item name="Color_Name" label="Color Name">
                 <Input />
               </Form.Item>
             </Col>
 
-            <Col flex="220px">
+            <Col xs={24} sm={12} md={8} lg={6} xl={4}>
               <Form.Item name="Color_Group" label="Color Group">
                 <Input />
               </Form.Item>
@@ -198,14 +285,20 @@ export default function ColorsPage() {
               },
             }}
           >
-            <div className="flex justify-between">
-              <Space style={{ marginBottom: 12 }}>
-                <Button className="actions-btn" onClick={handleCreate}>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between w-full">
+              <Space
+                wrap
+                className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
+              >
+                <Button
+                  className="actions-btn w-full lg:w-auto"
+                  onClick={handleCreate}
+                >
                   NEW COLOR
                 </Button>
 
                 <Button
-                  className="actions-btn"
+                  className="actions-btn w-full lg:w-auto"
                   disabled={!selectedRow}
                   onClick={handleEdit}
                 >
@@ -213,7 +306,7 @@ export default function ColorsPage() {
                 </Button>
 
                 <Button
-                  className="actions-btn"
+                  className="actions-btn w-full lg:w-auto"
                   disabled={!selectedRow}
                   onClick={confirmRemove}
                 >
@@ -221,7 +314,7 @@ export default function ColorsPage() {
                 </Button>
 
                 <Button
-                  className="actions-btn"
+                  className="actions-btn w-full lg:w-auto"
                   // icon={<Upload className="h-5" />}
                   onClick={() => setOpenImport(true)}
                 >
@@ -229,15 +322,20 @@ export default function ColorsPage() {
                 </Button>
               </Space>
 
-              <span className="adidas-font">5184 colors</span>
+              <span className="adidas-font text-left lg:text-right">
+                {total} colors
+              </span>
             </div>
 
-            <div style={{ flex: 1 }}>
+            <div className="w-full mt-1">
               <Table
+                loading={loading}
                 bordered
+                scroll={{ x: "max-content" }}
+                sticky
                 columns={columns}
                 dataSource={paginatedData}
-                rowKey="Color_Code"
+                rowKey="ColorID"
                 pagination={false}
                 onRow={(record) => ({
                   onClick: () => {
@@ -245,8 +343,7 @@ export default function ColorsPage() {
                   },
                 })}
                 rowClassName={(record) =>
-                  record.Color_Code &&
-                  record.Color_Code === selectedRow?.Color_Code
+                  record.ColorID && record.ColorID === selectedRow?.ColorID
                     ? "custom-selected-row"
                     : ""
                 }

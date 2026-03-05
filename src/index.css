@@ -10,12 +10,12 @@
   font-style: normal;
 }
 
-/* @font-face {
+@font-face {
   font-family: "AdihausDIN";
-  src: url("/src/assets/fonts/AdihausDIN-Bold.ttf") format("truetype");
+  src: url("/src/assets/fonts/AdihausDIN_Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
-} */
+}
 
 .adidas-font {
   font-family: "AdihausDIN", sans-serif;
@@ -311,4 +311,21 @@ body,
 .custom-selected-row > td {
   background-color: rgba(0, 0, 0, 0.8) !important;
   color: white;
+}
+
+.custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #000 !important;
+  font-weight: bold !important;
+}
+
+.custom-tabs .ant-tabs-ink-bar {
+  background: #000;
+}
+
+.app-alert-popup .swal2-title {
+  font-size: 14px;
+}
+
+.app-alert-popup .swal2-icon {
+  font-size: 16px;
 }

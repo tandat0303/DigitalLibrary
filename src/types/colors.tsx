@@ -1,36 +1,35 @@
 import type { ColumnsType } from "antd/es/table";
-
-export interface ColorsResponse {
-  draw: string;
-  recordsTotal: number;
-  recordsFiltered: number;
-  data: ColorsDataType[];
-}
+import type { Image } from "./images";
+import { resolveImageSrc } from "../lib/helpers";
 
 export interface ColorsDataType {
-  ID: string;
-  ID_Img: string;
-  Thumbnail: string;
-  Color_Name: string;
-  Color_Code: string;
-  RGB_Value: string;
-  CMYK_Value: string;
-  Color_Group: string;
-  Color_Status: string;
-  UserID: string;
-  UserDate: string;
-  ColorsImg?: string[];
+  ColorID: string;
+  // ID_Img: string;
+  // Thumbnail: string;
+  ColorName: string;
+  ColorCode: string;
+  RGBValue: string;
+  CMYKValue: string;
+  ColorGroup: string;
+  ColorStatus: boolean;
+  // UserID: string;
+  // UserDate: string;
+  Images?: (Image | File)[];
 }
 
 interface ColorFormValues {
-  ID: string;
-  Color_Name: string;
-  Color_Code: string;
-  RGB_Value: string;
-  CMYK_Value: string;
-  Color_Group: string;
-  Color_Status: string;
-  ColorsImg?: string[];
+  ColorID: string;
+  // ID_Img: string;
+  // Thumbnail: string;
+  ColorName: string;
+  ColorCode: string;
+  RGBValue: string;
+  CMYKValue: string;
+  ColorGroup: string;
+  ColorStatus?: boolean;
+  // UserID: string;
+  // UserDate: string;
+  Images?: (Image | File)[];
 }
 
 export interface ColorsModalProps {
@@ -42,15 +41,15 @@ export interface ColorsModalProps {
 }
 
 export const getColorsColumns = (
-  onPreview: (images: string[]) => void,
+  onPreview: (images: (Image | File)[]) => void,
 ): ColumnsType<ColorsDataType> => [
   {
     title: "Thumbnail",
-    dataIndex: "Thumbnail",
-    key: "Thumbnail",
+    dataIndex: "RGBValue",
+    key: "RGBValue",
     render: () => null,
     onCell: (record: any) => {
-      const rgb = record.Thumbnail?.trim();
+      const rgb = record.RGBValue?.trim();
       return {
         style: {
           backgroundColor: rgb ? `rgb(${rgb})` : undefined,
@@ -60,23 +59,23 @@ export const getColorsColumns = (
   },
   {
     title: "Color Name",
-    dataIndex: "Color_Name",
+    dataIndex: "ColorName",
   },
   {
     title: "Color Code",
-    dataIndex: "Color_Code",
+    dataIndex: "ColorCode",
   },
   {
     title: "RGB Value",
-    dataIndex: "RGB_Value",
+    dataIndex: "RGBValue",
   },
   {
     title: "CMYK Value",
-    dataIndex: "CMYK_Value",
+    dataIndex: "CMYKValue",
   },
   {
     title: "Reference",
-    dataIndex: "ColorsImg",
+    dataIndex: "Images",
     align: "center",
     onCell: () => ({
       style: {
@@ -84,31 +83,42 @@ export const getColorsColumns = (
         verticalAlign: "middle",
         padding: "4px",
       },
-      onClick: (e) => e.stopPropagation(),
+      // onClick: (e) => e.stopPropagation(),
     }),
-    render: (images?: string[]) => {
-      const validImages = Array.isArray(images) ? images.filter(Boolean) : [];
+    render: (images?: (Image | File)[]) => {
+      const validImages = Array.isArray(images) ? images : [];
 
       if (!validImages.length) return null;
+
+      console.log(validImages);
 
       const columns = Math.min(3, validImages.length);
 
       return (
         <div className="flex justify-center">
           <div
-            className="grid grid-cols-3 gap-4 w-fit cursor-pointer"
+            className="grid gap-2 w-fit cursor-pointer"
             style={{
-              gridTemplateColumns: `repeat(${columns}, 48px)`,
+              gridTemplateColumns: `repeat(${columns}, 64px)`,
             }}
             onClick={() => onPreview(validImages)}
           >
-            {validImages.map((src, index) => (
-              <img
-                key={index}
-                src={src}
-                className="w-16 h-12 object-cover rounded cursor-zoom-in hover:scale-110 hover:shadow-md transition-all duration-200 border border-[#8f8f8f]"
-              />
-            ))}
+            {validImages.map((img, index) => {
+              const src = resolveImageSrc(img);
+
+              return (
+                <img
+                  key={index}
+                  src={src}
+                  className="w-16 h-12 object-cover rounded cursor-zoom-in hover:scale-110 hover:shadow-md transition-all duration-200 border border-[#8f8f8f]"
+                  onLoad={() => {
+                    if (img instanceof File) {
+                      URL.revokeObjectURL(src);
+                    }
+                  }}
+                />
+              );
+            })}
           </div>
         </div>
       );
@@ -116,10 +126,11 @@ export const getColorsColumns = (
   },
   {
     title: "Color Group",
-    dataIndex: "Color_Group",
+    dataIndex: "ColorGroup",
   },
   {
     title: "Color Status",
-    dataIndex: "Color_Status",
+    dataIndex: "ColorStatus",
+    render: (status: boolean) => (status ? "Active" : "Disabled"),
   },
 ];

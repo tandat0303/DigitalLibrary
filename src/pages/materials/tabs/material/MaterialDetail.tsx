@@ -1,10 +1,15 @@
-import { Row, Col, Divider, Card } from "antd";
+import { Row, Col, Divider, Card, Grid } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { THUMBNAIL_COUNT } from "../../../../lib/helpers";
+import { resolveImageSrc, THUMBNAIL_COUNT } from "../../../../lib/helpers";
 import NotFound from "../../../NotFound";
 export default function MaterialDetailPage() {
   const { unique_price_id } = useParams();
+
+  const { useBreakpoint } = Grid;
+  const screens = useBreakpoint();
+
+  const isMobile = !screens.md;
 
   const imageRef = useRef<HTMLImageElement | null>(null);
 
@@ -72,24 +77,59 @@ export default function MaterialDetailPage() {
   }
 
   return (
-    <div style={{ height: "100%", paddingTop: 20 }}>
+    <div
+      style={{
+        height: isMobile ? "auto" : "calc(100vh - 50px)",
+        paddingTop: 20,
+      }}
+    >
       <Card
         title="GENERAL"
-        styles={{ body: { flex: 1, overflow: "hidden", display: "flex" } }}
-        style={{ height: "100%", display: "flex", flexDirection: "column" }}
+        styles={{
+          body: {
+            flex: isMobile ? undefined : 1,
+            overflow: isMobile ? "visible" : "hidden",
+            display: isMobile ? "block" : "flex",
+          },
+        }}
+        style={{
+          height: isMobile ? "auto" : "100%",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
-        <Row gutter={32} style={{ flex: 1, height: "100%" }}>
-          <Col span={7} style={{ height: "100%" }}>
+        <Row
+          gutter={[32, 24]}
+          style={{
+            height: "100%",
+            flexWrap: isMobile ? "wrap" : "nowrap",
+          }}
+        >
+          <Col
+            xs={24}
+            md={7}
+            style={{
+              overflow: "hidden",
+            }}
+          >
             <div className="flex flex-col h-full gap-4">
               <div
                 ref={imageRef}
-                onMouseEnter={() => setZoom((z) => ({ ...z, visible: true }))}
-                onMouseLeave={() => setZoom((z) => ({ ...z, visible: false }))}
-                onMouseMove={handleMouseMove}
+                onMouseEnter={
+                  !isMobile
+                    ? () => setZoom((z) => ({ ...z, visible: true }))
+                    : undefined
+                }
+                onMouseLeave={
+                  !isMobile
+                    ? () => setZoom((z) => ({ ...z, visible: false }))
+                    : undefined
+                }
+                onMouseMove={!isMobile ? handleMouseMove : undefined}
                 style={{
                   position: "relative",
                   width: "100%",
-                  height: 400,
+                  height: isMobile ? 260 : 400,
                   border: "1px solid #ddd",
                   background: "#808080",
                   overflow: "hidden",
@@ -98,7 +138,7 @@ export default function MaterialDetailPage() {
                 {images[selectedIndex] ? (
                   <img
                     ref={imageRef}
-                    src={images[selectedIndex]}
+                    src={resolveImageSrc(images[selectedIndex])}
                     className="w-full h-full object-cover select-none"
                     draggable={false}
                   />
@@ -119,7 +159,7 @@ export default function MaterialDetailPage() {
                   </span>
                 )}
 
-                {zoom.visible && images[selectedIndex] && (
+                {!isMobile && zoom.visible && images[selectedIndex] && (
                   <div
                     style={{
                       position: "absolute",
@@ -142,14 +182,22 @@ export default function MaterialDetailPage() {
                 )}
               </div>
 
-              <div className="flex gap-2 flex-wrap justify-center">
+              <div
+                className="flex gap-2"
+                style={{
+                  overflowX: isMobile ? "auto" : "visible",
+                  justifyContent: "center",
+                  paddingBottom: 4,
+                }}
+              >
                 {thumbnails.map((img, index) => (
                   <div
                     key={index}
                     onClick={() => setSelectedIndex(index)}
                     style={{
-                      width: 80,
-                      height: 80,
+                      width: isMobile ? 64 : 80,
+                      height: isMobile ? 64 : 80,
+                      flexShrink: 0,
                       border:
                         selectedIndex === index
                           ? "2px solid #1677ff"
@@ -163,13 +211,19 @@ export default function MaterialDetailPage() {
                     }}
                   >
                     {img ? (
-                      <img src={img} className="w-full h-full object-cover" />
+                      <img
+                        src={resolveImageSrc(img)}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <span
                         style={{
                           fontSize: 12,
                           fontWeight: "bold",
                           color: "#fff",
+                          position: "absolute",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
                         No Image
@@ -182,35 +236,36 @@ export default function MaterialDetailPage() {
           </Col>
 
           <Col
-            span={17}
+            xs={24}
+            md={17}
             style={{
-              height: "100%",
+              height: isMobile ? "calc(100vh - 530px)" : "100%",
               overflowY: "auto",
-              scrollBehavior: "smooth",
-              paddingRight: 8,
+              // paddingRight: isMobile ? 0 : 8,
+              WebkitOverflowScrolling: "touch",
             }}
           >
             <Row gutter={[16, 16]}>
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Material Id</strong>
                 <div>
                   {material.Material_ID ? material.Material_ID : "No data"}
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Vendor Code</strong>
                 <div>
                   {material.Vendor_Code ? material.Vendor_Code : "No data"}
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Supplier</strong>
                 <div>{material.Supplier ? material.Supplier : "No data"}</div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Supplier Material Id</strong>
                 <div>
                   {material.Supplier_Material_ID
@@ -219,7 +274,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Supplier Material Name</strong>
                 <div>
                   {material.Supplier_Material_Name
@@ -228,7 +283,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Mtl_Supp Lifecycle State</strong>
                 <div>
                   {material.Mtl_Supp_Lifecycle_State
@@ -237,7 +292,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Material Type Level 1</strong>
                 <div>
                   {material.Material_Type_Level_1
@@ -246,14 +301,14 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Composition</strong>
                 <div>
                   {material.Composition ? material.Composition : "No data"}
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Classification</strong>
                 <div>
                   {material.Classification
@@ -262,7 +317,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Material Thickness</strong>
                 <div>
                   {material.Material_Thickness
@@ -271,7 +326,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Material Thickness UOM</strong>
                 <div>
                   {material.Material_Thickness_UOM
@@ -280,7 +335,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Comparison UOM</strong>
                 <div>
                   {material.Comparison_UOM
@@ -289,31 +344,31 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Price Remark</strong>
                 <div>
                   {material.Price_Remark ? material.Price_Remark : "No data"}
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Skin Size</strong>
                 <div>{material.Skin_Size ? material.Skin_Size : "No data"}</div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>QC Percent</strong>
                 <div>
                   {material.QC_Percent ? material.QC_Percent : "No data"}
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Leadtime</strong>
                 <div>{material.Leadtime ? material.Leadtime : "No data"}</div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Sample Leadtime</strong>
                 <div>
                   {material.Sample_Leadtime
@@ -322,7 +377,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Min Qty Color</strong>
                 <div>
                   {material.Min_Qty_Color ? material.Min_Qty_Color : "No data"}
@@ -333,7 +388,7 @@ export default function MaterialDetailPage() {
             <Divider />
 
             <Row gutter={[16, 16]}>
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Min Qty Sample</strong>
                 <div>
                   {material.Min_Qty_Sample
@@ -342,7 +397,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Production Location</strong>
                 <div>
                   {material.Production_Location
@@ -351,7 +406,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Terms of Delivery per T1 Country</strong>
                 <div>
                   {material.Terms_of_Delivery_per_T1_Country
@@ -360,7 +415,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Valid From Price</strong>
                 <div>
                   {material.Valid_From_Price
@@ -369,7 +424,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Valid To Price</strong>
                 <div>
                   {material.Valid_To_Price
@@ -378,14 +433,14 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Price Type</strong>
                 <div>
                   {material.Price_Type ? material.Price_Type : "No data"}
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Color Code Price</strong>
                 <div>
                   {material.Color_Code_Price
@@ -394,14 +449,14 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Color Price</strong>
                 <div>
                   {material.Color_Price ? material.Color_Price : "No data"}
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Treatment Price</strong>
                 <div>
                   {material.Treatment_Price
@@ -410,14 +465,14 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Width Price</strong>
                 <div>
                   {material.Width_Price ? material.Width_Price : "No data"}
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Width Uom Price</strong>
                 <div>
                   {material.Weight_Uom_Price
@@ -426,14 +481,14 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Length Price</strong>
                 <div>
                   {material.Length_Price ? material.Length_Price : "No data"}
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Length Uom Price</strong>
                 <div>
                   {material.Material_Thickness
@@ -442,7 +497,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Thickness Price</strong>
                 <div>
                   {material.Thickness_Price
@@ -451,7 +506,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Thickness Uom Price</strong>
                 <div>
                   {material.Thickness_Uom_Price
@@ -460,7 +515,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Diameter Inside Price</strong>
                 <div>
                   {material.Diameter_Inside_Price
@@ -469,7 +524,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Diameter Inside Uom Price</strong>
                 <div>
                   {material.Diameter_Inside_Uom_Price
@@ -478,7 +533,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Weight Price</strong>
                 <div>
                   {material.Weight_Price ? material.Weight_Price : "No data"}
@@ -489,7 +544,7 @@ export default function MaterialDetailPage() {
             <Divider />
 
             <Row gutter={[16, 16]}>
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Weight Uom Price</strong>
                 <div>
                   {material.Weight_Uom_Price
@@ -498,7 +553,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Quantity Price</strong>
                 <div>
                   {material.Quantity_Price
@@ -507,7 +562,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Quantity Uom Price</strong>
                 <div>
                   {material.Quantity_Uom_Price
@@ -516,7 +571,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Uom String Price</strong>
                 <div>
                   {material.Uom_String_Price
@@ -525,7 +580,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>SS26 Final Price USD</strong>
                 <div>
                   {material.SS26_Final_Price_USD
@@ -534,7 +589,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Comparison Price Price USD</strong>
                 <div>
                   {material.Comparison_Price_Price_USD
@@ -543,7 +598,7 @@ export default function MaterialDetailPage() {
                 </div>
               </Col>
 
-              <Col span={8}>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Approved As Final Price Y/N Price</strong>
                 <div>
                   {material.Approved_As_Final_Price_Y_N_Price

@@ -1,18 +1,22 @@
 import { Modal } from "antd";
-import { useEffect, useState } from "react";
 import { CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { Images } from "lucide-react";
 import { AppAlert } from "./ui/AppAlert";
-import { toBase64 } from "../lib/helpers";
+import type { Image } from "../types/images";
+import { normalizeImages, resolveImageSrc } from "../lib/helpers";
+import { getApiErrorMessage } from "../lib/getApiErrorMsg";
+
+export type UploadImage = File | Image | null;
 
 interface ImageUploaderProps {
-  value?: (string | null)[];
-  onChange?: (images: (string | null)[]) => void;
+  value?: UploadImage[];
+  onChange?: (images: UploadImage[]) => void;
   max?: number;
   accept?: string[];
   width?: number;
   height?: number;
   labels?: string[];
+  onDeleteExisting?: (image: Image) => Promise<void>;
 }
 
 export default function ImageUploader({
@@ -23,23 +27,15 @@ export default function ImageUploader({
   width = 180,
   height = 150,
   labels = [],
+  onDeleteExisting,
 }: ImageUploaderProps) {
-  const [images, setImages] = useState<(string | null)[]>(
-    value || Array(max).fill(null),
-  );
+  const images = normalizeImages(value, max);
 
-  useEffect(() => {
-    if (value) {
-      setImages(value);
-    }
-  }, [value]);
-
-  const triggerChange = (newImages: (string | null)[]) => {
-    setImages(newImages);
-    onChange?.(newImages);
+  const triggerChange = (newImages: UploadImage[]) => {
+    onChange?.(normalizeImages(newImages, max));
   };
 
-  const handleFileChange = async (
+  const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number,
   ) => {
@@ -54,24 +50,38 @@ export default function ImageUploader({
       return;
     }
 
-    const base64 = await toBase64(file);
-
     const newImages = [...images];
-    newImages[index] = base64;
+    newImages[index] = file;
     triggerChange(newImages);
+
+    e.target.value = "";
   };
 
   const confirmRemoveImage = (index: number) => {
+    const img = images[index];
+
     Modal.confirm({
       title: "Remove Image",
       content: "Are you sure you want to remove this image?",
       okType: "danger",
       centered: true,
       icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
-      onOk: () => {
-        const newImages = [...images];
-        newImages[index] = null;
-        triggerChange(newImages);
+
+      onOk: async () => {
+        try {
+          if (img && typeof img === "object" && "ImageID" in img) {
+            await onDeleteExisting?.(img);
+          }
+
+          const newImages = [...images];
+          newImages[index] = null;
+          triggerChange(newImages);
+        } catch (error) {
+          AppAlert({
+            icon: "error",
+            title: getApiErrorMessage(error),
+          });
+        }
       },
     });
   };
@@ -92,6 +102,7 @@ export default function ImageUploader({
           >
             <input
               type="file"
+              key={index}
               accept={accept.join(",")}
               onChange={(e) => handleFileChange(e, index)}
               className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
@@ -100,9 +111,13 @@ export default function ImageUploader({
             {src ? (
               <>
                 <img
-                  src={src}
-                  alt="preview"
+                  src={resolveImageSrc(src)}
                   className="w-full h-full object-cover rounded-md"
+                  onLoad={(e) => {
+                    if (src instanceof File) {
+                      URL.revokeObjectURL((e.target as HTMLImageElement).src);
+                    }
+                  }}
                 />
 
                 {/* opacity-0 group-hover:opacity-100 */}
@@ -123,6 +138,7 @@ export default function ImageUploader({
                     transition
                     shadow-md
                     z-20
+                    cursor-pointer
                   "
                 >
                   <CloseOutlined style={{ fontSize: 12 }} />
