@@ -110,6 +110,15 @@ export default function MaterialsContent() {
     exportToExcel(exportData, "materials");
   };
 
+  const handleUploadAttach = () => {
+    if (!selectedRow) {
+      AppAlert({ icon: "warning", title: "Please choose a row data" });
+      return;
+    }
+
+    setOpenUploadAttach(true);
+  };
+
   const handleCreate = () => {
     setMode("create");
     setSelectedRow(null);
@@ -117,7 +126,11 @@ export default function MaterialsContent() {
   };
 
   const handleEdit = () => {
-    if (!selectedRow) return;
+    if (!selectedRow) {
+      AppAlert({ icon: "warning", title: "Please choose a row data" });
+      return;
+    }
+
     setMode("edit");
     setOpenModal(true);
   };
@@ -133,13 +146,18 @@ export default function MaterialsContent() {
 
     setSelectedRow(null);
 
-    AppAlert({ icon: "success", title: "Color removed successfully" });
+    AppAlert({ icon: "success", title: "Material removed successfully" });
   };
 
   const confirmRemove = () => {
+    if (!selectedRow) {
+      AppAlert({ icon: "warning", title: "Please choose a row data" });
+      return;
+    }
+
     Modal.confirm({
-      title: "REMOVE COLOR",
-      content: "Are you sure to remove this color?",
+      title: "REMOVE MATERIAL",
+      content: "Are you sure to remove this material?",
       okText: "Yes",
       cancelText: "No",
       okType: "danger",
@@ -200,10 +218,15 @@ export default function MaterialsContent() {
             visibleFilterCount={3 + dynamicCount}
             actions={
               <>
-                <Button className="btn-custom" htmlType="submit">
-                  Search <Search />
-                </Button>
-                <Checkbox>No Image</Checkbox>
+                <Form.Item>
+                  <Button className="btn-custom" htmlType="submit">
+                    Search
+                    <Search />
+                  </Button>
+                </Form.Item>
+                <Form.Item name="hasImage" valuePropName="checked">
+                  <Checkbox>No Image</Checkbox>
+                </Form.Item>
               </>
             }
           >
@@ -258,7 +281,7 @@ export default function MaterialsContent() {
 
                 <Button
                   className="actions-btn w-full lg:w-auto"
-                  disabled={!selectedRow}
+                  // disabled={!selectedRow}
                   onClick={handleEdit}
                 >
                   EDIT MATERIAL
@@ -266,7 +289,7 @@ export default function MaterialsContent() {
 
                 <Button
                   className="actions-btn w-full lg:w-auto"
-                  disabled={!selectedRow}
+                  // disabled={!selectedRow}
                   onClick={confirmRemove}
                 >
                   REMOVE MATERIAL
@@ -303,8 +326,8 @@ export default function MaterialsContent() {
                 </Button>
                 <Button
                   className="extra-actions-btn w-full lg:w-auto"
-                  disabled={!selectedRow}
-                  onClick={() => setOpenUploadAttach(true)}
+                  // disabled={!selectedRow}
+                  onClick={handleUploadAttach}
                 >
                   Add File
                 </Button>

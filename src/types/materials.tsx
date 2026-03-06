@@ -163,8 +163,6 @@ export const getMaterialsColumns = (
 
       if (!validImages.length) return null;
 
-      console.log(validImages.length);
-
       const columns = Math.min(2, validImages.length);
 
       return (

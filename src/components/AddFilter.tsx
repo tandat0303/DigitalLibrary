@@ -46,8 +46,10 @@ export default function AddFilter({
   };
 
   const handleClearAll = () => {
-    form.resetFields(activeFilters);
+    form.resetFields();
     setActiveFilters([]);
+
+    form.submit();
   };
 
   return (

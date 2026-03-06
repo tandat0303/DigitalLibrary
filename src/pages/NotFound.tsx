@@ -1,23 +1,31 @@
 // import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { SearchX } from "lucide-react";
 // import { Button, Result } from "antd";
 
 export default function NotFound() {
   //   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-liner-to-br from-blue-50 via-gray-50 to-blue-50 flex items-center justify-center p-3 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50 flex items-center justify-center p-3 sm:p-4">
       <div className="max-w-2xl w-full text-center">
         {/* 404 Animation */}
-        <div className="relative mb-6 sm:mb-8">
-          <h1 className="text-6xl sm:text-8xl md:text-9xl font-bold text-gray-200 select-none">
-            404
-          </h1>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-white rounded-full p-4 sm:p-6 shadow-xl transform hover:scale-110 transition-transform duration-300">
-              <Search className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16" />
-            </div>
-          </div>
+        <div className="flex items-center justify-center mb-6 sm:mb-8 select-none">
+          <span className="text-6xl sm:text-8xl md:text-9xl font-bold text-gray-200">
+            4
+          </span>
+
+          <span className="relative text-6xl sm:text-8xl md:text-9xl font-bold text-gray-200 mx-2 sm:mx-4">
+            -
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="bg-white rounded-full p-2 sm:p-3 md:p-4 shadow-xl transform hover:scale-110 transition-transform duration-300">
+                <SearchX className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 text-gray-600" />
+              </span>
+            </span>
+          </span>
+
+          <span className="text-6xl sm:text-8xl md:text-9xl font-bold text-gray-200">
+            4
+          </span>
         </div>
 
         {/* Message */}

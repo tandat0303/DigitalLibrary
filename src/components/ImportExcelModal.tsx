@@ -88,7 +88,7 @@ export default function ImportExcelModal({ open, onClose, onImport }: Props) {
         <Button
           type="link"
           onClick={handleDownloadSample}
-          style={{ padding: 0, color: "gray" }}
+          style={{ padding: 0, color: "gray", fontWeight: "bold" }}
         >
           Example File
         </Button>

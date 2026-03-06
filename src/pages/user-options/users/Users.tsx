@@ -48,7 +48,11 @@ export default function Users() {
   };
 
   const handleEdit = () => {
-    if (!selectedRow) return;
+    if (!selectedRow) {
+      AppAlert({ icon: "warning", title: "Please choose a row data" });
+      return;
+    }
+
     setMode("edit");
     setOpenModal(true);
   };
@@ -66,6 +70,11 @@ export default function Users() {
   };
 
   const confirmRemove = () => {
+    if (!selectedRow) {
+      AppAlert({ icon: "warning", title: "Please choose a row data" });
+      return;
+    }
+
     Modal.confirm({
       title: "REMOVE USER",
       content: "Are you sure to remove this user?",
@@ -119,12 +128,14 @@ export default function Users() {
             visibleFilterCount={2}
             actions={
               <>
-                <Button className="btn-custom" htmlType="submit">
-                  Search
-                </Button>
-                {/* <Button onClick={() => form.resetFields()}>
+                <Form.Item>
+                  <Button className="btn-custom" htmlType="submit">
+                    Search
+                  </Button>
+                  {/* <Button onClick={() => form.resetFields()}>
                           Reset
                         </Button> */}
+                </Form.Item>
               </>
             }
           >
@@ -174,7 +185,7 @@ export default function Users() {
 
                 <Button
                   className="actions-btn w-full lg:w-auto"
-                  disabled={!selectedRow}
+                  // disabled={!selectedRow}
                   onClick={handleEdit}
                 >
                   EDIT USER
@@ -182,7 +193,7 @@ export default function Users() {
 
                 <Button
                   className="actions-btn w-full lg:w-auto"
-                  disabled={!selectedRow}
+                  // disabled={!selectedRow}
                   onClick={confirmRemove}
                 >
                   REMOVE USER

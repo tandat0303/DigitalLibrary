@@ -27,6 +27,11 @@ import EmptyImg from "@/assets/nodata.png";
 import colorApi from "../../api/colors.api";
 import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
 import type { Image } from "../../types/images";
+import { buildQueryFilters } from "../../lib/buildQueryFilters";
+import Swal from "sweetalert2";
+import { SwalLoading } from "../../components/ui/SwalLoading";
+import { SwalNotification } from "../../components/ui/SwalNotification";
+import { sleep } from "../../lib/helpers";
 
 export default function ColorsPage() {
   const [form] = Form.useForm();
@@ -53,27 +58,39 @@ export default function ColorsPage() {
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const total = data.length;
-
-  const paginatedData = data.slice(
-    (current - 1) * pageSize,
-    current * pageSize,
-  );
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<any>({});
+  // const [sorter, setSorter] = useState<{
+  //   sort: string;
+  //   order: SortOrder;
+  // }>({
+  //   sort: "ColorName",
+  //   order: "DESC",
+  // });
 
   const fetchColors = async () => {
     try {
       setLoading(true);
 
-      const res = await colorApi.getAllColors();
+      const params = {
+        ...filters,
+        page: current,
+        limit: pageSize,
+        // sort: sorter.sort,
+        // order: sorter.order,
+      };
 
-      setData(
-        res.map((item: ColorsDataType) => ({
-          ...item,
-          key: item.ColorID,
-        })),
-      );
+      const res = await colorApi.getAllColors(params);
+
+      const rows = res.data.map((item) => ({
+        ...item,
+        key: item.ColorID,
+      }));
+
+      setData(rows);
+      setTotal(res.total);
     } catch (error) {
-      console.log("Failed to fetch error: ", error);
+      console.log("Failed to fetch color: ", error);
       AppAlert({ icon: "error", title: "Failed to fetch color" });
     } finally {
       setLoading(false);
@@ -82,10 +99,13 @@ export default function ColorsPage() {
 
   useEffect(() => {
     fetchColors();
-  }, []);
+  }, [current, pageSize, filters]);
 
   const handleFilter = (values: any) => {
-    console.log("Filter values:", values);
+    const newFilters = buildQueryFilters(values);
+
+    setFilters(newFilters);
+    setCurrent(1);
   };
 
   const handleSelectColor = (record: ColorsDataType) => {
@@ -104,7 +124,10 @@ export default function ColorsPage() {
   };
 
   const handleEdit = () => {
-    if (!selectedRow) return;
+    if (!selectedRow) {
+      AppAlert({ icon: "warning", title: "Please choose a row data" });
+      return;
+    }
     setMode("edit");
     setOpenModal(true);
   };
@@ -127,6 +150,11 @@ export default function ColorsPage() {
   };
 
   const confirmRemove = () => {
+    if (!selectedRow) {
+      AppAlert({ icon: "warning", title: "Please choose a row data" });
+      return;
+    }
+
     Modal.confirm({
       title: "REMOVE COLOR",
       content: "Are you sure to remove this color?",
@@ -137,6 +165,29 @@ export default function ColorsPage() {
       icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
       onOk: () => handleDelete(),
     });
+  };
+
+  const handleImportExcel = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      SwalLoading("Uploading Excel file...");
+
+      await sleep(700);
+
+      const res = await colorApi.importExcelFile(formData);
+
+      if (res.success) {
+        SwalNotification("success", res.message);
+
+        await fetchColors();
+      }
+    } catch (error) {
+      Swal.close();
+
+      SwalNotification("error", getApiErrorMessage(error));
+    }
   };
 
   const handleSubmit = async (values: any) => {
@@ -241,27 +292,49 @@ export default function ColorsPage() {
               />
             }
             visibleFilterCount={2 + dynamicCount}
+            onValuesChange={(changedValues, allValues) => {
+              if ("hasImage" in changedValues) {
+                setFilters((prev: any) => {
+                  const newFilters = { ...prev };
+
+                  if (allValues.hasImage) {
+                    newFilters.hasImage = false;
+                  } else {
+                    delete newFilters.hasImage;
+                  }
+
+                  return newFilters;
+                });
+
+                setCurrent(1);
+              }
+            }}
+            // initialValues={{ hasImage: false }}
             actions={
               <>
-                <Button className="btn-custom" htmlType="submit">
-                  Search
-                  <Search />
-                </Button>
+                <Form.Item>
+                  <Button className="btn-custom" htmlType="submit">
+                    Search
+                    <Search />
+                  </Button>
+                </Form.Item>
                 {/* <Button onClick={() => form.resetFields()}>
                           Reset
                         </Button> */}
-                <Checkbox>No Image</Checkbox>
+                <Form.Item name="hasImage" valuePropName="checked">
+                  <Checkbox>No Image</Checkbox>
+                </Form.Item>
               </>
             }
           >
             <Col xs={24} sm={12} md={8} lg={6} xl={4}>
-              <Form.Item name="Color_Name" label="Color Name">
+              <Form.Item name="ColorName" label="Color Name">
                 <Input />
               </Form.Item>
             </Col>
 
             <Col xs={24} sm={12} md={8} lg={6} xl={4}>
-              <Form.Item name="Color_Group" label="Color Group">
+              <Form.Item name="ColorGroup" label="Color Group">
                 <Input />
               </Form.Item>
             </Col>
@@ -299,7 +372,7 @@ export default function ColorsPage() {
 
                 <Button
                   className="actions-btn w-full lg:w-auto"
-                  disabled={!selectedRow}
+                  // disabled={!selectedRow}
                   onClick={handleEdit}
                 >
                   EDIT COLOR
@@ -307,7 +380,7 @@ export default function ColorsPage() {
 
                 <Button
                   className="actions-btn w-full lg:w-auto"
-                  disabled={!selectedRow}
+                  // disabled={!selectedRow}
                   onClick={confirmRemove}
                 >
                   REMOVE COLOR
@@ -334,7 +407,7 @@ export default function ColorsPage() {
                 scroll={{ x: "max-content" }}
                 sticky
                 columns={columns}
-                dataSource={paginatedData}
+                dataSource={data}
                 rowKey="ColorID"
                 pagination={false}
                 onRow={(record) => ({
@@ -347,6 +420,14 @@ export default function ColorsPage() {
                     ? "custom-selected-row"
                     : ""
                 }
+                // onChange={(sorter: any) => {
+                //   if (sorter?.field) {
+                //     setSorter({
+                //       sort: sorter.field,
+                //       order: sorter.order === "ascend" ? "ASC" : "DESC",
+                //     });
+                //   }
+                // }}
               />
             </div>
 
@@ -354,8 +435,8 @@ export default function ColorsPage() {
               total={total}
               current={current}
               pageSize={pageSize}
-              onChange={setCurrent}
-              onPageSizeChange={setPageSize}
+              onChange={(page) => setCurrent(page)}
+              onPageSizeChange={(size) => setPageSize(size)}
             />
           </Card>
         </Col>
@@ -365,9 +446,9 @@ export default function ColorsPage() {
         open={openImport}
         onClose={() => setOpenImport(false)}
         onImport={(file) => {
-          console.log("Import file: ", file);
+          if (!file) return;
+          handleImportExcel(file);
           setOpenImport(false);
-          AppAlert({ icon: "success", title: "Imported successfully" });
         }}
       />
 

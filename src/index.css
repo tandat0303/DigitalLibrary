@@ -131,6 +131,26 @@ body,
   justify-content: center;
 }
 
+.permission-tabs .ant-tabs-tab-btn {
+  font-weight: bold !important;
+}
+
+.permission-tabs .ant-tabs-tab-btn:hover {
+  color: #ff664b !important;
+}
+
+.permission-tabs .ant-tabs-tab-active {
+  font-weight: bold !important;
+}
+
+.permission-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #ff664b !important;
+}
+
+.permission-tabs .ant-tabs-ink-bar {
+  background: #ff664b;
+}
+
 .permission-tabs .ant-tabs-extra-content {
   margin-left: auto;
   font-family: "AdihausDIN", sans-serif !important;
@@ -168,6 +188,14 @@ body,
 .ant-table-body {
   flex: 1 !important;
   font-family: "AdihausDIN", sans-serif !important;
+}
+
+.ant-table-body .ant-table-tbody {
+  font-size: 17px;
+}
+
+.ant-table-content .ant-table-tbody {
+  font-size: 17px;
 }
 
 .btn-custom.ant-btn {
@@ -327,5 +355,5 @@ body,
 }
 
 .app-alert-popup .swal2-icon {
-  font-size: 16px;
+  font-size: 14px;
 }

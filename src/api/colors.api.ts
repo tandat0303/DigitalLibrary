@@ -1,8 +1,21 @@
+import type { ColorsResponse } from "../types/colors";
 import axiosConfig from "./axiosClient";
 
+export type SortOrder = "ASC" | "DESC";
+
+interface GetColorsParams {
+  keyword?: string;
+  colorGroup?: string;
+  hasImage?: boolean;
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: SortOrder;
+}
+
 const colorApi = {
-  getAllColors: async () => {
-    const res = await axiosConfig.get("/colors");
+  getAllColors: async (params: GetColorsParams) => {
+    const res = await axiosConfig.get<ColorsResponse>("/colors", { params });
     return res.data;
   },
 
@@ -32,6 +45,15 @@ const colorApi = {
 
   deleteColorImage: async (id: string) => {
     const res = await axiosConfig.delete(`colors/images/${id}`);
+    return res.data;
+  },
+
+  importExcelFile: async (formData: FormData) => {
+    const res = await axiosConfig.post("/colors/import", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return res.data;
   },
 };

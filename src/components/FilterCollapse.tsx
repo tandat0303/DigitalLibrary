@@ -1,28 +1,33 @@
 import { type ReactNode, useState } from "react";
-import { Card, Collapse, Form, Row, Col, Space, Button, Grid } from "antd";
+import { Collapse, Form, Row, Col, Space, Button, Grid } from "antd";
 import type { FormInstance } from "antd";
 import { DownOutlined, UpOutlined } from "@ant-design/icons";
+import type { Store } from "antd/es/form/interface";
 
 interface FilterCollapseProps {
   title?: string;
   form: FormInstance;
   onFinish: (values: any) => void;
+  onValuesChange?: (changedValues: any, allValues: any) => void;
   children: ReactNode;
   extraFilters?: ReactNode;
   actions?: ReactNode;
   visibleFilterCount: number;
   defaultActive?: boolean;
+  initialValues?: Store;
 }
 
 export default function FilterCollapse({
   title = "Filters",
   form,
   onFinish,
+  onValuesChange,
   children,
   extraFilters,
   actions,
   visibleFilterCount,
   defaultActive = true,
+  initialValues,
 }: FilterCollapseProps) {
   const [active, setActive] = useState(defaultActive);
 
@@ -44,7 +49,7 @@ export default function FilterCollapse({
         fontWeight: "bold",
       }}
     >
-      <span className="adidas-font">
+      <span className="adidas-font cursor-default">
         {title} {visibleFilterCount > 0 && `(${visibleFilterCount})`}
       </span>
 
@@ -75,7 +80,13 @@ export default function FilterCollapse({
             label: header,
             showArrow: false,
             children: (
-              <Form form={form} layout="vertical" onFinish={onFinish}>
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={onFinish}
+                onValuesChange={onValuesChange}
+                initialValues={initialValues}
+              >
                 <Row gutter={[16, 8]} align={isMobile ? "top" : "bottom"} wrap>
                   {children}
 
@@ -83,9 +94,9 @@ export default function FilterCollapse({
 
                   {actions && (
                     <Col flex="none">
-                      <Form.Item>
-                        <Space wrap={isMobile}>{actions}</Space>
-                      </Form.Item>
+                      {/* <Form.Item> */}
+                      <Space wrap={isMobile}>{actions}</Space>
+                      {/* </Form.Item> */}
                     </Col>
                   )}
                 </Row>

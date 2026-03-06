@@ -2,6 +2,14 @@ import type { ColumnsType } from "antd/es/table";
 import type { Image } from "./images";
 import { resolveImageSrc } from "../lib/helpers";
 
+export interface ColorsResponse {
+  data: ColorsDataType[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface ColorsDataType {
   ColorID: string;
   // ID_Img: string;
@@ -60,6 +68,7 @@ export const getColorsColumns = (
   {
     title: "Color Name",
     dataIndex: "ColorName",
+    // sorter: true,
   },
   {
     title: "Color Code",
@@ -89,9 +98,6 @@ export const getColorsColumns = (
       const validImages = Array.isArray(images) ? images : [];
 
       if (!validImages.length) return null;
-
-      console.log(validImages);
-
       const columns = Math.min(3, validImages.length);
 
       return (
@@ -101,7 +107,10 @@ export const getColorsColumns = (
             style={{
               gridTemplateColumns: `repeat(${columns}, 64px)`,
             }}
-            onClick={() => onPreview(validImages)}
+            onClick={(e) => {
+              onPreview(validImages);
+              e.stopPropagation();
+            }}
           >
             {validImages.map((img, index) => {
               const src = resolveImageSrc(img);

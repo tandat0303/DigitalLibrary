@@ -138,21 +138,27 @@ export default function UserLimit() {
             visibleFilterCount={1}
             actions={
               <>
-                <Button className="btn-custom" htmlType="submit">
-                  Search
-                </Button>
-                <Button
-                  className="btn-custom"
-                  onClick={() => setOpenModuleModal(true)}
-                >
-                  Module MGMT
-                </Button>
-                <Button
-                  className="btn-custom"
-                  onClick={() => setOpenMenuModal(true)}
-                >
-                  Menu MGMT
-                </Button>
+                <Form.Item>
+                  <Button className="btn-custom" htmlType="submit">
+                    Search
+                  </Button>
+                </Form.Item>
+                <Form.Item>
+                  <Button
+                    className="btn-custom"
+                    onClick={() => setOpenModuleModal(true)}
+                  >
+                    Module MGMT
+                  </Button>
+                </Form.Item>
+                <Form.Item>
+                  <Button
+                    className="btn-custom"
+                    onClick={() => setOpenMenuModal(true)}
+                  >
+                    Menu MGMT
+                  </Button>
+                </Form.Item>
               </>
             }
           >
@@ -266,6 +272,7 @@ export default function UserLimit() {
                 defaultActiveKey="GENERAL"
                 tabBarGutter={12}
                 moreIcon={null}
+                size="large"
                 items={["GENERAL", "CI", "ESG", "IT", "PLANNING", "VR"].map(
                   (tab) => ({
                     key: tab,
