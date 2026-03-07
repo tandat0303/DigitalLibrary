@@ -168,6 +168,7 @@ export default function ImagePreviewModal({
             left: hoverPos.x,
             width: previewSize,
             height: previewSize,
+            overflow: "hidden",
             background: "#fff",
             border: "1px solid #ddd",
             borderRadius: 8,

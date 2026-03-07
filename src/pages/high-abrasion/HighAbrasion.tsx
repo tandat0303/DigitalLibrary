@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   Input,
@@ -20,7 +20,6 @@ import { FILTER_OPTIONS } from "../../components/ui/MaterialsFilterOption";
 import { Download, QrCode, Search, Upload } from "lucide-react";
 import ImportExcelModal from "../../components/ImportExcelModal";
 import FilterCollapse from "../../components/FilterCollapse";
-import { initialMaterialsData } from "../../types/samples";
 import {
   getMaterialsColumns,
   type MaterialsDataType,
@@ -33,13 +32,20 @@ import EmptyImg from "@/assets/nodata.png";
 import CameraModal from "../../components/CameraModal";
 import { exportToExcel } from "../../lib/exportExcel";
 import type { Image } from "../../types/images";
+import { buildQueryFilters } from "../../lib/buildQueryFilters";
+import materialApi from "../../api/materials.api";
+import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
+import { SwalLoading } from "../../components/ui/SwalLoading";
+import { SwalNotification } from "../../components/ui/SwalNotification";
+import Swal from "sweetalert2";
 
 export default function HighAbrasion() {
   const [form] = Form.useForm();
 
   const [dynamicCount, setDynamicCount] = useState(0);
 
-  const [data, setData] = useState(initialMaterialsData);
+  const [data, setData] = useState<MaterialsDataType[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState<MaterialsDataType | null>(
     null,
   );
@@ -61,11 +67,11 @@ export default function HighAbrasion() {
   };
 
   const handleDetailView = (record: MaterialsDataType) => {
-    const key = `material-${record.Unique_Price_ID}`;
+    const key = `material-${record.ID}`;
 
     sessionStorage.setItem(key, JSON.stringify(record));
 
-    window.open(`/show-info/${record.Unique_Price_ID}`, "_blank");
+    window.open(`/show-info/${record.ID}`, "_blank");
   };
 
   const columns = getMaterialsColumns(handlePreview, handleDetailView);
@@ -73,19 +79,45 @@ export default function HighAbrasion() {
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const total = data.length;
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<any>({});
 
-  const paginatedData = data.slice(
-    (current - 1) * pageSize,
-    current * pageSize,
-  );
+  const fetchMaterials = async () => {
+    try {
+      setLoading(false);
+
+      const params = { ...filters, page: current, limit: pageSize };
+
+      const res = await materialApi.getAllMaterials(params);
+
+      const rows = res.data.map((item) => ({
+        ...item,
+        key: item.ID,
+      }));
+
+      setData(rows);
+      setTotal(res.total);
+    } catch (error) {
+      console.log("Failed to fetch material: ", error);
+      AppAlert({ icon: "error", title: "Failed to fetch material" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMaterials();
+  }, [current, pageSize, filters]);
 
   const handleFilter = (values: any) => {
-    console.log("Filter values:", values);
+    const newFilters = buildQueryFilters(values);
+
+    setFilters(newFilters);
+    setCurrent(1);
   };
 
   const handleSelectMaterial = (record: MaterialsDataType) => {
-    if (selectedRow?.Unique_Price_ID === record.Unique_Price_ID) {
+    if (selectedRow?.ID === record.ID) {
       setSelectedRow(null);
       return;
     }
@@ -94,12 +126,17 @@ export default function HighAbrasion() {
   };
 
   const handleExportExcel = () => {
+    const exportColumns = columns.filter(
+      (col: any) =>
+        col.dataIndex &&
+        col.dataIndex !== "Images" &&
+        col.dataIndex !== "File_Name",
+    );
+
     const exportData = data.map((row) => {
       const obj: Record<string, unknown> = {};
 
-      columns.forEach((col: any) => {
-        if (!col.dataIndex) return;
-
+      exportColumns.forEach((col: any) => {
         const key = col.dataIndex as keyof MaterialsDataType;
         obj[String(col.title)] = row[key];
       });
@@ -107,7 +144,11 @@ export default function HighAbrasion() {
       return obj;
     });
 
-    exportToExcel(exportData, "materials");
+    exportToExcel(
+      exportData,
+      exportColumns.map((c: any) => c.title),
+      "Materials Data",
+    );
   };
 
   const handleUploadAttach = () => {
@@ -135,18 +176,21 @@ export default function HighAbrasion() {
     setOpenModal(true);
   };
 
-  const handleDelete = () => {
-    if (!selectedRow) return;
+  const handleDelete = async () => {
+    try {
+      if (!selectedRow) return;
 
-    setData((prev) =>
-      prev.filter(
-        (item) => item.Unique_Price_ID !== selectedRow.Unique_Price_ID,
-      ),
-    );
+      const res = await materialApi.deleteMaterial(selectedRow.ID);
 
-    setSelectedRow(null);
+      if (res.success) {
+        setSelectedRow(null);
+        AppAlert({ icon: "success", title: res.message });
+      }
 
-    AppAlert({ icon: "success", title: "Material removed successfully" });
+      await fetchMaterials();
+    } catch (error) {
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
   };
 
   const confirmRemove = () => {
@@ -167,36 +211,202 @@ export default function HighAbrasion() {
     });
   };
 
+  const handleImportExcel = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      SwalLoading("Uploading Excel file...");
+
+      await sleep(1000);
+
+      const res = await materialApi.importExcelFile(formData);
+
+      if (res.success) {
+        SwalNotification("success", res.message);
+
+        await fetchMaterials();
+      }
+    } catch (error) {
+      Swal.close();
+
+      SwalNotification("error", getApiErrorMessage(error));
+    }
+  };
+
   const handleSubmit = async (values: any) => {
     if (mode === "create") {
-      // if (!values.Unique_Price_ID) return;
+      try {
+        const formData = new FormData();
 
-      const newRecord = {
-        ...values,
-        Unique_Price_ID: crypto.randomUUID(),
-        key: crypto.randomUUID(),
-      };
-      setData((prev) => [...prev, newRecord]);
-      AppAlert({ icon: "success", title: "Added new material successfully" });
+        formData.append("materialID", values.Material_ID);
+        formData.append("vendorCode", values.Vendor_Code);
+        formData.append("supplier", values.Supplier);
+        formData.append("supplierMaterialID", values.Supplier_Material_ID);
+        formData.append("supplierMaterialName", values.Supplier_Material_Name);
+        formData.append(
+          "mtlSuppLifecycleState",
+          values.Mtl_Supp_Lifecycle_State,
+        );
+        formData.append("materialTypeLevel1", values.Material_Type_Level_1);
+        formData.append("composition", values.Composition);
+        formData.append("classification", values.Classification);
+        formData.append("materialThickness", values.Material_Thickness);
+        formData.append("materialThicknessUOM", values.Material_Thickness_UOM);
+        formData.append("comparisonUOM", values.Comparison_UOM);
+        formData.append("priceRemark", values.Price_Remark);
+        formData.append("skinSize", values.Skin_Size);
+        formData.append("qCPercent", values.QC_Percent);
+        formData.append("leadtime", values.Leadtime);
+        formData.append("sampleLeadtime", values.Sample_Leadtime);
+        formData.append("minQtyColor", values.Min_Qty_Color);
+        formData.append("minQtySample", values.Min_Qty_Sample);
+        formData.append("productionLocation", values.Production_Location);
+        formData.append(
+          "termsofDeliveryperT1Country",
+          values.Terms_of_Delivery_per_T1_Country,
+        );
+        formData.append("validFromPrice", values.Valid_From_Price);
+        formData.append("validToPrice", values.Valid_To_Price);
+        formData.append("priceType", values.Price_Type);
+        formData.append("colorCodePrice", values.Color_Code_Price);
+        formData.append("colorPrice", values.Color_Price);
+        formData.append("treatmentPrice", values.Treatment_Price);
+        formData.append("widthPrice", values.Width_Price);
+        formData.append("widthUomPrice", values.Width_Uom_Price);
+        formData.append("lengthPrice", values.Length_Price);
+        formData.append("lengthUomPrice", values.Length_Uom_Price);
+        formData.append("thicknessPrice", values.Thickness_Price);
+        formData.append("thicknessUomPrice", values.Thickness_Uom_Price);
+        formData.append("diameterInsidePrice", values.Diameter_Inside_Price);
+        formData.append(
+          "diameterInsideUomPrice",
+          values.Diameter_Inside_Uom_Price,
+        );
+        formData.append("weightPrice", values.Weight_Price);
+        formData.append("weightUomPrice", values.Weight_Uom_Price);
+        formData.append("quantityPrice", values.Quantity_Price);
+        formData.append("quantityUomPrice", values.Quantity_Uom_Price);
+        formData.append("uomStringPrice", values.Uom_String_Price);
+        formData.append("sS26FinalPriceUSD", values.SS26_Final_Price_USD);
+        formData.append(
+          "comparisonPricePriceUSD",
+          values.Comparison_Price_Price_USD,
+        );
+        formData.append(
+          "approvedAsFinalPriceYNPrice",
+          values.Approved_As_Final_Price_Y_N_Price,
+        );
+        formData.append("season", values.Season);
+
+        if (values.Images?.length) {
+          values.Images.forEach((file: File) => {
+            if (file instanceof File) {
+              formData.append("images", file);
+            }
+          });
+        }
+
+        await materialApi.createMaterial(formData);
+
+        AppAlert({ icon: "success", title: "Added new material successfully" });
+
+        setOpenModal(false);
+        setSelectedRow(null);
+
+        await fetchMaterials();
+      } catch (error) {
+        AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+      }
     } else {
-      setData((prev) =>
-        prev.map((item) =>
-          item.Unique_Price_ID === selectedRow?.Unique_Price_ID
-            ? {
-                ...values,
-                Unique_Price_ID: selectedRow.Unique_Price_ID,
-                key: selectedRow.Unique_Price_ID,
-              }
-            : item,
-        ),
-      );
+      try {
+        if (!selectedRow) return;
 
-      AppAlert({ icon: "success", title: "Material updated successfully" });
+        const formData = new FormData();
+
+        formData.append("materialID", values.Material_ID);
+        formData.append("vendorCode", values.Vendor_Code);
+        formData.append("supplier", values.Supplier);
+        formData.append("supplierMaterialID", values.Supplier_Material_ID);
+        formData.append("supplierMaterialName", values.Supplier_Material_Name);
+        formData.append(
+          "mtlSuppLifecycleState",
+          values.Mtl_Supp_Lifecycle_State,
+        );
+        formData.append("materialTypeLevel1", values.Material_Type_Level_1);
+        formData.append("composition", values.Composition);
+        formData.append("classification", values.Classification);
+        formData.append("materialThickness", values.Material_Thickness);
+        formData.append("materialThicknessUOM", values.Material_Thickness_UOM);
+        formData.append("comparisonUOM", values.Comparison_UOM);
+        formData.append("priceRemark", values.Price_Remark);
+        formData.append("skinSize", values.Skin_Size);
+        formData.append("qCPercent", values.QC_Percent);
+        formData.append("leadtime", values.Leadtime);
+        formData.append("sampleLeadtime", values.Sample_Leadtime);
+        formData.append("minQtyColor", values.Min_Qty_Color);
+        formData.append("minQtySample", values.Min_Qty_Sample);
+        formData.append("productionLocation", values.Production_Location);
+        formData.append(
+          "termsofDeliveryperT1Country",
+          values.Terms_of_Delivery_per_T1_Country,
+        );
+        formData.append("validFromPrice", values.Valid_From_Price);
+        formData.append("validToPrice", values.Valid_To_Price);
+        formData.append("priceType", values.Price_Type);
+        formData.append("colorCodePrice", values.Color_Code_Price);
+        formData.append("colorPrice", values.Color_Price);
+        formData.append("treatmentPrice", values.Treatment_Price);
+        formData.append("widthPrice", values.Width_Price);
+        formData.append("widthUomPrice", values.Width_Uom_Price);
+        formData.append("lengthPrice", values.Length_Price);
+        formData.append("lengthUomPrice", values.Length_Uom_Price);
+        formData.append("thicknessPrice", values.Thickness_Price);
+        formData.append("thicknessUomPrice", values.Thickness_Uom_Price);
+        formData.append("diameterInsidePrice", values.Diameter_Inside_Price);
+        formData.append(
+          "diameterInsideUomPrice",
+          values.Diameter_Inside_Uom_Price,
+        );
+        formData.append("weightPrice", values.Weight_Price);
+        formData.append("weightUomPrice", values.Weight_Uom_Price);
+        formData.append("quantityPrice", values.Quantity_Price);
+        formData.append("quantityUomPrice", values.Quantity_Uom_Price);
+        formData.append("uomStringPrice", values.Uom_String_Price);
+        formData.append("sS26FinalPriceUSD", values.SS26_Final_Price_USD);
+        formData.append(
+          "comparisonPricePriceUSD",
+          values.Comparison_Price_Price_USD,
+        );
+        formData.append(
+          "approvedAsFinalPriceYNPrice",
+          values.Approved_As_Final_Price_Y_N_Price,
+        );
+        formData.append("season", values.Season);
+
+        const images = (values.Images ?? []).filter(Boolean);
+
+        const newImages = images.filter(
+          (img): img is File => img instanceof File,
+        );
+
+        newImages.forEach((file) => {
+          formData.append("images", file);
+        });
+
+        await materialApi.updateMaterial(selectedRow.ID, formData);
+
+        AppAlert({ icon: "success", title: "Material updated successfully" });
+
+        setOpenModal(false);
+        setSelectedRow(null);
+
+        await fetchMaterials();
+      } catch (error) {
+        console.log(error);
+        AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+      }
     }
-
-    await sleep(500);
-    setOpenModal(false);
-    setSelectedRow(null);
   };
 
   return (
@@ -216,6 +426,23 @@ export default function HighAbrasion() {
               />
             }
             visibleFilterCount={3 + dynamicCount}
+            onValuesChange={(changedValues, allValues) => {
+              if ("hasImage" in changedValues) {
+                setFilters((prev: any) => {
+                  const newFilters = { ...prev };
+
+                  if (allValues.hasImage) {
+                    newFilters.hasImage = false;
+                  } else {
+                    delete newFilters.hasImage;
+                  }
+
+                  return newFilters;
+                });
+
+                setCurrent(1);
+              }
+            }}
             actions={
               <>
                 <Form.Item>
@@ -340,10 +567,11 @@ export default function HighAbrasion() {
 
             <div className="w-full mt-1">
               <Table
+                loading={loading}
                 bordered
                 columns={columns}
-                dataSource={paginatedData}
-                rowKey="Unique_Price_ID"
+                dataSource={data}
+                rowKey="ID"
                 pagination={false}
                 scroll={{ x: "max-content" }}
                 onRow={(record) => ({
@@ -352,8 +580,7 @@ export default function HighAbrasion() {
                   },
                 })}
                 rowClassName={(record) =>
-                  record.Unique_Price_ID &&
-                  record.Unique_Price_ID === selectedRow?.Unique_Price_ID
+                  record.ID && record.ID === selectedRow?.ID
                     ? "custom-selected-row"
                     : ""
                 }
@@ -364,8 +591,8 @@ export default function HighAbrasion() {
               total={total}
               current={current}
               pageSize={pageSize}
-              onChange={setCurrent}
-              onPageSizeChange={setPageSize}
+              onChange={(page) => setCurrent(page)}
+              onPageSizeChange={(size) => setPageSize(size)}
             />
           </Card>
         </Col>
@@ -382,10 +609,11 @@ export default function HighAbrasion() {
       <ImportExcelModal
         open={openImport}
         onClose={() => setOpenImport(false)}
+        sampleFileName="Ex_File_Material"
         onImport={(file) => {
-          console.log("Import file: ", file);
+          if (!file) return;
+          handleImportExcel(file);
           setOpenImport(false);
-          AppAlert({ icon: "success", title: "Imported successfully" });
         }}
       />
 
@@ -397,7 +625,7 @@ export default function HighAbrasion() {
 
           setData((prev) =>
             prev.map((item) =>
-              item.Unique_Price_ID === selectedRow.Unique_Price_ID
+              item.ID === selectedRow.ID
                 ? { ...item, File_Name: file.name }
                 : item,
             ),

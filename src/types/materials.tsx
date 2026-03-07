@@ -4,15 +4,16 @@ import type { Image } from "./images";
 import { resolveImageSrc } from "../lib/helpers";
 
 export interface MaterialsResponse {
-  draw: string;
-  recordsTotal: number;
-  recordsFiltered: number;
   data: MaterialsDataType[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
 
 export interface MaterialsDataType {
   ID: string;
-  ID_Image: string;
+  // ID_Image: string;
   Unique_Price_ID: string;
   Material_ID: string;
   Vendor_Code: string;
@@ -57,18 +58,18 @@ export interface MaterialsDataType {
   SS26_Final_Price_USD: string;
   Comparison_Price_Price_USD: string;
   Approved_As_Final_Price_Y_N_Price: string;
-  UserID: string;
-  UserDate: string;
+  // UserID: string;
+  // UserDate: string;
   Season: string;
   ID_MaterialImage: string;
   Images?: (Image | File)[];
-  User_Account: string;
-  File_Name: string;
+  // User_Account: string;
+  // File_Name: string;
 }
 
 interface MaterialFormValues {
   ID: string;
-  ID_Image: string;
+  // ID_Image: string;
   Unique_Price_ID: string;
   Material_ID: string;
   Vendor_Code: string;
@@ -113,13 +114,13 @@ interface MaterialFormValues {
   SS26_Final_Price_USD: string;
   Comparison_Price_Price_USD: string;
   Approved_As_Final_Price_Y_N_Price: string;
-  UserID: string;
-  UserDate: string;
+  // UserID: string;
+  // UserDate: string;
   Season: string;
   ID_MaterialImage: string;
   Images?: (Image | File)[];
-  User_Account: string;
-  File_Name: string;
+  // User_Account: string;
+  // File_Name: string;
 }
 
 export interface MaterialsModalProps {
@@ -170,7 +171,10 @@ export const getMaterialsColumns = (
           <div
             className="grid gap-2 w-fit cursor-pointer"
             style={{ gridTemplateColumns: `repeat(${columns}, 64px)` }}
-            onClick={() => onPreview(validImages)}
+            onClick={(e) => {
+              onPreview(validImages);
+              e.stopPropagation();
+            }}
           >
             {validImages.map((img, index) => {
               const src = resolveImageSrc(img);

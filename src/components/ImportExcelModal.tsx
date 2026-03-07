@@ -5,10 +5,16 @@ import { AppAlert } from "./ui/AppAlert";
 interface Props {
   open: boolean;
   onClose: () => void;
+  sampleFileName: string;
   onImport: (file: File | null) => void;
 }
 
-export default function ImportExcelModal({ open, onClose, onImport }: Props) {
+export default function ImportExcelModal({
+  open,
+  onClose,
+  sampleFileName,
+  onImport,
+}: Props) {
   const [file, setFile] = useState<File | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -39,9 +45,14 @@ export default function ImportExcelModal({ open, onClose, onImport }: Props) {
   };
 
   const handleDownloadSample = () => {
+    if (!sampleFileName) {
+      AppAlert({ icon: "info", title: "No available sample file" });
+      return;
+    }
+
     const link = document.createElement("a");
-    link.href = "/sample/Sample_File_Color.xlsx";
-    link.download = "Sample_File_Color.xlsx";
+    link.href = `/sample/${sampleFileName}.xlsx`;
+    link.download = `${sampleFileName}.xlsx`;
     link.click();
   };
 

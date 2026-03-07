@@ -266,7 +266,6 @@ export default function ColorsPage() {
 
         await fetchColors();
       } catch (error) {
-        console.log(error);
         AppAlert({
           icon: "error",
           title: getApiErrorMessage(error),
@@ -445,6 +444,7 @@ export default function ColorsPage() {
       <ImportExcelModal
         open={openImport}
         onClose={() => setOpenImport(false)}
+        sampleFileName="Sample_File_Color"
         onImport={(file) => {
           if (!file) return;
           handleImportExcel(file);

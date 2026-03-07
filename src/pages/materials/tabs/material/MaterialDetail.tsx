@@ -171,12 +171,12 @@ export default function MaterialDetailPage() {
                       boxShadow: "0 0 8px rgba(0,0,0,0.4)",
                       pointerEvents: "none",
 
-                      backgroundImage: `url(${images[selectedIndex]})`,
+                      backgroundImage: `url(${resolveImageSrc(images[selectedIndex])})`,
                       backgroundRepeat: "no-repeat",
 
-                      backgroundSize: "200%", // zoom level
+                      backgroundSize: "200%",
                       backgroundPosition: `${zoom.bgX}% ${zoom.bgY}%`,
-                      transition: "background-position 0.03s linear",
+                      willChange: "background-position",
                     }}
                   />
                 )}

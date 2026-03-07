@@ -3,7 +3,7 @@ import axiosClient from "./axiosClient";
 
 const authApi = {
   login: async (payload: LoginPayload) => {
-    const res = await axiosClient.post("auth/login", payload);
+    const res = await axiosClient.post("/auth/login", payload);
     return res.data;
   },
 };

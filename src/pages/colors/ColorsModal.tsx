@@ -43,7 +43,8 @@ export default function ColorsModal({
       await onSubmit(values);
 
       form.resetFields();
-    } catch (error: any) {
+    } catch (error) {
+      console.log(error);
       AppAlert({ icon: "error", title: "Please fill all fields" });
     } finally {
       setLoading(false);
