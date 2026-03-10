@@ -146,8 +146,11 @@ export default function CustomPagination({
 
         <button
           style={{
-            cursor: current === totalPages ? "not-allowed" : "pointer",
-            opacity: current === totalPages ? 0.4 : 1,
+            cursor:
+              current === totalPages || totalPages === 0
+                ? "not-allowed"
+                : "pointer",
+            opacity: current === totalPages || totalPages === 0 ? 0.4 : 1,
             border: "1px solid #d9d9d9",
             minWidth: 32,
             height: 32,
@@ -164,8 +167,11 @@ export default function CustomPagination({
         {screens.md && (
           <button
             style={{
-              cursor: current === totalPages ? "not-allowed" : "pointer",
-              opacity: current === totalPages ? 0.4 : 1,
+              cursor:
+                current === totalPages || totalPages === 0
+                  ? "not-allowed"
+                  : "pointer",
+              opacity: current === totalPages || totalPages === 0 ? 0.4 : 1,
               border: "1px solid #d9d9d9",
               minWidth: 32,
               height: 32,

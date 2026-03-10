@@ -7,7 +7,7 @@ import type { MaterialsModalProps } from "../../../../types/materials";
 import type { Image } from "../../../../types/images";
 import materialApi from "../../../../api/materials.api";
 import { getApiErrorMessage } from "../../../../lib/getApiErrorMsg";
-import { IMAGE_LABELS } from "../../../../lib/helpers";
+import { IMAGE_LABELS, mapImagesToLabels } from "../../../../lib/helpers";
 
 export default function MaterialModal({
   open,
@@ -38,7 +38,10 @@ export default function MaterialModal({
     if (!open) return;
 
     if (mode === "edit" && initialValues) {
-      form.setFieldsValue(initialValues);
+      form.setFieldsValue({
+        ...initialValues,
+        Images: mapImagesToLabels(initialValues.Images, IMAGE_LABELS, 2),
+      });
     } else {
       form.resetFields();
     }
@@ -548,7 +551,11 @@ export default function MaterialModal({
             </Col>
 
             <Col span={24} className="mt-1">
-              <Form.Item name="Images">
+              <Form.Item
+                name="Images"
+                valuePropName="value"
+                getValueFromEvent={(v) => v}
+              >
                 <ImageUploader
                   max={2}
                   accept={["image/jpeg", "image/png"]}

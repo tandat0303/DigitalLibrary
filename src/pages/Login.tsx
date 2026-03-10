@@ -49,11 +49,18 @@ export default function Login() {
       dispatch(setToken({ accessToken, data: user }));
 
       navigate("/", { replace: true });
-    } catch (error) {
-      AppAlert({
-        icon: "error",
-        title: getApiErrorMessage(error),
-      });
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        AppAlert({
+          icon: "error",
+          title: "Invalid username or password",
+        });
+      } else {
+        AppAlert({
+          icon: "error",
+          title: getApiErrorMessage(error),
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -61,7 +68,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
         {/* Left Side */}
         <div className="flex flex-col justify-center flex-1 px-6 py-10 sm:px-10 md:px-12">
           <div className="mb-6 flex justify-center">

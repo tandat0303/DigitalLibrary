@@ -3,13 +3,8 @@ import { CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { Images } from "lucide-react";
 import { AppAlert } from "./ui/AppAlert";
 import type { Image } from "../types/images";
-import {
-  mapImagesToLabels,
-  normalizeImages,
-  resolveImageSrc,
-} from "../lib/helpers";
+import { normalizeImages, resolveImageSrc } from "../lib/helpers";
 import { getApiErrorMessage } from "../lib/getApiErrorMsg";
-import { useEffect } from "react";
 
 export type UploadImage = File | Image | null;
 
@@ -34,19 +29,18 @@ export default function ImageUploader({
   labels = [],
   onDeleteExisting,
 }: ImageUploaderProps) {
-  const images = labels?.length
-    ? mapImagesToLabels(value, labels, max)
-    : normalizeImages(value, max);
+  //
+  const images = normalizeImages(value ?? [], max);
 
-  useEffect(() => {
-    return () => {
-      images.forEach((img) => {
-        if (img instanceof File) {
-          URL.revokeObjectURL(resolveImageSrc(img));
-        }
-      });
-    };
-  }, [images]);
+  // useEffect(() => {
+  //   return () => {
+  //     images.forEach((img) => {
+  //       if (img instanceof File) {
+  //         URL.revokeObjectURL(resolveImageSrc(img));
+  //       }
+  //     });
+  //   };
+  // }, [images]);
 
   const triggerChange = (newImages: UploadImage[]) => {
     onChange?.(normalizeImages(newImages, max));
@@ -67,8 +61,14 @@ export default function ImageUploader({
       return;
     }
 
-    const newImages = [...images];
+    const newImages = [...(value ?? [])];
+
+    while (newImages.length < max) {
+      newImages.push(null);
+    }
+
     newImages[index] = file;
+
     triggerChange(newImages);
 
     e.target.value = "";
@@ -90,7 +90,7 @@ export default function ImageUploader({
             await onDeleteExisting?.(img);
           }
 
-          const newImages = [...images];
+          const newImages = [...(value ?? [])];
           newImages[index] = null;
           triggerChange(newImages);
         } catch (error) {
@@ -130,11 +130,11 @@ export default function ImageUploader({
                 <img
                   src={resolveImageSrc(src)}
                   className="w-full h-full object-cover rounded-md"
-                  // onLoad={(e) => {
-                  //   if (src instanceof File) {
-                  //     URL.revokeObjectURL((e.target as HTMLImageElement).src);
-                  //   }
-                  // }}
+                  onLoad={(e) => {
+                    if (src instanceof File) {
+                      URL.revokeObjectURL((e.target as HTMLImageElement).src);
+                    }
+                  }}
                 />
 
                 {/* opacity-0 group-hover:opacity-100 */}
