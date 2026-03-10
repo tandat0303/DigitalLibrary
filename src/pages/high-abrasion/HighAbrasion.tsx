@@ -25,12 +25,11 @@ import {
   type MaterialsDataType,
 } from "../../types/materials";
 import UploadAttachModal from "../../components/UploadAttachModal";
-import { sleep } from "../../lib/helpers";
+import { IMAGE_FIELD_MAP, IMAGE_LABELS, sleep } from "../../lib/helpers";
 import MaterialModal from "../materials/tabs/material/MaterialModal";
 import ImagePreviewModal from "../../components/ImagePreviewModal";
 import EmptyImg from "@/assets/nodata.png";
 import CameraModal from "../../components/CameraModal";
-import { exportToExcel } from "../../lib/exportExcel";
 import type { Image } from "../../types/images";
 import { buildQueryFilters } from "../../lib/buildQueryFilters";
 import materialApi from "../../api/materials.api";
@@ -38,9 +37,12 @@ import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
 import { SwalLoading } from "../../components/ui/SwalLoading";
 import { SwalNotification } from "../../components/ui/SwalNotification";
 import Swal from "sweetalert2";
+import { useAppSelector } from "../../hooks/auth";
 
 export default function HighAbrasion() {
   const [form] = Form.useForm();
+
+  const user = useAppSelector((state) => state.auth.user);
 
   const [dynamicCount, setDynamicCount] = useState(0);
 
@@ -67,10 +69,6 @@ export default function HighAbrasion() {
   };
 
   const handleDetailView = (record: MaterialsDataType) => {
-    const key = `material-${record.ID}`;
-
-    sessionStorage.setItem(key, JSON.stringify(record));
-
     window.open(`/show-info/${record.ID}`, "_blank");
   };
 
@@ -84,7 +82,7 @@ export default function HighAbrasion() {
 
   const fetchMaterials = async () => {
     try {
-      setLoading(false);
+      setLoading(true);
 
       const params = { ...filters, page: current, limit: pageSize };
 
@@ -125,39 +123,113 @@ export default function HighAbrasion() {
     setSelectedRow(record);
   };
 
-  const handleExportExcel = () => {
-    const exportColumns = columns.filter(
-      (col: any) =>
-        col.dataIndex &&
-        col.dataIndex !== "Images" &&
-        col.dataIndex !== "File_Name",
-    );
+  const handleExportExcel = async () => {
+    try {
+      const params = { ...filters };
 
-    const exportData = data.map((row) => {
-      const obj: Record<string, unknown> = {};
+      const response = await materialApi.exportExcel(params);
 
-      exportColumns.forEach((col: any) => {
-        const key = col.dataIndex as keyof MaterialsDataType;
-        obj[String(col.title)] = row[key];
-      });
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement("a");
+      link.href = url;
+      const fileName = `Materials Data_${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-      return obj;
-    });
-
-    exportToExcel(
-      exportData,
-      exportColumns.map((c: any) => c.title),
-      "Materials Data",
-    );
+      AppAlert({ icon: "success", title: "Export Excel successfully" });
+    } catch (error) {
+      console.log("Failed to export Excel: ", error);
+      AppAlert({ icon: "error", title: "Failed to export Excel" });
+    }
   };
 
-  const handleUploadAttach = () => {
-    if (!selectedRow) {
-      AppAlert({ icon: "warning", title: "Please choose a row data" });
-      return;
-    }
+  const handleExportExcelQR = async () => {
+    try {
+      const params = { ...filters };
 
-    setOpenUploadAttach(true);
+      const response = await materialApi.exportExcelQR(params);
+
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement("a");
+      link.href = url;
+      const fileName = `Materials QR Data_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      AppAlert({ icon: "success", title: "Export QR Excel successfully" });
+    } catch (error) {
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
+  };
+
+  const handleCameraSearch = (response: any) => {
+    try {
+      if (!response?.results?.length) {
+        AppAlert({ icon: "warning", title: "No search results found" });
+        return;
+      }
+
+      const topResult = response.results.find(
+        (item: any) => item.advanced_rank === 1,
+      );
+
+      if (!topResult) {
+        AppAlert({ icon: "warning", title: "No result with rank 1" });
+        return;
+      }
+
+      const formattedCluster = topResult.cluster.replace(/_/g, "//");
+
+      // AppAlert({
+      //   icon: "success",
+      //   title: `Detected: ${formattedCluster}`,
+      // });
+
+      form.setFieldsValue({
+        Classification: formattedCluster,
+      });
+
+      const newFilters = buildQueryFilters({
+        Classification: formattedCluster,
+      });
+
+      setFilters(newFilters);
+      setCurrent(1);
+
+      setOpenCapture(false);
+    } catch (error) {
+      console.error(error);
+      AppAlert({ icon: "error", title: "Failed to process search result" });
+    }
+  };
+
+  const handleUploadAttach = async (file: File) => {
+    if (!selectedRow || !user) return;
+
+    try {
+      const formData = new FormData();
+
+      formData.append("fileId", selectedRow.ID);
+      formData.append("user", user.userid);
+      formData.append("file", file);
+
+      await materialApi.attachFile(formData);
+
+      AppAlert({ icon: "success", title: "Success" });
+
+      await fetchMaterials();
+    } catch (error) {
+      console.error(error);
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
   };
 
   const handleCreate = () => {
@@ -299,13 +371,18 @@ export default function HighAbrasion() {
         );
         formData.append("season", values.Season);
 
-        if (values.Images?.length) {
-          values.Images.forEach((file: File) => {
-            if (file instanceof File) {
-              formData.append("images", file);
-            }
-          });
-        }
+        const images = values.Images ?? [];
+
+        images.forEach((img: any, index: number) => {
+          if (!(img instanceof File)) return;
+
+          const label = IMAGE_LABELS[index];
+          const fieldName = IMAGE_FIELD_MAP[label];
+
+          if (fieldName) {
+            formData.append(fieldName, img);
+          }
+        });
 
         await materialApi.createMaterial(formData);
 
@@ -384,14 +461,17 @@ export default function HighAbrasion() {
         );
         formData.append("season", values.Season);
 
-        const images = (values.Images ?? []).filter(Boolean);
+        const images = values.Images ?? [];
 
-        const newImages = images.filter(
-          (img): img is File => img instanceof File,
-        );
+        images.forEach((img: any, index: number) => {
+          if (!(img instanceof File)) return;
 
-        newImages.forEach((file) => {
-          formData.append("images", file);
+          const label = IMAGE_LABELS[index];
+          const fieldName = IMAGE_FIELD_MAP[label];
+
+          if (fieldName) {
+            formData.append(fieldName, img);
+          }
         });
 
         await materialApi.updateMaterial(selectedRow.ID, formData);
@@ -540,6 +620,7 @@ export default function HighAbrasion() {
 
                 <Button
                   className="actions-btn w-full lg:w-auto"
+                  onClick={handleExportExcelQR}
                   // icon={<QrCode className="h-5" />}
                 >
                   <QrCode />
@@ -554,9 +635,19 @@ export default function HighAbrasion() {
                 <Button
                   className="extra-actions-btn w-full lg:w-auto"
                   // disabled={!selectedRow}
-                  onClick={handleUploadAttach}
+                  onClick={() => {
+                    if (!selectedRow) {
+                      AppAlert({
+                        icon: "warning",
+                        title: "Please choose a row data",
+                      });
+                      return;
+                    }
+
+                    setOpenUploadAttach(true);
+                  }}
                 >
-                  Add File
+                  Attach File
                 </Button>
               </Space>
 
@@ -622,21 +713,8 @@ export default function HighAbrasion() {
         onClose={() => setOpenUploadAttach(false)}
         onImport={(file) => {
           if (!file || !selectedRow) return;
-
-          setData((prev) =>
-            prev.map((item) =>
-              item.ID === selectedRow.ID
-                ? { ...item, File_Name: file.name }
-                : item,
-            ),
-          );
-
+          handleUploadAttach(file);
           setOpenUploadAttach(false);
-
-          AppAlert({
-            icon: "success",
-            title: "File attached successfully",
-          });
         }}
       />
 
@@ -648,14 +726,14 @@ export default function HighAbrasion() {
         maxImages={2}
         imageSize={400}
         emptyImage={EmptyImg}
-        labels={["Topside", "Bottomside"]}
+        labels={["Top side", "Bottom side"]}
         previewSize={500}
       />
 
       <CameraModal
         open={openCapture}
         onClose={() => setOpenCapture(false)}
-        onCapture={(img) => console.log("Captured: ", img)}
+        onCapture={handleCameraSearch}
       />
     </>
   );

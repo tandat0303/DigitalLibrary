@@ -1,12 +1,15 @@
-import { Modal, Button } from "antd";
-import { useEffect, useRef, useState } from "react";
+import { Modal, Button, Progress } from "antd";
+import { useRef, useState, useEffect } from "react";
 import { AppAlert } from "./ui/AppAlert";
 import { Camera } from "lucide-react";
+import Webcam from "react-webcam";
+import { dataURItoBlob, generateUUID } from "../lib/helpers";
+import materialApi from "../api/materials.api";
 
 interface CameraModalProps {
   open: boolean;
   onClose: () => void;
-  onCapture?: (image: string) => void;
+  onCapture?: (image: any) => void;
 }
 
 export default function CameraModal({
@@ -14,56 +17,85 @@ export default function CameraModal({
   onClose,
   onCapture,
 }: CameraModalProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const webcamRef = useRef<Webcam>(null);
 
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
-  const startCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+  const [loading, setLoading] = useState(false);
+  const [percent, setPercent] = useState(0);
+
+  useEffect(() => {
+    if (!loading) return;
+
+    const timer = setInterval(() => {
+      setPercent((prev) => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 10;
       });
+    }, 100);
 
-      setStream(mediaStream);
-      setCameraOpen(true);
+    return () => clearInterval(timer);
+  }, [loading]);
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+  const captureImage = async () => {
+    try {
+      const imageSrc = webcamRef.current?.getScreenshot();
+      if (!imageSrc) return;
+
+      setLoading(true);
+      setPercent(0);
+
+      const imageBlob = dataURItoBlob(imageSrc);
+      if (!imageBlob) {
+        AppAlert({
+          icon: "error",
+          title: "Cannot convert image",
+        });
+        return;
       }
+
+      const fileName = generateUUID() + ".jpg";
+
+      const formData = new FormData();
+      formData.append("file", imageBlob, fileName);
+      formData.append("use_clip_rerank", "true");
+
+      const res = await materialApi.searchMaterial(formData);
+
+      setPercent(100);
+
+      setTimeout(() => {
+        onCapture?.(res);
+        setLoading(false);
+        setPercent(0);
+      }, 300);
     } catch (err) {
-      AppAlert({ icon: "error", title: `Cannot access camera: ${err}` });
+      setLoading(false);
+
+      AppAlert({
+        icon: "error",
+        title: `Search material failed: ${err}`,
+      });
     }
   };
 
-  const stopCamera = () => {
-    stream?.getTracks().forEach((track) => track.stop());
-    setCameraOpen(false);
-    setStream(null);
+  const handleCameraSuccess = () => {
+    setCameraReady(true);
+    setCameraError(null);
   };
 
-  const captureImage = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+  const handleCameraError = (err: string | DOMException) => {
+    const message =
+      typeof err === "string" ? err : err?.message || "Cannot access camera";
 
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
+    setCameraError(message);
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const ctx = canvas.getContext("2d");
-    ctx?.drawImage(video, 0, 0);
-
-    const image = canvas.toDataURL("image/png");
-
-    onCapture?.(image);
-    stopCamera();
+    AppAlert({
+      icon: "error",
+      title: `Cannot access camera: ${message}`,
+    });
   };
-
-  useEffect(() => {
-    if (!open) stopCamera();
-  }, [open]);
 
   return (
     <Modal
@@ -82,37 +114,59 @@ export default function CameraModal({
         }}
       >
         <div className="border border-[#d2d2d2] rounded-lg h-100 relative overflow-hidden">
-          <div className="w-full h-full flex items-center justify-center">
-            {/* {!cameraOpen ? (
-            <div className="text-gray-400">Click button to open camera</div>
-          ) : ( */}
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
+          {cameraError && (
+            <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+              Cannot access camera
+            </div>
+          )}
+
+          {open && !cameraError && (
+            <Webcam
+              ref={webcamRef}
+              screenshotFormat="image/png"
               className="w-full h-full object-cover"
+              videoConstraints={{ facingMode: "environment" }}
+              onUserMedia={handleCameraSuccess}
+              onUserMediaError={handleCameraError}
             />
-            {/* )} */}
-          </div>
+          )}
+
+          {!cameraReady && !cameraError && (
+            <div className="absolute inset-0 flex items-center justify-center text-white">
+              Opening camera...
+            </div>
+          )}
+
+          {loading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
+              <Progress
+                type="circle"
+                percent={Math.round(percent)}
+                size={80}
+                strokeColor={"#fff"}
+                // strokeColor={{
+                //   "0%": "#7c3aed",
+                //   "100%": "#06b6d4",
+                // }}
+                railColor={"#8d8d8dff"}
+                format={(p) => `${p}%`}
+                status="active"
+              />
+              <div className="text-white mt-3">Processing...</div>
+            </div>
+          )}
 
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
             <Button
               type="primary"
               danger
               shape="round"
-              // size="large"
-              // icon={<Camera />}
-              onClick={cameraOpen ? captureImage : startCamera}
-              // style={{
-              //   width: 40,
-              //   height: 40,
-              // }}
+              onClick={captureImage}
+              disabled={!cameraReady || loading}
             >
               <Camera />
             </Button>
           </div>
-
-          <canvas ref={canvasRef} style={{ display: "none" }} />
         </div>
       </div>
     </Modal>

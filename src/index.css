@@ -314,6 +314,11 @@ body,
   border-color: #8c8c8c !important;
 }
 
+.save-modal-btn.ant-btn:disabled {
+  background-color: #dbdbdb !important;
+  border-color: #dbdbdb !important;
+}
+
 ::-webkit-scrollbar {
   height: 6px;
   width: 6px;
@@ -356,4 +361,8 @@ body,
 
 .app-alert-popup .swal2-icon {
   font-size: 14px;
+}
+
+.ant-progress-indicator {
+  color: white !important;
 }

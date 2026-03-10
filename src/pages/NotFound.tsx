@@ -1,9 +1,9 @@
-// import { useNavigate } from "react-router-dom";
-import { SearchX } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Home, SearchX } from "lucide-react";
 // import { Button, Result } from "antd";
 
 export default function NotFound() {
-  //   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50 flex items-center justify-center p-3 sm:p-4">
@@ -30,15 +30,15 @@ export default function NotFound() {
 
         {/* Message */}
         <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4 px-2">
-          Material not found
+          Page not found
         </h2>
-        {/* <p className="text-xs sm:text-base md:text-lg text-gray-600 mb-6 sm:mb-8 px-4 leading-relaxed">
+        <p className="text-xs sm:text-base md:text-lg text-gray-600 mb-6 sm:mb-8 px-4 leading-relaxed">
           Sorry, we couldn't find the page you were looking for. The page may
           have been deleted, moved, or may no longer exist.
-        </p> */}
+        </p>
 
         {/* Action Buttons */}
-        {/* <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
           <button
             onClick={() => navigate(-1)}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold text-sm sm:text-base hover:border-gray-400 hover:shadow-md transition-all duration-200 transform hover:scale-105 cursor-pointer"
@@ -53,7 +53,7 @@ export default function NotFound() {
             <Home size={18} className="sm:w-5 sm:h-5" />
             Back to Home Page
           </button>
-        </div> */}
+        </div>
 
         {/* Decorative Elements */}
         <div className="mt-8 sm:mt-12 grid grid-cols-3 gap-3 sm:gap-4 max-w-md mx-auto opacity-50">

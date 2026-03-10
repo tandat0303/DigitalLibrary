@@ -7,6 +7,7 @@ import type { MaterialsModalProps } from "../../../../types/materials";
 import type { Image } from "../../../../types/images";
 import materialApi from "../../../../api/materials.api";
 import { getApiErrorMessage } from "../../../../lib/getApiErrorMsg";
+import { IMAGE_LABELS } from "../../../../lib/helpers";
 
 export default function MaterialModal({
   open,
@@ -23,6 +24,15 @@ export default function MaterialModal({
 
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+
+  const formValues = Form.useWatch([], form);
+
+  const isFormEmpty =
+    mode === "create" &&
+    (!formValues ||
+      Object.values(formValues).every(
+        (v) => v === undefined || v === null || v === "",
+      ));
 
   useEffect(() => {
     if (!open) return;
@@ -118,7 +128,7 @@ export default function MaterialModal({
                     <Form.Item
                       label="Vendor Code"
                       name="Vendor_Code"
-                      rules={[{ required: true }]}
+                      // rules={[{ required: true }]}
                     >
                       <Input placeholder="Enter your Vendor Code" />
                     </Form.Item>
@@ -544,7 +554,7 @@ export default function MaterialModal({
                   accept={["image/jpeg", "image/png"]}
                   width={380}
                   height={240}
-                  labels={["Top side", "Bottom side"]}
+                  labels={IMAGE_LABELS}
                   onDeleteExisting={
                     mode === "edit" ? handleDeleteExistingImage : undefined
                   }
@@ -578,6 +588,7 @@ export default function MaterialModal({
             type="primary"
             onClick={handleSubmit}
             loading={loading}
+            disabled={mode === "create" && isFormEmpty}
             style={{
               background: "#1f1f1f",
               borderColor: "#1f1f1f",

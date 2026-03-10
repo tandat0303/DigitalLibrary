@@ -15,7 +15,7 @@ const axiosConfig = axios.create({
 axiosConfig.interceptors.request.use((config) => {
   const state = store.getState();
 
-  const token = state.auth.accessToken || storage.get("accessToken");
+  const token = state.auth.accessToken || storage.get("auth")?.accessToken;
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -31,7 +31,7 @@ axiosConfig.interceptors.response.use(
     const status = error?.response?.status;
 
     if (status === 401 && !error.config.url.includes("/auth/login")) {
-      storage.remove("accessToken");
+      storage.remove("auth");
       store.dispatch(logout());
       window.location.href = "/login";
     }

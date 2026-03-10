@@ -1,7 +1,7 @@
 import { Grid, Modal } from "antd";
 import { useMemo, useState } from "react";
 import type { Image } from "../types/images";
-import { resolveImageSrc } from "../lib/helpers";
+import { mapImagesToLabels, resolveImageSrc } from "../lib/helpers";
 
 interface ImagePreviewModalProps {
   open: boolean;
@@ -41,15 +41,17 @@ export default function ImagePreviewModal({
   const [hoverSrc, setHoverSrc] = useState<string | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
 
-  const validImages = useMemo(() => {
-    return images.filter(Boolean) as (File | Image)[];
-  }, [images]);
-
   const slots = useMemo(() => {
-    return Array.from({ length: maxImages }).map((_, index) => {
-      return validImages[index] || null;
-    });
-  }, [validImages, maxImages]);
+    if (labels.length) {
+      return mapImagesToLabels(images, labels, maxImages);
+    }
+
+    return Array.from({ length: maxImages }).map(
+      (_, index) => images[index] || null,
+    );
+  }, [images, labels, maxImages]);
+
+  const validCount = slots.filter(Boolean).length;
 
   const modalWidth = isMobile
     ? "95vw"
@@ -90,7 +92,7 @@ export default function ImagePreviewModal({
         footer={null}
         centered
         width={modalWidth}
-        title={`Preview Images (${validImages.length}/${maxImages})`}
+        title={`Preview Images (${validCount}/${maxImages})`}
       >
         <div
           style={{
@@ -109,7 +111,7 @@ export default function ImagePreviewModal({
             {slots.map((src, index) => (
               <div key={index} className="flex flex-col shrink-0">
                 {labels?.[index] && (
-                  <span className="mb-1 text-sm font-medium text-gray-600">
+                  <span className="mb-1 text-sm font-bold text-gray-600">
                     {labels[index]}
                   </span>
                 )}

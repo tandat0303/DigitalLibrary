@@ -247,10 +247,10 @@ export default function ColorsPage() {
         const images = (values.Images ?? []).filter(Boolean);
 
         const newImages = images.filter(
-          (img): img is File => img instanceof File,
+          (img: any): img is File => img instanceof File,
         );
 
-        newImages.forEach((file) => {
+        newImages.forEach((file: any) => {
           formData.append("images", file);
         });
 

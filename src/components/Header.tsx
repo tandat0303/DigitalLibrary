@@ -3,17 +3,22 @@ import type { MenuProps } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 import Loading from "./ui/Loading";
 import { useLoadingNavigate } from "../hooks/useLoadingNavigate";
-import { useAppDispatch } from "../hooks/auth";
+import { useAppDispatch, useAppSelector } from "../hooks/auth";
 import { logout } from "../features/authSlice";
 import storage from "../lib/storage";
+import { useState } from "react";
 
 export default function Header() {
+  const [open, setOpen] = useState(false);
+
   const dispatch = useAppDispatch();
+
+  const user = useAppSelector((state) => state.auth.user);
 
   const { handleNavigate, loading } = useLoadingNavigate();
 
   const handleLogout = () => {
-    storage.remove("accessToken");
+    storage.remove("auth");
 
     dispatch(logout());
 
@@ -21,6 +26,8 @@ export default function Header() {
   };
 
   const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
+    setOpen(false);
+
     switch (key) {
       case "user-limit":
         handleNavigate("/user-limit");
@@ -79,9 +86,17 @@ export default function Header() {
           menu={{ items, onClick: handleMenuClick }}
           trigger={["click"]}
           placement="bottomRight"
+          arrow={true}
+          open={open}
+          onOpenChange={(flag) => setOpen(flag)}
         >
           <div className="cursor-pointer text-[18px] flex items-center gap-1 hover:text-gray-300">
-            Administrators <DownOutlined className="text-xs" />
+            {user?.fullname}{" "}
+            <DownOutlined
+              className={`text-xs transition-transform duration-200 ${
+                open ? "rotate-180" : ""
+              }`}
+            />
           </div>
         </Dropdown>
       </header>

@@ -11,7 +11,6 @@ import type { LoginPayload } from "../types/auth";
 import authApi from "../api/auth.api";
 import { setToken } from "../features/authSlice";
 import { AppAlert } from "../components/ui/AppAlert";
-import storage from "../lib/storage";
 import { useAppDispatch, useAppSelector } from "../hooks/auth";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -24,10 +23,10 @@ export default function Login() {
 
   const dispatch = useAppDispatch();
 
-  const { accessToken, isHydrated } = useAppSelector((s) => s.auth);
+  const { accessToken, user, isHydrated } = useAppSelector((s) => s.auth);
 
   if (!isHydrated) return null;
-  if (accessToken) return <Navigate to="/" replace />;
+  if (accessToken && user) return <Navigate to="/" replace />;
 
   const handleSubmit = async (values: LoginPayload) => {
     setLoading(true);
@@ -36,8 +35,9 @@ export default function Login() {
       const data = await authApi.login(values);
 
       const accessToken = data?.accessToken;
+      const user = data?.data;
 
-      if (!accessToken) {
+      if (!accessToken || !user) {
         AppAlert({
           icon: "error",
           title: "Invalid username or password",
@@ -46,9 +46,7 @@ export default function Login() {
         return;
       }
 
-      storage.set("accessToken", accessToken);
-
-      dispatch(setToken(accessToken));
+      dispatch(setToken({ accessToken, data: user }));
 
       navigate("/", { replace: true });
     } catch (error) {

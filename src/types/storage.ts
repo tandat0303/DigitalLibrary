@@ -1,3 +1,8 @@
+import type { User } from "./users";
+
 export interface StorageSchema {
-  accessToken: string;
+  auth: {
+    accessToken: string;
+    data: User;
+  };
 }

@@ -1,17 +1,30 @@
 import { Row, Col, Divider, Card, Grid } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { resolveImageSrc, THUMBNAIL_COUNT } from "../../../../lib/helpers";
+import {
+  displayValue,
+  resolveImageSrc,
+  sortImagesByType,
+  THUMBNAIL_COUNT,
+} from "../../../../lib/helpers";
 import NotFound from "../../../NotFound";
+import type { MaterialsDataType } from "../../../../types/materials";
+import materialApi from "../../../../api/materials.api";
+import { AppAlert } from "../../../../components/ui/AppAlert";
+import { getApiErrorMessage } from "../../../../lib/getApiErrorMsg";
+import Loading from "../../../../components/ui/Loading";
 export default function MaterialDetailPage() {
-  const { unique_price_id } = useParams();
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [material, setMaterial] = useState<MaterialsDataType>();
+  const [loading, setLoading] = useState(true);
+  const { id } = useParams();
 
   const { useBreakpoint } = Grid;
   const screens = useBreakpoint();
 
   const isMobile = !screens.md;
 
-  const imageRef = useRef<HTMLImageElement | null>(null);
+  const imageRef = useRef<HTMLDivElement | null>(null);
 
   const [zoom, setZoom] = useState({
     visible: false,
@@ -21,17 +34,33 @@ export default function MaterialDetailPage() {
     bgY: 0,
   });
 
-  const material = useMemo(() => {
-    if (!unique_price_id) return null;
+  useEffect(() => {
+    const fetchMaterialDetail = async () => {
+      try {
+        if (!id) return;
 
-    const saved = sessionStorage.getItem(`material-${unique_price_id}`);
+        setLoading(true);
 
-    return saved ? JSON.parse(saved) : null;
-  }, [unique_price_id]);
+        const res = await materialApi.getDetailMaterial(id);
+
+        setMaterial(res);
+      } catch (error) {
+        AppAlert({
+          icon: "error",
+          title: getApiErrorMessage(error),
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMaterialDetail();
+  }, [id]);
 
   const images = useMemo(() => {
     if (!material?.Images) return [];
-    return material.Images;
+
+    return sortImagesByType(material.Images);
   }, [material]);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -40,37 +69,49 @@ export default function MaterialDetailPage() {
     setSelectedIndex(0);
   }, [images]);
 
-  useEffect(() => {
-    return () => {
-      if (unique_price_id) {
-        sessionStorage.removeItem(`material-${unique_price_id}`);
-      }
-    };
-  }, [unique_price_id]);
-
   const thumbnails = useMemo(() => {
     return Array.from({ length: THUMBNAIL_COUNT }, (_, i) => images[i] ?? null);
   }, [images]);
+
+  const LENS_SIZE = 150;
+  const ZOOM_SCALE = 1;
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!imageRef.current) return;
 
     const rect = imageRef.current.getBoundingClientRect();
 
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    const half = LENS_SIZE / 2;
+
+    x = Math.max(half, Math.min(rect.width - half, x));
+    y = Math.max(half, Math.min(rect.height - half, y));
 
     const percentX = x / rect.width;
     const percentY = y / rect.height;
+
+    const bgX = percentX * rect.width * ZOOM_SCALE;
+    const bgY = percentY * rect.height * ZOOM_SCALE;
 
     setZoom({
       visible: true,
       x,
       y,
-      bgX: percentX * 100,
-      bgY: percentY * 100,
+      bgX,
+      bgY,
+    });
+
+    setImageSize({
+      width: rect.width,
+      height: rect.height,
     });
   };
+
+  if (loading) {
+    return <Loading overlay fullScreen />;
+  }
 
   if (!material) {
     return <NotFound />;
@@ -137,7 +178,6 @@ export default function MaterialDetailPage() {
               >
                 {images[selectedIndex] ? (
                   <img
-                    ref={imageRef}
                     src={resolveImageSrc(images[selectedIndex])}
                     className="w-full h-full object-cover select-none"
                     draggable={false}
@@ -163,10 +203,10 @@ export default function MaterialDetailPage() {
                   <div
                     style={{
                       position: "absolute",
-                      width: 200,
-                      height: 200,
-                      left: zoom.x - 100,
-                      top: zoom.y - 100,
+                      width: LENS_SIZE,
+                      height: LENS_SIZE,
+                      left: zoom.x - LENS_SIZE / 2,
+                      top: zoom.y - LENS_SIZE / 2,
                       border: "2px solid white",
                       boxShadow: "0 0 8px rgba(0,0,0,0.4)",
                       pointerEvents: "none",
@@ -174,9 +214,8 @@ export default function MaterialDetailPage() {
                       backgroundImage: `url(${resolveImageSrc(images[selectedIndex])})`,
                       backgroundRepeat: "no-repeat",
 
-                      backgroundSize: "200%",
-                      backgroundPosition: `${zoom.bgX}% ${zoom.bgY}%`,
-                      willChange: "background-position",
+                      backgroundSize: `${imageSize.width * ZOOM_SCALE}px ${imageSize.height * ZOOM_SCALE}px`,
+                      backgroundPosition: `-${zoom.bgX - LENS_SIZE / 2}px -${zoom.bgY - LENS_SIZE / 2}px`,
                     }}
                   />
                 )}
@@ -248,140 +287,92 @@ export default function MaterialDetailPage() {
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} lg={8}>
                 <strong>Material Id</strong>
-                <div>
-                  {material.Material_ID ? material.Material_ID : "No data"}
-                </div>
+                <div>{displayValue(material.Material_ID)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Vendor Code</strong>
-                <div>
-                  {material.Vendor_Code ? material.Vendor_Code : "No data"}
-                </div>
+                <div>{displayValue(material.Vendor_Code)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Supplier</strong>
-                <div>{material.Supplier ? material.Supplier : "No data"}</div>
+                <div>{displayValue(material.Supplier)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Supplier Material Id</strong>
-                <div>
-                  {material.Supplier_Material_ID
-                    ? material.Supplier_Material_ID
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Supplier_Material_ID)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Supplier Material Name</strong>
-                <div>
-                  {material.Supplier_Material_Name
-                    ? material.Supplier_Material_Name
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Supplier_Material_Name)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Mtl_Supp Lifecycle State</strong>
-                <div>
-                  {material.Mtl_Supp_Lifecycle_State
-                    ? material.Mtl_Supp_Lifecycle_State
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Mtl_Supp_Lifecycle_State)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Material Type Level 1</strong>
-                <div>
-                  {material.Material_Type_Level_1
-                    ? material.Material_Type_Level_1
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Material_Type_Level_1)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Composition</strong>
-                <div>
-                  {material.Composition ? material.Composition : "No data"}
-                </div>
+                <div>{displayValue(material.Composition)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Classification</strong>
-                <div>
-                  {material.Classification
-                    ? material.Classification
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Classification)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Material Thickness</strong>
-                <div>
-                  {material.Material_Thickness
-                    ? material.Material_Thickness
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Material_Thickness)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Material Thickness UOM</strong>
-                <div>
-                  {material.Material_Thickness_UOM
-                    ? material.Material_Thickness_UOM
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Material_Thickness_UOM)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Comparison UOM</strong>
-                <div>
-                  {material.Comparison_UOM
-                    ? material.Comparison_UOM
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Comparison_UOM)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Price Remark</strong>
-                <div>
-                  {material.Price_Remark ? material.Price_Remark : "No data"}
-                </div>
+                <div>{displayValue(material.Price_Remark)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Skin Size</strong>
-                <div>{material.Skin_Size ? material.Skin_Size : "No data"}</div>
+                <div>{displayValue(material.Skin_Size)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>QC Percent</strong>
-                <div>
-                  {material.QC_Percent ? material.QC_Percent : "No data"}
-                </div>
+                <div>{displayValue(material.QC_Percent)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Leadtime</strong>
-                <div>{material.Leadtime ? material.Leadtime : "No data"}</div>
+                <div>{displayValue(material.Leadtime)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Sample Leadtime</strong>
-                <div>
-                  {material.Sample_Leadtime
-                    ? material.Sample_Leadtime
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Sample_Leadtime)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Min Qty Color</strong>
-                <div>
-                  {material.Min_Qty_Color ? material.Min_Qty_Color : "No data"}
-                </div>
+                <div>{displayValue(material.Min_Qty_Color)}</div>
               </Col>
             </Row>
 
@@ -390,154 +381,94 @@ export default function MaterialDetailPage() {
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} lg={8}>
                 <strong>Min Qty Sample</strong>
-                <div>
-                  {material.Min_Qty_Sample
-                    ? material.Min_Qty_Sample
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Min_Qty_Sample)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Production Location</strong>
-                <div>
-                  {material.Production_Location
-                    ? material.Production_Location
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Production_Location)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Terms of Delivery per T1 Country</strong>
                 <div>
-                  {material.Terms_of_Delivery_per_T1_Country
-                    ? material.Terms_of_Delivery_per_T1_Country
-                    : "No data"}
+                  {displayValue(material.Terms_of_Delivery_per_T1_Country)}
                 </div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Valid From Price</strong>
-                <div>
-                  {material.Valid_From_Price
-                    ? material.Valid_From_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Valid_From_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Valid To Price</strong>
-                <div>
-                  {material.Valid_To_Price
-                    ? material.Valid_From_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Valid_To_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Price Type</strong>
-                <div>
-                  {material.Price_Type ? material.Price_Type : "No data"}
-                </div>
+                <div>{displayValue(material.Price_Type)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Color Code Price</strong>
-                <div>
-                  {material.Color_Code_Price
-                    ? material.Color_Code_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Color_Code_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Color Price</strong>
-                <div>
-                  {material.Color_Price ? material.Color_Price : "No data"}
-                </div>
+                <div>{displayValue(material.Color_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Treatment Price</strong>
-                <div>
-                  {material.Treatment_Price
-                    ? material.Treatment_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Treatment_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Width Price</strong>
-                <div>
-                  {material.Width_Price ? material.Width_Price : "No data"}
-                </div>
+                <div>{displayValue(material.Width_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Width Uom Price</strong>
-                <div>
-                  {material.Weight_Uom_Price
-                    ? material.Width_Uom_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Width_Uom_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Length Price</strong>
-                <div>
-                  {material.Length_Price ? material.Length_Price : "No data"}
-                </div>
+                <div>{displayValue(material.Length_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Length Uom Price</strong>
-                <div>
-                  {material.Material_Thickness
-                    ? material.Material_Thickness
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Length_Uom_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Thickness Price</strong>
-                <div>
-                  {material.Thickness_Price
-                    ? material.Thickness_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Thickness_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Thickness Uom Price</strong>
-                <div>
-                  {material.Thickness_Uom_Price
-                    ? material.Thickness_Uom_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Thickness_Uom_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Diameter Inside Price</strong>
-                <div>
-                  {material.Diameter_Inside_Price
-                    ? material.Diameter_Inside_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Diameter_Inside_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Diameter Inside Uom Price</strong>
-                <div>
-                  {material.Diameter_Inside_Uom_Price
-                    ? material.Diameter_Inside_Uom_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Diameter_Inside_Uom_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Weight Price</strong>
-                <div>
-                  {material.Weight_Price ? material.Weight_Price : "No data"}
-                </div>
+                <div>{displayValue(material.Weight_Price)}</div>
               </Col>
             </Row>
 
@@ -546,64 +477,38 @@ export default function MaterialDetailPage() {
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} lg={8}>
                 <strong>Weight Uom Price</strong>
-                <div>
-                  {material.Weight_Uom_Price
-                    ? material.Weight_Uom_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Weight_Uom_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Quantity Price</strong>
-                <div>
-                  {material.Quantity_Price
-                    ? material.Quantity_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Quantity_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Quantity Uom Price</strong>
-                <div>
-                  {material.Quantity_Uom_Price
-                    ? material.Quantity_Uom_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Quantity_Uom_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Uom String Price</strong>
-                <div>
-                  {material.Uom_String_Price
-                    ? material.Uom_String_Price
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Uom_String_Price)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>SS26 Final Price USD</strong>
-                <div>
-                  {material.SS26_Final_Price_USD
-                    ? material.SS26_Final_Price_USD
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.SS26_Final_Price_USD)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Comparison Price Price USD</strong>
-                <div>
-                  {material.Comparison_Price_Price_USD
-                    ? material.Comparison_Price_Price_USD
-                    : "No data"}
-                </div>
+                <div>{displayValue(material.Comparison_Price_Price_USD)}</div>
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
                 <strong>Approved As Final Price Y/N Price</strong>
                 <div>
-                  {material.Approved_As_Final_Price_Y_N_Price
-                    ? material.Approved_As_Final_Price_Y_N_Price
-                    : "No data"}
+                  {displayValue(material.Approved_As_Final_Price_Y_N_Price)}
                 </div>
               </Col>
             </Row>

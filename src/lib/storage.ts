@@ -2,27 +2,29 @@ import type { StorageSchema } from "../types/storage";
 
 const storage = {
   set: <K extends keyof StorageSchema>(key: K, value: StorageSchema[K]) => {
-    localStorage.setItem(key, value);
+    localStorage.setItem(key, JSON.stringify(value));
   },
+
   get: <K extends keyof StorageSchema>(
     key: K,
-    defaultValue?: StorageSchema[K],
-  ): StorageSchema[K] => {
+    defaultValue: StorageSchema[K] | null = null,
+  ): StorageSchema[K] | null => {
     const value = localStorage.getItem(key);
 
-    if (value === null || value === undefined)
-      return defaultValue as StorageSchema[K];
+    if (!value) return defaultValue;
 
     try {
-      return value as StorageSchema[K];
+      return JSON.parse(value) as StorageSchema[K];
     } catch {
       localStorage.removeItem(key);
-      return defaultValue as StorageSchema[K];
+      return defaultValue;
     }
   },
+
   remove: (key: keyof StorageSchema) => {
     localStorage.removeItem(key);
   },
+
   clear: () => {
     localStorage.clear();
   },

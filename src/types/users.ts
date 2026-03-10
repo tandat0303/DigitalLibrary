@@ -263,3 +263,13 @@ export interface UsersModalProps {
   onCancel: () => void;
   onSubmit: (values: UserFormValues) => Promise<void>;
 }
+
+{
+  /* ---------- User Info Module ---------- */
+}
+export interface User {
+  userid: string;
+  username: string;
+  email: string;
+  fullname: string;
+}

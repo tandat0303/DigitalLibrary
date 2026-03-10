@@ -3,12 +3,12 @@ import CrudModal from "./CrudModal";
 import {
   moduleColumns,
   moduleFields,
-  type ModuleProps,
+  type ModalProps,
   type ModuleType,
 } from "../../../types/users";
 import { initialModuleData } from "../../../types/samples";
 
-const ModuleMgmtModal: React.FC<ModuleProps> = ({ open, onClose }) => {
+const ModuleMgmtModal: React.FC<ModalProps> = ({ open, onClose }) => {
   return (
     <CrudModal<ModuleType>
       open={open}
