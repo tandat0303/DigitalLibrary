@@ -6,16 +6,16 @@ import {
   resolveImageSrc,
   sortImagesByType,
   THUMBNAIL_COUNT,
-} from "../../../../lib/helpers";
-import NotFound from "../../../NotFound";
-import type { MaterialsDataType } from "../../../../types/materials";
-import materialApi from "../../../../api/materials.api";
-import { AppAlert } from "../../../../components/ui/AppAlert";
-import { getApiErrorMessage } from "../../../../lib/getApiErrorMsg";
-import Loading from "../../../../components/ui/Loading";
-export default function MaterialDetail() {
+} from "../../lib/helpers";
+import NotFound from "../NotFound";
+import { AppAlert } from "../../components/ui/AppAlert";
+import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
+import Loading from "../../components/ui/Loading";
+import type { HighAbrasionDataType } from "../../types/highAbrasion";
+import highAbrasionApi from "../../api/highAbrasion.api";
+export default function HighAbrasionDetail() {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
-  const [material, setMaterial] = useState<MaterialsDataType>();
+  const [material, setMaterial] = useState<HighAbrasionDataType>();
   const [loading, setLoading] = useState(true);
   const { id } = useParams();
 
@@ -41,7 +41,7 @@ export default function MaterialDetail() {
 
         setLoading(true);
 
-        const res = await materialApi.getDetailMaterial(id);
+        const res = await highAbrasionApi.getDetailMaterial(id);
 
         setMaterial(res);
       } catch (error) {

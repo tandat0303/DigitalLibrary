@@ -20,24 +20,24 @@ import { FILTER_OPTIONS } from "../../components/ui/MaterialsFilterOption";
 import { Download, QrCode, Search, Upload } from "lucide-react";
 import ImportExcelModal from "../../components/ImportExcelModal";
 import FilterCollapse from "../../components/FilterCollapse";
-import {
-  getMaterialsColumns,
-  type MaterialsDataType,
-} from "../../types/materials";
 import UploadAttachModal from "../../components/UploadAttachModal";
-import { IMAGE_FIELD_MAP, IMAGE_LABELS, sleep } from "../../lib/helpers";
-import MaterialModal from "../materials/tabs/material/MaterialModal";
+import { IMAGE_FIELD_MAP, IMAGE_LABELS } from "../../lib/helpers";
 import ImagePreviewModal from "../../components/ImagePreviewModal";
 import EmptyImg from "@/assets/nodata.png";
 import CameraModal from "../../components/CameraModal";
 import type { Image } from "../../types/images";
 import { buildQueryFilters } from "../../lib/buildQueryFilters";
-import materialApi from "../../api/materials.api";
 import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
 import { SwalLoading } from "../../components/ui/SwalLoading";
 import { SwalNotification } from "../../components/ui/SwalNotification";
 import Swal from "sweetalert2";
 import { useAppSelector } from "../../hooks/auth";
+import {
+  getNewLibraryColumns,
+  type NewLibraryDataType,
+} from "../../types/newLibrary";
+import newLibraryApi from "../../api/newLibrary.api";
+import NewLibraryModal from "./NewLibraryModal";
 
 export default function NewLibrary() {
   const [form] = Form.useForm();
@@ -46,9 +46,9 @@ export default function NewLibrary() {
 
   const [dynamicCount, setDynamicCount] = useState(0);
 
-  const [data, setData] = useState<MaterialsDataType[]>([]);
+  const [data, setData] = useState<NewLibraryDataType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<MaterialsDataType | null>(
+  const [selectedRow, setSelectedRow] = useState<NewLibraryDataType | null>(
     null,
   );
 
@@ -68,11 +68,11 @@ export default function NewLibrary() {
     setOpenPreview(true);
   };
 
-  const handleDetailView = (record: MaterialsDataType) => {
-    window.open(`/show-info/${record.ID}`, "_blank");
+  const handleDetailView = (record: NewLibraryDataType) => {
+    window.open(`/new-library/show-info/${record.ID}`, "_blank");
   };
 
-  const columns = getMaterialsColumns(handlePreview, handleDetailView);
+  const columns = getNewLibraryColumns(handlePreview, handleDetailView);
 
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -86,7 +86,7 @@ export default function NewLibrary() {
 
       const params = { ...filters, page: current, limit: pageSize };
 
-      const res = await materialApi.getAllMaterials(params);
+      const res = await newLibraryApi.getAllMaterials(params);
 
       const rows = res.data.map((item) => ({
         ...item,
@@ -114,7 +114,7 @@ export default function NewLibrary() {
     setCurrent(1);
   };
 
-  const handleSelectMaterial = (record: MaterialsDataType) => {
+  const handleSelectMaterial = (record: NewLibraryDataType) => {
     if (selectedRow?.ID === record.ID) {
       setSelectedRow(null);
       return;
@@ -127,12 +127,12 @@ export default function NewLibrary() {
     try {
       const params = { ...filters };
 
-      const response = await materialApi.exportExcel(params);
+      const response = await newLibraryApi.exportExcel(params);
 
       const url = window.URL.createObjectURL(new Blob([response]));
       const link = document.createElement("a");
       link.href = url;
-      const fileName = `Materials Data_${new Date()
+      const fileName = `Materials (New Library) Data_${new Date()
         .toISOString()
         .slice(0, 10)}.xlsx`;
       link.setAttribute("download", fileName);
@@ -152,12 +152,12 @@ export default function NewLibrary() {
     try {
       const params = { ...filters };
 
-      const response = await materialApi.exportExcelQR(params);
+      const response = await newLibraryApi.exportExcelQR(params);
 
       const url = window.URL.createObjectURL(new Blob([response]));
       const link = document.createElement("a");
       link.href = url;
-      const fileName = `Materials QR Data_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const fileName = `Materials (New Library) QR Data_${new Date().toISOString().slice(0, 10)}.xlsx`;
       link.setAttribute("download", fileName);
       document.body.appendChild(link);
       link.click();
@@ -221,7 +221,7 @@ export default function NewLibrary() {
       formData.append("user", user.userid);
       formData.append("file", file);
 
-      await materialApi.attachFile(formData);
+      await newLibraryApi.attachFile(formData);
 
       AppAlert({ icon: "success", title: "Success" });
 
@@ -252,7 +252,7 @@ export default function NewLibrary() {
     try {
       if (!selectedRow) return;
 
-      const res = await materialApi.deleteMaterial(selectedRow.ID);
+      const res = await newLibraryApi.deleteMaterial(selectedRow.ID);
 
       if (res.success) {
         setSelectedRow(null);
@@ -290,9 +290,9 @@ export default function NewLibrary() {
 
       SwalLoading("Uploading Excel file...");
 
-      await sleep(1000);
+      const res = await newLibraryApi.importExcelFile(formData);
 
-      const res = await materialApi.importExcelFile(formData);
+      Swal.close();
 
       if (res.success) {
         SwalNotification("success", res.message);
@@ -384,7 +384,7 @@ export default function NewLibrary() {
           }
         });
 
-        await materialApi.createMaterial(formData);
+        await newLibraryApi.createMaterial(formData);
 
         AppAlert({ icon: "success", title: "Added new material successfully" });
 
@@ -474,7 +474,7 @@ export default function NewLibrary() {
           }
         });
 
-        await materialApi.updateMaterial(selectedRow.ID, formData);
+        await newLibraryApi.updateMaterial(selectedRow.ID, formData);
 
         AppAlert({ icon: "success", title: "Material updated successfully" });
 
@@ -689,7 +689,7 @@ export default function NewLibrary() {
         </Col>
       </Row>
 
-      <MaterialModal
+      <NewLibraryModal
         open={openModal}
         mode={mode}
         initialValues={mode === "edit" ? selectedRow : undefined}

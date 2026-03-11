@@ -25,7 +25,7 @@ import {
   type MaterialsDataType,
 } from "../../../../types/materials";
 import UploadAttachModal from "../../../../components/UploadAttachModal";
-import { IMAGE_FIELD_MAP, IMAGE_LABELS, sleep } from "../../../../lib/helpers";
+import { IMAGE_FIELD_MAP, IMAGE_LABELS } from "../../../../lib/helpers";
 import MaterialModal from "./MaterialModal";
 import ImagePreviewModal from "../../../../components/ImagePreviewModal";
 import EmptyImg from "@/assets/nodata.png";
@@ -69,7 +69,7 @@ export default function MaterialsContent() {
   };
 
   const handleDetailView = (record: MaterialsDataType) => {
-    window.open(`/show-info/${record.ID}`, "_blank");
+    window.open(`/materials/show-info/${record.ID}`, "_blank");
   };
 
   const columns = getMaterialsColumns(handlePreview, handleDetailView);
@@ -290,9 +290,9 @@ export default function MaterialsContent() {
 
       SwalLoading("Uploading Excel file...");
 
-      await sleep(1000);
-
       const res = await materialApi.importExcelFile(formData);
+
+      Swal.close();
 
       if (res.success) {
         SwalNotification("success", res.message);

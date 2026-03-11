@@ -48,10 +48,23 @@ export default function MainLayout() {
 
   const isHome = location.pathname === "/";
 
-  const isShowInfo = !!matchPath(
-    "/show-info/:unique_price_id",
+  const isMaterialShowInfo = !!matchPath(
+    "/materials/show-info/:id",
     location.pathname,
   );
+
+  const isHighAbrasionShowInfo = !!matchPath(
+    "/high-abrasion/show-info/:id",
+    location.pathname,
+  );
+
+  const isNewLibraryShowInfo = !!matchPath(
+    "/new-library/show-info/:id",
+    location.pathname,
+  );
+
+  const isShowInfo =
+    isMaterialShowInfo || isHighAbrasionShowInfo || isNewLibraryShowInfo;
 
   const isSpecialLayout = isHome || isShowInfo;
 

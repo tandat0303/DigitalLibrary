@@ -1,10 +1,10 @@
 import axios from "axios";
-import type { MaterialsResponse } from "../types/materials";
 import axiosConfig from "./axiosClient";
+import type { NewLibraryResponse } from "../types/newLibrary";
 
 export type SortOrder = "ASC" | "DESC";
 
-interface GetMaterialsParams {
+interface GetLibraryParams {
   keyword?: string;
   hasImage?: boolean;
   page?: number;
@@ -13,16 +13,16 @@ interface GetMaterialsParams {
   order?: SortOrder;
 }
 
-const materialApi = {
-  getAllMaterials: async (params: GetMaterialsParams) => {
-    const res = await axiosConfig.get<MaterialsResponse>("/materials", {
+const newLibraryApi = {
+  getAllMaterials: async (params: GetLibraryParams) => {
+    const res = await axiosConfig.get<NewLibraryResponse>("/new-library", {
       params,
     });
     return res.data;
   },
 
   createMaterial: async (formData: FormData) => {
-    const res = await axiosConfig.post("/materials", formData, {
+    const res = await axiosConfig.post("/new-library", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -32,7 +32,7 @@ const materialApi = {
   },
 
   updateMaterial: async (id: string, formData: FormData) => {
-    const res = await axiosConfig.put(`/materials/${id}`, formData, {
+    const res = await axiosConfig.put(`/new-library/${id}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -41,17 +41,17 @@ const materialApi = {
   },
 
   deleteMaterial: async (id: string) => {
-    const res = await axiosConfig.delete(`/materials/${id}`);
+    const res = await axiosConfig.delete(`/new-library/${id}`);
     return res.data;
   },
 
   deleteMaterialImage: async (id: string) => {
-    const res = await axiosConfig.delete(`/materials/images/${id}`);
+    const res = await axiosConfig.delete(`/new-library/images/${id}`);
     return res.data;
   },
 
   importExcelFile: async (formData: FormData) => {
-    const res = await axiosConfig.post("/materials/import", formData, {
+    const res = await axiosConfig.post("/new-library/import", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -68,8 +68,8 @@ const materialApi = {
     return res.data;
   },
 
-  exportExcel: async (params: GetMaterialsParams) => {
-    const res = await axiosConfig.get("/materials/export-excel", {
+  exportExcel: async (params: GetLibraryParams) => {
+    const res = await axiosConfig.get("/new-library/export-excel", {
       params,
       responseType: "blob",
     });
@@ -77,7 +77,7 @@ const materialApi = {
   },
 
   attachFile: async (formData: FormData) => {
-    const res = await axiosConfig.post("/materials/attach-file", formData, {
+    const res = await axiosConfig.post("/new-library/attach-file", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -86,8 +86,8 @@ const materialApi = {
     return res.data;
   },
 
-  exportExcelQR: async (params: GetMaterialsParams) => {
-    const res = await axiosConfig.get("/materials/export-excel-qr", {
+  exportExcelQR: async (params: GetLibraryParams) => {
+    const res = await axiosConfig.get("/new-library/export-excel-qr", {
       params,
       responseType: "blob",
     });
@@ -95,9 +95,9 @@ const materialApi = {
   },
 
   getDetailMaterial: async (id: string) => {
-    const res = await axiosConfig.get(`/materials/show-info/${id}`);
+    const res = await axiosConfig.get(`/new-library/show-info/${id}`);
     return res.data?.[0] ?? null;
   },
 };
 
-export default materialApi;
+export default newLibraryApi;

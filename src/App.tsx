@@ -7,12 +7,14 @@ import Users from "./pages/user-options/users/Users";
 import UserInfo from "./pages/user-options/user-info/UserInfo";
 import ColorsPage from "./pages/colors/ColorsPage";
 import MaterialsPage from "./pages/materials/MaterialsPage";
-import MaterialDetailPage from "./pages/materials/tabs/material/MaterialDetail";
 import HighAbrasion from "./pages/high-abrasion/HighAbrasion";
 import NewLibrary from "./pages/new-library/NewLibrary";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import AuthBootstrap from "./routes/AuthBootstrap";
+import MaterialDetail from "./pages/materials/tabs/material/MaterialDetail";
+import HighAbrasionDetail from "./pages/high-abrasion/HighAbrasionDetail";
+import NewLibraryDetail from "./pages/new-library/NewLibraryDetail";
 
 export default function App() {
   return (
@@ -28,9 +30,20 @@ export default function App() {
             <Route path="/user-info" element={<UserInfo />} />
             <Route path="/colors" element={<ColorsPage />} />
             <Route path="/materials" element={<MaterialsPage />} />
-            <Route path="/show-info/:id" element={<MaterialDetailPage />} />
+            <Route
+              path="/materials/show-info/:id"
+              element={<MaterialDetail />}
+            />
             <Route path="/high-abrasion" element={<HighAbrasion />} />
+            <Route
+              path="/high-abrasion/show-info/:id"
+              element={<HighAbrasionDetail />}
+            />
             <Route path="/new-library" element={<NewLibrary />} />
+            <Route
+              path="/new-library/show-info/:id"
+              element={<NewLibraryDetail />}
+            />
           </Route>
         </Route>
 
