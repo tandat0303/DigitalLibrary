@@ -31,7 +31,6 @@ import { buildQueryFilters } from "../../lib/buildQueryFilters";
 import Swal from "sweetalert2";
 import { SwalLoading } from "../../components/ui/SwalLoading";
 import { SwalNotification } from "../../components/ui/SwalNotification";
-import { sleep } from "../../lib/helpers";
 
 export default function ColorsPage() {
   const [form] = Form.useForm();
@@ -174,9 +173,9 @@ export default function ColorsPage() {
 
       SwalLoading("Uploading Excel file...");
 
-      await sleep(700);
-
       const res = await colorApi.importExcelFile(formData);
+
+      Swal.close();
 
       if (res.success) {
         SwalNotification("success", res.message);
