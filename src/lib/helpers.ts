@@ -104,7 +104,9 @@ export const displayValue = (value?: any) => {
     value === null ||
     value === undefined ||
     value === "" ||
-    value === "undefined"
+    value === "undefined" ||
+    value === "null" ||
+    value === "N/A"
   )
     return "No data";
 

@@ -12,6 +12,7 @@ import {
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import { useState } from "react";
 import { requiredMessage } from "../../../lib/helpers";
+import { useAppSelector } from "../../../hooks/auth";
 
 const { Title, Text } = Typography;
 
@@ -22,6 +23,8 @@ export default function UserInfo() {
 
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+
+  const user = useAppSelector((state) => state.auth.user);
 
   const handleSave = async () => {
     try {
@@ -68,9 +71,9 @@ export default function UserInfo() {
           form={form}
           layout="vertical"
           initialValues={{
-            userAccount: "admin",
-            name: "Administrators",
-            email: "admin@lacty.com.vn",
+            userAccount: user?.username,
+            name: user?.fullname,
+            email: user?.email,
           }}
         >
           <Row gutter={isMobile ? 12 : 16}>

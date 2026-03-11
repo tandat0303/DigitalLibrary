@@ -34,6 +34,17 @@ export default function MaterialDetail() {
     bgY: 0,
   });
 
+  // const lensRef = useRef<HTMLDivElement | null>(null);
+  // const rafRef = useRef<number | null>(null);
+
+  // const zoomData = useRef({
+  //   x: 0,
+  //   y: 0,
+  //   bgX: 0,
+  //   bgY: 0,
+  //   visible: false,
+  // });
+
   useEffect(() => {
     const fetchMaterialDetail = async () => {
       try {
@@ -109,6 +120,56 @@ export default function MaterialDetail() {
     });
   };
 
+  // const updateLens = () => {
+  //   const lens = lensRef.current;
+  //   const data = zoomData.current;
+
+  //   if (!lens) return;
+
+  //   lens.style.left = `${data.x - LENS_SIZE / 2}px`;
+  //   lens.style.top = `${data.y - LENS_SIZE / 2}px`;
+
+  //   lens.style.backgroundPosition = `-${
+  //     data.bgX - LENS_SIZE / 2
+  //   }px -${data.bgY - LENS_SIZE / 2}px`;
+
+  //   rafRef.current = null;
+  // };
+
+  // const handleMouseMove = (e: React.MouseEvent) => {
+  //   if (!imageRef.current || !lensRef.current) return;
+
+  //   const rect = imageRef.current.getBoundingClientRect();
+
+  //   let x = e.clientX - rect.left;
+  //   let y = e.clientY - rect.top;
+
+  //   const half = LENS_SIZE / 2;
+
+  //   x = Math.max(half, Math.min(rect.width - half, x));
+  //   y = Math.max(half, Math.min(rect.height - half, y));
+
+  //   const percentX = x / rect.width;
+  //   const percentY = y / rect.height;
+
+  //   zoomData.current = {
+  //     x,
+  //     y,
+  //     bgX: percentX * rect.width * ZOOM_SCALE,
+  //     bgY: percentY * rect.height * ZOOM_SCALE,
+  //     visible: true,
+  //   };
+
+  //   setImageSize({
+  //     width: rect.width,
+  //     height: rect.height,
+  //   });
+
+  //   if (!rafRef.current) {
+  //     rafRef.current = requestAnimationFrame(updateLens);
+  //   }
+  // };
+
   if (loading) {
     return <Loading overlay fullScreen />;
   }
@@ -166,6 +227,12 @@ export default function MaterialDetail() {
                     ? () => setZoom((z) => ({ ...z, visible: false }))
                     : undefined
                 }
+                // onMouseEnter={() => {
+                //   if (lensRef.current) lensRef.current.style.opacity = "1";
+                // }}
+                // onMouseLeave={() => {
+                //   if (lensRef.current) lensRef.current.style.opacity = "0";
+                // }}
                 onMouseMove={!isMobile ? handleMouseMove : undefined}
                 style={{
                   position: "relative",
@@ -219,6 +286,30 @@ export default function MaterialDetail() {
                     }}
                   />
                 )}
+                {/* {!isMobile && images[selectedIndex] && (
+                  <div
+                    ref={lensRef}
+                    style={{
+                      position: "absolute",
+                      width: LENS_SIZE,
+                      height: LENS_SIZE,
+                      border: "2px solid white",
+                      boxShadow: "0 0 8px rgba(0,0,0,0.4)",
+                      pointerEvents: "none",
+
+                      opacity: 0,
+                      transition: "opacity 0.15s",
+
+                      backgroundImage: `url(${resolveImageSrc(
+                        images[selectedIndex],
+                      )})`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundSize: `${imageSize.width * ZOOM_SCALE}px ${
+                        imageSize.height * ZOOM_SCALE
+                      }px`,
+                    }}
+                  />
+                )} */}
               </div>
 
               <div
