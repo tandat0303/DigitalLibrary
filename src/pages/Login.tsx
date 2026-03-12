@@ -37,14 +37,14 @@ export default function Login() {
       const accessToken = data?.accessToken;
       const user = data?.data;
 
-      if (!accessToken || !user) {
-        AppAlert({
-          icon: "error",
-          title: "Invalid username or password",
-        });
+      // if (!accessToken || !user) {
+      //   AppAlert({
+      //     icon: "error",
+      //     title: "Invalid account or password",
+      //   });
 
-        return;
-      }
+      //   return;
+      // }
 
       dispatch(setToken({ accessToken, data: user }));
 
@@ -53,7 +53,7 @@ export default function Login() {
       if (error?.response?.status === 401) {
         AppAlert({
           icon: "error",
-          title: "Invalid username or password",
+          title: "Invalid account or password",
         });
       } else {
         AppAlert({
@@ -129,7 +129,7 @@ export default function Login() {
                 block
                 className="login-button"
               >
-                Login
+                {loading ? "Logging in" : "Login"}
               </Button>
             </Form.Item>
           </Form>

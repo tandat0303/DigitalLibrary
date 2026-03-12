@@ -602,7 +602,7 @@ export default function HighAbrasionModal({
             }}
             className="save-modal-btn"
           >
-            Save
+            {loading ? "Saving" : "Save"}
           </Button>
         </div>
       </div>

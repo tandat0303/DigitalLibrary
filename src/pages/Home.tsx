@@ -16,7 +16,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 h-full">
-            {buttons.map((btn, idx) => {
+            {/* {buttons.map((btn, idx) => {
               const Icon = btn.icon;
               return (
                 <button
@@ -34,7 +34,30 @@ export default function Home() {
                   </span>
                 </button>
               );
-            })}
+            })} */}
+            {buttons.map((btn, idx) => (
+              <button
+                key={idx}
+                className="bg-white shadow-[0_10px_20px_rgba(128,128,128,0.3)]
+               hover:shadow-xl hover:bg-gray-50 transition-all duration-300
+               flex flex-col items-center justify-center cursor-pointer
+               active:bg-gray-100 group box-border px-2 py-5"
+                onClick={() => handleNavigate(btn.path)}
+              >
+                <img
+                  src={btn.image}
+                  alt={btn.label}
+                  className="w-[90px] h-[90px] object-contain mb-4
+                 group-hover:scale-110 transition-transform duration-300"
+                  loading="lazy"
+                  draggable={false}
+                />
+
+                <span className="tracking-wider text-sm font-semibold text-gray-800 text-center px-3">
+                  {btn.label}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>

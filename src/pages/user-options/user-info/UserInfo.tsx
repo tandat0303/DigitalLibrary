@@ -156,7 +156,7 @@ export default function UserInfo() {
                 // maxWidth: isMobile ? 300 : undefined,
               }}
             >
-              Save
+              {loading ? "Saving" : "Save"}
             </Button>
           </div>
         </Form>

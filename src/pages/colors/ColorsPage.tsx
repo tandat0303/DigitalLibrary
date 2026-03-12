@@ -466,6 +466,7 @@ export default function ColorsPage() {
         columns={3}
         maxImages={6}
         imageSize={250}
+        slotImageWidth={1.3}
         emptyImage={EmptyImg}
       />
     </>

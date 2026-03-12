@@ -1,6 +1,6 @@
 import type { ColumnsType } from "antd/es/table";
 import type { Image } from "./images";
-import { resolveImageSrc } from "../lib/helpers";
+import { normalizeRGB, resolveImageSrc } from "../lib/helpers";
 
 export interface ColorsResponse {
   data: ColorsDataType[];
@@ -57,7 +57,7 @@ export const getColorsColumns = (
     key: "RGBValue",
     render: () => null,
     onCell: (record: any) => {
-      const rgb = record.RGBValue?.trim();
+      const rgb = normalizeRGB(record.RGBValue);
       return {
         style: {
           backgroundColor: rgb ? `rgb(${rgb})` : undefined,

@@ -602,7 +602,7 @@ export default function NewLibraryModal({
             }}
             className="save-modal-btn"
           >
-            Save
+            {loading ? "Saving" : "Save"}
           </Button>
         </div>
       </div>

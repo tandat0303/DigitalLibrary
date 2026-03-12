@@ -201,7 +201,7 @@ export default function UsersModal({
             }}
             className="save-modal-btn"
           >
-            Save
+            {loading ? "Saving" : "Save"}
           </Button>
         </div>
       </div>

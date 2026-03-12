@@ -5,7 +5,7 @@ export const FILTER_OPTIONS = [
     label: "RGB Value",
     value: "rgb",
     render: () => (
-      <Form.Item name="RGBValue" label="RGB Value">
+      <Form.Item name="RgbValue" label="RGB Value">
         <Input />
       </Form.Item>
     ),
@@ -14,7 +14,7 @@ export const FILTER_OPTIONS = [
     label: "CMYK Value",
     value: "cmyk",
     render: () => (
-      <Form.Item name="CMYKValue" label="CMYK Value">
+      <Form.Item name="CmykValue" label="CMYK Value">
         <Input />
       </Form.Item>
     ),

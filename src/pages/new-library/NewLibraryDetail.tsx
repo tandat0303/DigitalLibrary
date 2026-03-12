@@ -27,12 +27,15 @@ export default function NewLibraryDetail() {
 
   const imageRef = useRef<HTMLDivElement | null>(null);
 
-  const [zoom, setZoom] = useState({
-    visible: false,
+  const lensRef = useRef<HTMLDivElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  const zoomData = useRef({
     x: 0,
     y: 0,
     bgX: 0,
     bgY: 0,
+    visible: false,
   });
 
   useEffect(() => {
@@ -77,8 +80,24 @@ export default function NewLibraryDetail() {
   const LENS_SIZE = 150;
   const ZOOM_SCALE = 1;
 
+  const updateLens = () => {
+    const lens = lensRef.current;
+    const data = zoomData.current;
+
+    if (!lens) return;
+
+    lens.style.left = `${data.x - LENS_SIZE / 2}px`;
+    lens.style.top = `${data.y - LENS_SIZE / 2}px`;
+
+    lens.style.backgroundPosition = `-${
+      data.bgX - LENS_SIZE / 2
+    }px -${data.bgY - LENS_SIZE / 2}px`;
+
+    rafRef.current = null;
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!imageRef.current) return;
+    if (!imageRef.current || !lensRef.current) return;
 
     const rect = imageRef.current.getBoundingClientRect();
 
@@ -93,21 +112,22 @@ export default function NewLibraryDetail() {
     const percentX = x / rect.width;
     const percentY = y / rect.height;
 
-    const bgX = percentX * rect.width * ZOOM_SCALE;
-    const bgY = percentY * rect.height * ZOOM_SCALE;
-
-    setZoom({
-      visible: true,
+    zoomData.current = {
       x,
       y,
-      bgX,
-      bgY,
-    });
+      bgX: percentX * rect.width * ZOOM_SCALE,
+      bgY: percentY * rect.height * ZOOM_SCALE,
+      visible: true,
+    };
 
     setImageSize({
       width: rect.width,
       height: rect.height,
     });
+
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(updateLens);
+    }
   };
 
   if (loading) {
@@ -157,16 +177,12 @@ export default function NewLibraryDetail() {
             <div className="flex flex-col h-full gap-4">
               <div
                 ref={imageRef}
-                onMouseEnter={
-                  !isMobile
-                    ? () => setZoom((z) => ({ ...z, visible: true }))
-                    : undefined
-                }
-                onMouseLeave={
-                  !isMobile
-                    ? () => setZoom((z) => ({ ...z, visible: false }))
-                    : undefined
-                }
+                onMouseEnter={() => {
+                  if (lensRef.current) lensRef.current.style.opacity = "1";
+                }}
+                onMouseLeave={() => {
+                  if (lensRef.current) lensRef.current.style.opacity = "0";
+                }}
                 onMouseMove={!isMobile ? handleMouseMove : undefined}
                 style={{
                   position: "relative",
@@ -200,23 +216,27 @@ export default function NewLibraryDetail() {
                   </span>
                 )}
 
-                {!isMobile && zoom.visible && images[selectedIndex] && (
+                {!isMobile && images[selectedIndex] && (
                   <div
+                    ref={lensRef}
                     style={{
                       position: "absolute",
                       width: LENS_SIZE,
                       height: LENS_SIZE,
-                      left: zoom.x - LENS_SIZE / 2,
-                      top: zoom.y - LENS_SIZE / 2,
                       border: "2px solid white",
                       boxShadow: "0 0 8px rgba(0,0,0,0.4)",
                       pointerEvents: "none",
 
-                      backgroundImage: `url(${resolveImageSrc(images[selectedIndex])})`,
-                      backgroundRepeat: "no-repeat",
+                      opacity: 0,
+                      transition: "opacity 0.15s",
 
-                      backgroundSize: `${imageSize.width * ZOOM_SCALE}px ${imageSize.height * ZOOM_SCALE}px`,
-                      backgroundPosition: `-${zoom.bgX - LENS_SIZE / 2}px -${zoom.bgY - LENS_SIZE / 2}px`,
+                      backgroundImage: `url(${resolveImageSrc(
+                        images[selectedIndex],
+                      )})`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundSize: `${imageSize.width * ZOOM_SCALE}px ${
+                        imageSize.height * ZOOM_SCALE
+                      }px`,
                     }}
                   />
                 )}

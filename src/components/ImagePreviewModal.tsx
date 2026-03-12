@@ -14,6 +14,7 @@ interface ImagePreviewModalProps {
   labels?: string[];
   enableHoverPreview?: boolean;
   previewSize?: number;
+  slotImageWidth?: number;
 }
 
 export default function ImagePreviewModal({
@@ -27,6 +28,7 @@ export default function ImagePreviewModal({
   labels = [],
   enableHoverPreview = true,
   previewSize = 320,
+  slotImageWidth,
 }: ImagePreviewModalProps) {
   const { useBreakpoint } = Grid;
   const screens = useBreakpoint();
@@ -36,6 +38,9 @@ export default function ImagePreviewModal({
 
   const responsiveColumns = isMobile ? 2 : columns;
   const responsiveImageSize = isMobile ? 120 : imageSize;
+  const slotWidth = slotImageWidth
+    ? responsiveImageSize * slotImageWidth
+    : responsiveImageSize;
   const gap = responsiveImageSize * 0.12;
 
   const [hoverSrc, setHoverSrc] = useState<string | null>(null);
@@ -55,9 +60,8 @@ export default function ImagePreviewModal({
 
   const modalWidth = isMobile
     ? "95vw"
-    : responsiveColumns * responsiveImageSize +
-      (responsiveColumns - 1) * gap +
-      48;
+    : // : responsiveColumns * responsiveImageSize +
+      responsiveColumns * slotWidth + (responsiveColumns - 1) * gap + 48;
 
   const handleMouseEnter = (e: React.MouseEvent, file: File | Image) => {
     if (!allowHoverPreview || !file) return;
@@ -103,7 +107,8 @@ export default function ImagePreviewModal({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${responsiveColumns}, ${responsiveImageSize}px)`,
+              // gridTemplateColumns: `repeat(${responsiveColumns}, ${responsiveImageSize}px)`,
+              gridTemplateColumns: `repeat(${responsiveColumns}, ${slotWidth}px)`,
               gap,
               justifyContent: "center",
             }}
@@ -118,7 +123,8 @@ export default function ImagePreviewModal({
                 <div
                   key={index}
                   style={{
-                    width: responsiveImageSize,
+                    // width: responsiveImageSize,
+                    width: slotWidth,
                     height: responsiveImageSize,
                     // borderRadius: imageSize * 0.06,
                     border: "1px solid #ddd",
@@ -127,6 +133,7 @@ export default function ImagePreviewModal({
                     alignItems: "center",
                     justifyContent: "center",
                     overflow: "hidden",
+                    position: "relative",
                     cursor: src ? "zoom-in" : "default",
                   }}
                   onMouseEnter={(e) => handleMouseEnter(e, src)}
@@ -139,7 +146,9 @@ export default function ImagePreviewModal({
                       style={{
                         width: "100%",
                         height: "100%",
-                        objectFit: "cover",
+                        objectFit: "contain",
+                        objectPosition: "center",
+                        display: "block",
                       }}
                     />
                   ) : (

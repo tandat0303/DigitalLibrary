@@ -224,7 +224,7 @@ export default function ColorsModal({
             }}
             className="save-modal-btn"
           >
-            Save
+            {loading ? "Saving" : "Save"}
           </Button>
         </div>
       </div>

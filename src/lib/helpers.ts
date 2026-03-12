@@ -154,6 +154,14 @@ export function normalizeColumns<T>(
   });
 }
 
+export const normalizeRGB = (value?: string) => {
+  if (!value) return undefined;
+
+  const rgb = value.replace(/[[\]]/g, "").replace(/\s+/g, "");
+
+  return /^\d{1,3},\d{1,3},\d{1,3}$/.test(rgb) ? rgb : undefined;
+};
+
 const formatImageType = (label?: string) => {
   if (!label) return "";
 
