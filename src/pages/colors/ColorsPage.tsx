@@ -31,6 +31,7 @@ import { buildQueryFilters } from "../../lib/buildQueryFilters";
 import Swal from "sweetalert2";
 import { SwalLoading } from "../../components/ui/SwalLoading";
 import { SwalNotification } from "../../components/ui/SwalNotification";
+import { SafeTooltip } from "../../components/ui/Tooltip";
 
 export default function ColorsPage() {
   const [form] = Form.useForm();
@@ -361,36 +362,44 @@ export default function ColorsPage() {
                 wrap
                 className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
               >
-                <Button
-                  className="actions-btn w-full lg:w-auto"
-                  onClick={handleCreate}
-                >
-                  NEW COLOR
-                </Button>
+                <SafeTooltip title={"Create new color"}>
+                  <Button
+                    className="actions-btn w-full lg:w-auto"
+                    onClick={handleCreate}
+                  >
+                    NEW COLOR
+                  </Button>
+                </SafeTooltip>
 
-                <Button
-                  className="actions-btn w-full lg:w-auto"
-                  // disabled={!selectedRow}
-                  onClick={handleEdit}
-                >
-                  EDIT COLOR
-                </Button>
+                <SafeTooltip title={"Update color information"}>
+                  <Button
+                    className="actions-btn w-full lg:w-auto"
+                    // disabled={!selectedRow}
+                    onClick={handleEdit}
+                  >
+                    EDIT COLOR
+                  </Button>
+                </SafeTooltip>
 
-                <Button
-                  className="actions-btn w-full lg:w-auto"
-                  // disabled={!selectedRow}
-                  onClick={confirmRemove}
-                >
-                  REMOVE COLOR
-                </Button>
+                <SafeTooltip title={"Delete color"}>
+                  <Button
+                    className="actions-btn w-full lg:w-auto"
+                    // disabled={!selectedRow}
+                    onClick={confirmRemove}
+                  >
+                    REMOVE COLOR
+                  </Button>
+                </SafeTooltip>
 
-                <Button
-                  className="actions-btn w-full lg:w-auto"
-                  // icon={<Upload className="h-5" />}
-                  onClick={() => setOpenImport(true)}
-                >
-                  <Upload />
-                </Button>
+                <SafeTooltip title={"Import Excel file"}>
+                  <Button
+                    className="actions-btn w-full lg:w-auto"
+                    // icon={<Upload className="h-5" />}
+                    onClick={() => setOpenImport(true)}
+                  >
+                    <Upload />
+                  </Button>
+                </SafeTooltip>
               </Space>
 
               <span className="adidas-font text-left lg:text-right">

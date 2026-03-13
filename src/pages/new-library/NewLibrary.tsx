@@ -21,7 +21,7 @@ import { Download, QrCode, Search, Upload } from "lucide-react";
 import ImportExcelModal from "../../components/ImportExcelModal";
 import FilterCollapse from "../../components/FilterCollapse";
 import UploadAttachModal from "../../components/UploadAttachModal";
-import { IMAGE_FIELD_MAP, IMAGE_LABELS } from "../../lib/helpers";
+import { IMAGE_FIELD_MAP, IMAGE_LABELS, sleep } from "../../lib/helpers";
 import ImagePreviewModal from "../../components/ImagePreviewModal";
 import EmptyImg from "@/assets/nodata.png";
 import CameraModal from "../../components/CameraModal";
@@ -38,6 +38,7 @@ import {
 } from "../../types/newLibrary";
 import newLibraryApi from "../../api/newLibrary.api";
 import NewLibraryModal from "./NewLibraryModal";
+import { SafeTooltip } from "../../components/ui/Tooltip";
 
 export default function NewLibrary() {
   const [form] = Form.useForm();
@@ -127,6 +128,10 @@ export default function NewLibrary() {
     try {
       const params = { ...filters };
 
+      SwalLoading("Exporting Excel file...");
+
+      const start = Date.now();
+
       const response = await newLibraryApi.exportExcel(params);
 
       const url = window.URL.createObjectURL(new Blob([response]));
@@ -141,16 +146,33 @@ export default function NewLibrary() {
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      AppAlert({ icon: "success", title: "Export Excel successfully" });
+      const elapsed = Date.now() - start;
+      if (elapsed < 1000) {
+        await sleep(1000 - elapsed);
+      }
+
+      Swal.close();
+
+      SwalNotification("success", "Export successfully");
     } catch (error) {
-      console.log("Failed to export Excel: ", error);
-      AppAlert({ icon: "error", title: "Failed to export Excel" });
+      Swal.close();
+
+      SwalNotification("error", getApiErrorMessage(error));
     }
   };
 
   const handleExportExcelQR = async () => {
+    if (Object.keys(filters).length === 0) {
+      AppAlert({ icon: "warning", title: "Please choose filter" });
+      return;
+    }
+
     try {
       const params = { ...filters };
+
+      SwalLoading("Exporting QR Excel file...");
+
+      const start = Date.now();
 
       const response = await newLibraryApi.exportExcelQR(params);
 
@@ -164,9 +186,18 @@ export default function NewLibrary() {
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      AppAlert({ icon: "success", title: "Export QR Excel successfully" });
+      const elapsed = Date.now() - start;
+      if (elapsed < 1000) {
+        await sleep(1000 - elapsed);
+      }
+
+      Swal.close();
+
+      SwalNotification("success", "Export successfully");
     } catch (error) {
-      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+      Swal.close();
+
+      SwalNotification("error", getApiErrorMessage(error));
     }
   };
 
@@ -489,6 +520,19 @@ export default function NewLibrary() {
     }
   };
 
+  const handleDownloadReport = () => {
+    if (!selectedRow?.FilePath || !selectedRow?.FileName) return;
+
+    const link = document.createElement("a");
+    link.href = selectedRow.FilePath;
+    link.download = selectedRow.FileName;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <>
       <Row gutter={24}>
@@ -579,76 +623,105 @@ export default function NewLibrary() {
                 wrap
                 className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
               >
-                <Button
-                  className="actions-btn w-full lg:w-auto"
-                  onClick={handleCreate}
-                >
-                  NEW MATERIAL
-                </Button>
+                <SafeTooltip title={"Create new material"}>
+                  <Button
+                    className="actions-btn w-full lg:w-auto"
+                    onClick={handleCreate}
+                  >
+                    NEW MATERIAL
+                  </Button>
+                </SafeTooltip>
 
-                <Button
-                  className="actions-btn w-full lg:w-auto"
-                  // disabled={!selectedRow}
-                  onClick={handleEdit}
-                >
-                  EDIT MATERIAL
-                </Button>
+                <SafeTooltip title={"Update material information"}>
+                  <Button
+                    className="actions-btn w-full lg:w-auto"
+                    // disabled={!selectedRow}
+                    onClick={handleEdit}
+                  >
+                    EDIT MATERIAL
+                  </Button>
+                </SafeTooltip>
 
-                <Button
-                  className="actions-btn w-full lg:w-auto"
-                  // disabled={!selectedRow}
-                  onClick={confirmRemove}
-                >
-                  REMOVE MATERIAL
-                </Button>
+                <SafeTooltip title={"Delete material"}>
+                  <Button
+                    className="actions-btn w-full lg:w-auto"
+                    // disabled={!selectedRow}
+                    onClick={confirmRemove}
+                  >
+                    REMOVE MATERIAL
+                  </Button>
+                </SafeTooltip>
 
-                <Button
-                  className="actions-btn w-full lg:w-auto"
-                  // icon={<Upload className="h-5" />}
-                  onClick={() => setOpenImport(true)}
-                >
-                  <Upload />
-                </Button>
+                <SafeTooltip title={"Import Excel file"}>
+                  <Button
+                    className="actions-btn w-full lg:w-auto"
+                    // icon={<Upload className="h-5" />}
+                    onClick={() => setOpenImport(true)}
+                  >
+                    <Upload />
+                  </Button>
+                </SafeTooltip>
 
-                <Button
-                  className="actions-btn w-full lg:w-auto"
-                  // icon={<Download className="h-5" />}
-                  onClick={handleExportExcel}
-                >
-                  <Download />
-                </Button>
+                <SafeTooltip title={"Export Excel file"}>
+                  <Button
+                    className="actions-btn w-full lg:w-auto"
+                    // icon={<Download className="h-5" />}
+                    onClick={handleExportExcel}
+                  >
+                    <Download />
+                  </Button>
+                </SafeTooltip>
 
-                <Button
-                  className="actions-btn w-full lg:w-auto"
-                  onClick={handleExportExcelQR}
-                  // icon={<QrCode className="h-5" />}
-                >
-                  <QrCode />
-                </Button>
+                <SafeTooltip title={"Export QR Excel file"}>
+                  <Button
+                    className="actions-btn w-full lg:w-auto"
+                    onClick={handleExportExcelQR}
+                    // icon={<QrCode className="h-5" />}
+                  >
+                    <QrCode />
+                  </Button>
+                </SafeTooltip>
 
-                <Button
-                  className="extra-actions-btn w-full lg:w-auto"
-                  onClick={() => setOpenCapture(true)}
-                >
-                  Detail Material
-                </Button>
-                <Button
-                  className="extra-actions-btn w-full lg:w-auto"
-                  // disabled={!selectedRow}
-                  onClick={() => {
-                    if (!selectedRow) {
-                      AppAlert({
-                        icon: "warning",
-                        title: "Please choose a row data",
-                      });
-                      return;
-                    }
+                <SafeTooltip title={"Scan material image"}>
+                  <Button
+                    className="extra-actions-btn w-full lg:w-auto"
+                    onClick={() => setOpenCapture(true)}
+                  >
+                    Detail Material
+                  </Button>
+                </SafeTooltip>
 
-                    setOpenUploadAttach(true);
-                  }}
-                >
-                  Attach File
-                </Button>
+                <SafeTooltip title={"Upload attach file"}>
+                  <Button
+                    className="extra-actions-btn w-full lg:w-auto"
+                    // disabled={!selectedRow}
+                    onClick={() => {
+                      if (!selectedRow) {
+                        AppAlert({
+                          icon: "warning",
+                          title: "Please choose a row data",
+                        });
+                        return;
+                      }
+
+                      setOpenUploadAttach(true);
+                    }}
+                  >
+                    Attach File
+                  </Button>
+                </SafeTooltip>
+
+                {selectedRow && selectedRow.FileName && (
+                  <SafeTooltip title={"Download attach file"}>
+                    <Button
+                      className="extra-actions-btn w-full lg:w-auto"
+                      onClick={handleDownloadReport}
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Report
+                    </Button>
+                  </SafeTooltip>
+                )}
               </Space>
 
               <span className="adidas-font text-left lg:text-right">

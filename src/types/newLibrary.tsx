@@ -6,6 +6,7 @@ import {
   resolveImageSrc,
   sortImagesByType,
 } from "../lib/helpers";
+import { SafeTooltip } from "../components/ui/Tooltip";
 
 export interface NewLibraryResponse {
   data: NewLibraryDataType[];
@@ -151,13 +152,15 @@ export const getNewLibraryColumns = (
       align: "center",
       render: (_, record) => (
         <div className="flex items-center justify-center h-full">
-          <Eye
-            className="cursor-pointer h-4"
-            onClick={(e) => {
-              e.stopPropagation();
-              onView(record);
-            }}
-          />
+          <SafeTooltip title={"Show material detail information"}>
+            <Eye
+              className="cursor-pointer h-4"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(record);
+              }}
+            />
+          </SafeTooltip>
         </div>
       ),
     },

@@ -15,9 +15,11 @@ import { useAppDispatch, useAppSelector } from "../hooks/auth";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { getApiErrorMessage } from "../lib/getApiErrorMsg";
+import Loading from "../components/ui/Loading";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
+  const [navigating, setNavigating] = useState(false);
 
   const navigate = useNavigate();
 
@@ -26,7 +28,7 @@ export default function Login() {
   const { accessToken, user, isHydrated } = useAppSelector((s) => s.auth);
 
   if (!isHydrated) return null;
-  if (accessToken && user) return <Navigate to="/" replace />;
+  if (!navigating && accessToken && user) return <Navigate to="/" replace />;
 
   const handleSubmit = async (values: LoginPayload) => {
     setLoading(true);
@@ -48,7 +50,8 @@ export default function Login() {
 
       dispatch(setToken({ accessToken, data: user }));
 
-      navigate("/", { replace: true });
+      setNavigating(true);
+      setTimeout(() => navigate("/", { replace: true }), 1000);
     } catch (error: any) {
       if (error?.response?.status === 401) {
         AppAlert({
@@ -65,6 +68,8 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  if (navigating) return <Loading overlay fullScreen />;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
