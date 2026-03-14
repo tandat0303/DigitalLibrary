@@ -364,7 +364,7 @@ export default function ColorsPage() {
               >
                 <SafeTooltip title={"Create new color"}>
                   <Button
-                    className="actions-btn w-full lg:w-auto"
+                    className="add-btn w-full lg:w-auto"
                     onClick={handleCreate}
                   >
                     NEW COLOR
@@ -373,7 +373,7 @@ export default function ColorsPage() {
 
                 <SafeTooltip title={"Update color information"}>
                   <Button
-                    className="actions-btn w-full lg:w-auto"
+                    className="edit-btn w-full lg:w-auto"
                     // disabled={!selectedRow}
                     onClick={handleEdit}
                   >
@@ -383,7 +383,7 @@ export default function ColorsPage() {
 
                 <SafeTooltip title={"Delete color"}>
                   <Button
-                    className="actions-btn w-full lg:w-auto"
+                    className="delete-btn w-full lg:w-auto"
                     // disabled={!selectedRow}
                     onClick={confirmRemove}
                   >

@@ -1,5 +1,5 @@
 import Logo from "../assets/LYLogo_White 1.png";
-import LoginBanner from "../assets/login-banner.jpg";
+import LoginBanner from "../assets/login-banner.png";
 import { Form, Input, Button } from "antd";
 import {
   IdcardOutlined,
@@ -142,7 +142,7 @@ export default function Login() {
 
         {/* Right Side */}
         {/*max-h-[520px]*/}
-        <div className="hidden md:flex md:w-[45%] bg-gray-200 items-center justify-center p-6">
+        <div className="hidden md:flex md:w-[45%] bg-[#cee9fe]/50 items-center justify-center p-6">
           <img
             src={LoginBanner}
             alt="Workspace illustration"

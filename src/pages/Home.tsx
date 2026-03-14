@@ -1,5 +1,6 @@
 import { buttons } from "../components/ui/HomeButtons";
 import Loading from "../components/ui/Loading";
+import { ShineText } from "../components/ui/ShineText";
 import { useLoadingNavigate } from "../hooks/useLoadingNavigate";
 
 export default function Home() {
@@ -12,7 +13,9 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-[70%] lg:-mt-24">
           <div className="mb-6">
-            <h1 className="text-5xl font-extrabold text-black">LYG</h1>
+            <h1 className="text-5xl font-extrabold bg-black border w-fit rounded-lg flex items-center justify-center">
+              <ShineText>LYG</ShineText>
+            </h1>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 h-full">

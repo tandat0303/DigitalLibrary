@@ -625,7 +625,7 @@ export default function HighAbrasion() {
               >
                 <SafeTooltip title={"Create new material"}>
                   <Button
-                    className="actions-btn w-full lg:w-auto"
+                    className="add-btn w-full lg:w-auto"
                     onClick={handleCreate}
                   >
                     NEW MATERIAL
@@ -634,7 +634,7 @@ export default function HighAbrasion() {
 
                 <SafeTooltip title={"Update material information"}>
                   <Button
-                    className="actions-btn w-full lg:w-auto"
+                    className="edit-btn w-full lg:w-auto"
                     // disabled={!selectedRow}
                     onClick={handleEdit}
                   >
@@ -644,7 +644,7 @@ export default function HighAbrasion() {
 
                 <SafeTooltip title={"Delete material"}>
                   <Button
-                    className="actions-btn w-full lg:w-auto"
+                    className="delete-btn w-full lg:w-auto"
                     // disabled={!selectedRow}
                     onClick={confirmRemove}
                   >

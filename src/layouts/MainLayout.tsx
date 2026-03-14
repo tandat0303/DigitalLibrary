@@ -106,14 +106,14 @@ export default function MainLayout() {
           {isShowInfo ? <SpecialHeader /> : <Header />}
         </div>
 
-        <div className="mt-9">
+        <div className="mt-13">
           {!isHome && !isShowInfo && (
             <Breadcrumb
               separator=">"
               items={breadcrumbItems}
               style={{
                 padding: "6px",
-                paddingLeft: 60,
+                paddingLeft: 10,
                 fontSize: 16,
                 fontWeight: "bold",
               }}
