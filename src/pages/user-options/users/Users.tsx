@@ -177,14 +177,14 @@ export default function Users() {
                 className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
               >
                 <Button
-                  className="actions-btn w-full lg:w-auto"
+                  className="add-btn w-full lg:w-auto"
                   onClick={handleCreate}
                 >
                   NEW USER
                 </Button>
 
                 <Button
-                  className="actions-btn w-full lg:w-auto"
+                  className="edit-btn w-full lg:w-auto"
                   // disabled={!selectedRow}
                   onClick={handleEdit}
                 >
@@ -192,7 +192,7 @@ export default function Users() {
                 </Button>
 
                 <Button
-                  className="actions-btn w-full lg:w-auto"
+                  className="delete-btn w-full lg:w-auto"
                   // disabled={!selectedRow}
                   onClick={confirmRemove}
                 >

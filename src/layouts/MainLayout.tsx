@@ -28,6 +28,7 @@ export default function MainLayout() {
     "/materials": "Materials",
     "/high-abrasion": "High Abrasion",
     "/new-library": "New Library",
+    "/last-library": "Last Library",
   };
 
   const getPageTitle = () => {
@@ -63,8 +64,16 @@ export default function MainLayout() {
     location.pathname,
   );
 
+  const isLastLibraryShowInfo = !!matchPath(
+    "/last-library/show-info/:id",
+    location.pathname,
+  );
+
   const isShowInfo =
-    isMaterialShowInfo || isHighAbrasionShowInfo || isNewLibraryShowInfo;
+    isMaterialShowInfo ||
+    isHighAbrasionShowInfo ||
+    isNewLibraryShowInfo ||
+    isLastLibraryShowInfo;
 
   const isSpecialLayout = isHome || isShowInfo;
 
@@ -106,7 +115,7 @@ export default function MainLayout() {
           {isShowInfo ? <SpecialHeader /> : <Header />}
         </div>
 
-        <div className="mt-13">
+        <div className="mt-10">
           {!isHome && !isShowInfo && (
             <Breadcrumb
               separator=">"
@@ -128,6 +137,7 @@ export default function MainLayout() {
             // height: "calc(100vh - 48px)",
             overflow: isSpecialLayout ? "hidden" : "auto",
             padding: isSpecialLayout ? 0 : "0px 24px",
+            // backgroundColor: "#f5f4f0",
           }}
         >
           {pageTitle && (

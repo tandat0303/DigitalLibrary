@@ -1,5 +1,4 @@
 import Logo from "../assets/LYLogo_White 1.png";
-import LoginBanner from "../assets/login-banner.png";
 import { Form, Input, Button } from "antd";
 import {
   IdcardOutlined,
@@ -7,6 +6,8 @@ import {
   EyeInvisibleOutlined,
   EyeTwoTone,
 } from "@ant-design/icons";
+import Lottie from "lottie-react";
+import loginAnimation from "../assets/login-banner-animation.json";
 import type { LoginPayload } from "../types/auth";
 import authApi from "../api/auth.api";
 import { setToken } from "../features/authSlice";
@@ -16,15 +17,15 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { getApiErrorMessage } from "../lib/getApiErrorMsg";
 import Loading from "../components/ui/Loading";
+import { requiredMessage } from "../lib/helpers";
+import dayjs from "dayjs";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [navigating, setNavigating] = useState(false);
 
   const navigate = useNavigate();
-
   const dispatch = useAppDispatch();
-
   const { accessToken, user, isHydrated } = useAppSelector((s) => s.auth);
 
   if (!isHydrated) return null;
@@ -32,37 +33,19 @@ export default function Login() {
 
   const handleSubmit = async (values: LoginPayload) => {
     setLoading(true);
-
     try {
       const data = await authApi.login(values);
-
       const accessToken = data?.accessToken;
       const user = data?.data;
 
-      // if (!accessToken || !user) {
-      //   AppAlert({
-      //     icon: "error",
-      //     title: "Invalid account or password",
-      //   });
-
-      //   return;
-      // }
-
       dispatch(setToken({ accessToken, data: user }));
-
       setNavigating(true);
       setTimeout(() => navigate("/", { replace: true }), 1000);
     } catch (error: any) {
       if (error?.response?.status === 401) {
-        AppAlert({
-          icon: "error",
-          title: "Invalid account or password",
-        });
+        AppAlert({ icon: "error", title: "Invalid account or password" });
       } else {
-        AppAlert({
-          icon: "error",
-          title: getApiErrorMessage(error),
-        });
+        AppAlert({ icon: "error", title: getApiErrorMessage(error) });
       }
     } finally {
       setLoading(false);
@@ -72,52 +55,46 @@ export default function Login() {
   if (navigating) return <Loading overlay fullScreen />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
-        {/* Left Side */}
-        <div className="flex flex-col justify-center flex-1 px-6 py-10 sm:px-10 md:px-12">
-          <div className="mb-6 flex justify-center">
-            <img src={Logo} alt="Logo" className="h-16 object-contain" />
+    <div className="login-page">
+      <div className="login-card">
+        {/* ── LEFT: Form ── */}
+        <div className="login-form-side">
+          {/* Brand */}
+          <div className="login-brand">
+            <img src={Logo} alt="LYG Logo" className="login-logo" />
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight text-center">
-            Welcome Back !
-          </h1>
-
-          <p className="text-sm text-gray-400 mb-8 text-center">
-            Please enter your details
-          </p>
+          <h1 className="login-title">Welcome back</h1>
+          <p className="login-subtitle">Login to continue</p>
 
           <Form
             layout="vertical"
             onFinish={handleSubmit}
-            className="w-full max-w-md mx-auto md:mx-0"
+            className="login-form"
             autoComplete="off"
           >
-            {/* Account */}
             <Form.Item
               label="Account"
               name="username"
-              rules={[{ required: true, message: "Please enter your account" }]}
+              rules={[{ required: true, message: requiredMessage }]}
             >
               <Input
                 prefix={<IdcardOutlined />}
                 size="large"
+                placeholder="Enter account"
                 className="login-input"
               />
             </Form.Item>
 
-            {/* Password */}
             <Form.Item
               label="Password"
               name="password"
-              rules={[
-                { required: true, message: "Please enter your password" },
-              ]}
+              rules={[{ required: true, message: requiredMessage }]}
             >
               <Input.Password
                 prefix={<LockOutlined />}
                 size="large"
+                placeholder="••••••••"
                 iconRender={(visible) =>
                   visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
                 }
@@ -125,7 +102,7 @@ export default function Login() {
               />
             </Form.Item>
 
-            <Form.Item>
+            <Form.Item style={{ marginBottom: 0 }}>
               <Button
                 type="primary"
                 htmlType="submit"
@@ -134,20 +111,37 @@ export default function Login() {
                 block
                 className="login-button"
               >
-                {loading ? "Logging in" : "Login"}
+                {loading ? "Logging in..." : "Login"}
               </Button>
             </Form.Item>
           </Form>
+
+          <p className="login-footer">
+            LYG © {dayjs().year()} — Digital Library
+          </p>
         </div>
 
-        {/* Right Side */}
-        {/*max-h-[520px]*/}
-        <div className="hidden md:flex md:w-[45%] bg-[#cee9fe]/50 items-center justify-center p-6">
-          <img
-            src={LoginBanner}
-            alt="Workspace illustration"
-            className="w-full h-full max-h-130 object-contain"
-          />
+        {/* ── RIGHT: Lottie banner ── */}
+        <div className="login-banner-side">
+          <span className="login-ring login-ring--lg" />
+          <span className="login-ring login-ring--sm" />
+
+          <div className="login-lottie-wrap">
+            <Lottie
+              animationData={loginAnimation}
+              loop
+              className="login-lottie"
+            />
+          </div>
+
+          <div className="login-tagline">
+            <h2>Smart Library</h2>
+            <p>
+              Internal Management System
+              <br />
+              LYG
+            </p>
+          </div>
         </div>
       </div>
     </div>

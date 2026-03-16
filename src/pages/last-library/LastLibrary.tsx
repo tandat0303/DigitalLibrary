@@ -37,10 +37,10 @@ import {
   type NewLibraryDataType,
 } from "../../types/newLibrary";
 import newLibraryApi from "../../api/newLibrary.api";
-import NewLibraryModal from "./NewLibraryModal";
 import { SafeTooltip } from "../../components/ui/Tooltip";
+import LastLibraryModal from "./LastLibraryModal";
 
-export default function NewLibrary() {
+export default function LastLibrary() {
   const [form] = Form.useForm();
 
   const user = useAppSelector((state) => state.auth.user);
@@ -70,7 +70,7 @@ export default function NewLibrary() {
   };
 
   const handleDetailView = (record: NewLibraryDataType) => {
-    window.open(`/new-library/show-info/${record.ID}`, "_blank");
+    window.open(`/last-library/show-info/${record.ID}`, "_blank");
   };
 
   const columns = getNewLibraryColumns(handlePreview, handleDetailView);
@@ -762,7 +762,7 @@ export default function NewLibrary() {
         </Col>
       </Row>
 
-      <NewLibraryModal
+      <LastLibraryModal
         open={openModal}
         mode={mode}
         initialValues={mode === "edit" ? selectedRow : undefined}

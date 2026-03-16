@@ -141,7 +141,7 @@ export default function HighAbrasionDetail() {
     <div
       style={{
         height: isMobile ? "auto" : "calc(100vh - 50px)",
-        // paddingTop: 20,
+        paddingTop: 20,
       }}
     >
       <Card

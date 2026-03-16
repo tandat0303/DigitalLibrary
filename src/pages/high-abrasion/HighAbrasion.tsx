@@ -773,7 +773,7 @@ export default function HighAbrasion() {
       <ImportExcelModal
         open={openImport}
         onClose={() => setOpenImport(false)}
-        sampleFileName="Ex_File_Material"
+        sampleFileName="Ex_File_High_Abrasion"
         onImport={(file) => {
           if (!file) return;
           handleImportExcel(file);

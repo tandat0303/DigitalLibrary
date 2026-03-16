@@ -1,6 +1,5 @@
-import { FaUser, FaUserCircle, FaUsers, FaUserSecret } from "react-icons/fa";
-import { IoLogOutOutline } from "react-icons/io5"; //IoClose
-// import { HiMenuAlt3 } from "react-icons/hi";
+import { FaUserCircle, FaUsers, FaUserSecret } from "react-icons/fa";
+import { IoLogOutOutline } from "react-icons/io5";
 import logo from "../assets/logo-LY-sm.png";
 import Loading from "./ui/Loading";
 import { useLoadingNavigate } from "../hooks/useLoadingNavigate";
@@ -8,26 +7,25 @@ import { useAppDispatch, useAppSelector } from "../hooks/auth";
 import { logout } from "../features/authSlice";
 import storage from "../lib/storage";
 import { useEffect, useRef, useState } from "react";
-import { DownOutlined } from "@ant-design/icons";
+import { useLocation } from "react-router-dom";
+import { getInitials } from "../lib/helpers";
 
 interface MenuProps {
   onClick: () => void;
   icon: React.ReactNode;
   title: string;
+  danger?: boolean;
 }
 
 export default function Header() {
-  // const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
   const [isShow, setIsShow] = useState<boolean>(false);
-  // const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   const dispatch = useAppDispatch();
-
   const user = useAppSelector((state) => state.auth.user);
-
   const { handleNavigate, loading } = useLoadingNavigate();
-
   const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleMenu = () => setIsShow((prev) => !prev);
@@ -38,7 +36,6 @@ export default function Header() {
         setIsShow(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -47,43 +44,42 @@ export default function Header() {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setIsShow(false);
     };
-
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
-  const handleLogout = () => {
-    storage.remove("auth");
-
-    dispatch(logout());
-
-    window.location.href = "/login";
-
-    // setIsMobileMenuOpen(false);
+  const handleNavHome = () => {
+    if (isHome) return;
+    handleNavigate("/");
   };
 
-  const menuOption: MenuProps[] = [
+  const handleLogout = () => {
+    storage.remove("auth");
+    dispatch(logout());
+    window.location.href = "/login";
+  };
+
+  const menuOptions: MenuProps[] = [
     {
       onClick: () => handleNavigate("/user-limit"),
-      icon: <FaUserSecret size={20} className="text-primary flex-shrink-0" />,
+      icon: <FaUserSecret size={14} />,
       title: "User Limit",
     },
     {
       onClick: () => handleNavigate("/users"),
-      icon: <FaUsers size={20} className="text-primary flex-shrink-0" />,
+      icon: <FaUsers size={14} />,
       title: "Users",
     },
     {
       onClick: () => handleNavigate("/user-info"),
-      icon: <FaUserCircle size={20} className="text-primary flex-shrink-0" />,
+      icon: <FaUserCircle size={14} />,
       title: "User Info",
     },
     {
       onClick: handleLogout,
-      icon: (
-        <IoLogOutOutline size={20} className="text-primary flex-shrink-0" />
-      ),
+      icon: <IoLogOutOutline size={15} />,
       title: "Logout",
+      danger: true,
     },
   ];
 
@@ -91,66 +87,76 @@ export default function Header() {
     <>
       {loading && <Loading fullScreen overlay />}
 
-      <header className="w-full bg-black text-white flex items-center justify-between px-1.5 py-1.5">
-        <div
-          className="h-10 flex items-center cursor-pointer"
-          onClick={() => {
-            handleNavigate("/");
-            // setIsMobileMenuOpen(false);
-          }}
-        >
+      <header className="header-root">
+        <div className="header-logo" onClick={handleNavHome}>
           <img
             src={logo || "/placeholder.svg"}
             alt="Logo"
-            className="h-full object-contain"
+            className="h-8 object-contain"
           />
         </div>
 
         <div className="relative" ref={menuRef}>
           <button
-            className="flex items-center gap-2 lg:gap-3 cursor-pointer
-             px-3 py-2 rounded-lg
-             hover:bg-white/10 transition-all"
+            className={`header-user-btn ${isShow ? "header-user-btn--open" : ""}`}
             onClick={toggleMenu}
+            aria-haspopup="true"
+            aria-expanded={isShow}
           >
-            <FaUser size={18} className="flex-shrink-0" />
-
-            <span className="text-sm lg:text-base max-w-[120px] truncate leading-none">
-              {user?.fullname}
+            <span className="header-avatar-wrap">
+              <span className="header-avatar">
+                {getInitials(user?.fullname)}
+              </span>
+              <span className="header-online-dot" />
             </span>
 
-            <DownOutlined
-              className={`text-xs transition-transform duration-200 ${
-                isShow ? "rotate-180" : ""
-              }`}
-            />
+            <span className="header-username">{user?.fullname}</span>
+
+            <svg
+              className={`header-chevron ${isShow ? "header-chevron--up" : ""}`}
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="4 6 8 10 12 6" />
+            </svg>
           </button>
 
-          {/* DROPDOWN */}
           <div
-            className={`absolute top-12 right-0 w-30 bg-white text-primary shadow-lg rounded-lg overflow-hidden transition-all duration-300 ease-out ${
-              isShow
-                ? "opacity-100 translate-y-0 visible"
-                : "opacity-0 -translate-y-2 invisible"
+            className={`header-dropdown ${
+              isShow ? "header-dropdown--visible" : ""
             }`}
+            role="menu"
           >
-            <ul className="font-semibold text-gray-600 py-1 adidas-font">
-              {menuOption.map((item, index) => (
-                <li key={index}>
-                  {item.title === "Logout" && (
-                    <div className="my-1 border-t border-gray-200" />
-                  )}
+            <div className="header-dd-info flex items-center justify-between">
+              <p className="header-dd-name">{user?.fullname}</p>
+              {/* {user?.role && ( */}
+              <span className="header-dd-role">
+                {user?.username.toLowerCase() === "admin" ? "ADMIN" : "USER"}
+              </span>
+              {/* )} */}
+            </div>
 
-                  <div
-                    className="px-3 py-2 hover:bg-gray-100 flex items-center gap-3 cursor-pointer transition-colors"
+            <ul className="header-dd-list">
+              {menuOptions.map((item, idx) => (
+                <li key={idx}>
+                  {item.danger && <div className="header-dd-sep" />}
+                  <button
+                    className={`header-dd-item ${
+                      item.danger ? "header-dd-item--danger" : ""
+                    }`}
                     onClick={() => {
                       item.onClick();
                       setIsShow(false);
                     }}
+                    role="menuitem"
                   >
-                    {item.icon}
-                    <span>{item.title}</span>
-                  </div>
+                    <span className="header-dd-icon">{item.icon}</span>
+                    {item.title}
+                  </button>
                 </li>
               ))}
             </ul>

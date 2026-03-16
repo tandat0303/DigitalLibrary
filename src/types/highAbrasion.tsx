@@ -19,6 +19,7 @@ export interface HighAbrasionResponse {
 export interface HighAbrasionDataType {
   ID: string;
   // ID_Image: string;
+  GE_63: string;
   Unique_Price_ID: string;
   Material_ID: string;
   Vendor_Code: string;
@@ -76,6 +77,7 @@ export interface HighAbrasionDataType {
 interface HighAbrasionFormValues {
   ID: string;
   // ID_Image: string;
+  GE_63: string;
   Unique_Price_ID: string;
   Material_ID: string;
   Vendor_Code: string;
@@ -216,6 +218,10 @@ export const getHighAbrasionColumns = (
           </div>
         );
       },
+    },
+    {
+      title: "GE - 63",
+      dataIndex: "GE_63",
     },
     {
       title: "Material ID",

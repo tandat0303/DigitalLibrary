@@ -14,7 +14,7 @@ import Loading from "../../components/ui/Loading";
 import type { NewLibraryDataType } from "../../types/newLibrary";
 import newLibraryApi from "../../api/newLibrary.api";
 
-export default function NewLibraryDetail() {
+export default function LastLibraryDetail() {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [material, setMaterial] = useState<NewLibraryDataType>();
   const [loading, setLoading] = useState(true);
