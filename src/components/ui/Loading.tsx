@@ -21,7 +21,7 @@ const Loading: React.FC<LoadingProps> = ({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background: overlay ? "rgba(255,255,255,0.6)" : "transparent",
+        background: overlay ? "rgba(255,255,255,0.6)" : "#f0ede8",
         zIndex: 9999,
       }}
     >

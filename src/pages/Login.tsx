@@ -52,7 +52,7 @@ export default function Login() {
     }
   };
 
-  if (navigating) return <Loading overlay fullScreen />;
+  if (navigating) return <Loading fullScreen />;
 
   return (
     <div className="login-page">
@@ -89,7 +89,10 @@ export default function Login() {
             <Form.Item
               label="Password"
               name="password"
-              rules={[{ required: true, message: requiredMessage }]}
+              rules={[
+                { required: true, message: requiredMessage },
+                { min: 4, message: "Password must be at least 4 characters" },
+              ]}
             >
               <Input.Password
                 prefix={<LockOutlined />}

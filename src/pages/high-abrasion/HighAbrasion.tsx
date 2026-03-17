@@ -16,7 +16,7 @@ import CustomPagination from "../../components/CustomPagination";
 import { AppAlert } from "../../components/ui/AppAlert";
 
 import AddFilter from "../../components/AddFilter";
-import { FILTER_OPTIONS } from "../../components/ui/MaterialsFilterOption";
+import { FILTER_OPTIONS } from "../../components/ui/HighAbrasionFilterOption";
 import { Download, QrCode, Search, Upload } from "lucide-react";
 import ImportExcelModal from "../../components/ImportExcelModal";
 import FilterCollapse from "../../components/FilterCollapse";
@@ -342,6 +342,7 @@ export default function HighAbrasion() {
       try {
         const formData = new FormData();
 
+        formData.append("gE63", values.GE_63);
         formData.append("materialID", values.Material_ID);
         formData.append("vendorCode", values.Vendor_Code);
         formData.append("supplier", values.Supplier);
@@ -432,6 +433,7 @@ export default function HighAbrasion() {
 
         const formData = new FormData();
 
+        formData.append("gE63", values.GE_63);
         formData.append("materialID", values.Material_ID);
         formData.append("vendorCode", values.Vendor_Code);
         formData.append("supplier", values.Supplier);

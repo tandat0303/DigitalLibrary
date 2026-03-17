@@ -119,6 +119,16 @@ export default function HighAbrasionModal({
                 <Row gutter={[24, 1]}>
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
+                      label="GE - 63"
+                      name="GE_63"
+                      // rules={[{ required: true, message: requiredMessage }]}
+                    >
+                      <Input placeholder="Enter your GE - 63" />
+                    </Form.Item>
+                  </Col>
+
+                  <Col xs={24} sm={12} lg={6}>
+                    <Form.Item
                       label="Material ID"
                       name="Material_ID"
                       // rules={[{ required: true, message: requiredMessage }]}

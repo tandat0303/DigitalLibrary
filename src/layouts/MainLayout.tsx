@@ -121,8 +121,7 @@ export default function MainLayout() {
               separator=">"
               items={breadcrumbItems}
               style={{
-                padding: "6px",
-                paddingLeft: 10,
+                padding: "12px 6px 6px 4px",
                 fontSize: 16,
                 fontWeight: "bold",
               }}

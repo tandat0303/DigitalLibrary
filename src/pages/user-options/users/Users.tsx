@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card, Input, Button, Table, Space, Row, Col, Form, Modal } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import { usersDataColumns, type UsersDataType } from "../../../types/users";
-import { initialUsersData } from "../../../types/samples";
 import CustomPagination from "../../../components/CustomPagination";
 import UsersModal from "./UsersModal";
 import { AppAlert } from "../../../components/ui/AppAlert";
@@ -12,7 +11,7 @@ import FilterCollapse from "../../../components/FilterCollapse";
 export default function Users() {
   const [form] = Form.useForm();
 
-  const [data, setData] = useState(initialUsersData);
+  const [data, setData] = useState<UsersDataType[]>([]);
   const [selectedRow, setSelectedRow] = useState<UsersDataType | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
