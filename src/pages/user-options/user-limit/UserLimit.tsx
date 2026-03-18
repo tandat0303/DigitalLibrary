@@ -12,18 +12,60 @@ import ModuleMgmtModal from "./ModuleMgmtModal";
 import MenuMgmtModal from "./MenuMgmtModal";
 import FilterCollapse from "../../../components/FilterCollapse";
 import CustomPagination from "../../../components/CustomPagination";
+import {
+  Save,
+  Search,
+  Shield,
+  Layers,
+  Menu,
+  User,
+  UserRoundKey,
+} from "lucide-react";
+
+const permissionLevels = [
+  { num: 0, label: "Administrator", color: "#ef4444" },
+  { num: 1, label: "All functions", color: "#f97316" },
+  { num: 2, label: "View only", color: "#3b82f6" },
+  { num: 3, label: "No view", color: "#9ca3af" },
+  { num: 4, label: "View + Edit", color: "#22c55e" },
+];
 
 export default function UserLimit() {
   const [form] = Form.useForm();
 
   const [selectedUser, setSelectedUser] = useState<DataType | null>(data[0]);
-  const [permissionData, setPermissionData] = useState<PermissionType[]>([]);
+  const [permissionData, setPermissionData] = useState<PermissionType[]>(
+    data[0]
+      ? [
+          {
+            key: "1",
+            userId: data[0].account,
+            module: "GENERAL",
+            menu: "COLORS",
+            level: 0,
+          },
+          {
+            key: "2",
+            userId: data[0].account,
+            module: "GENERAL",
+            menu: "MATERIALS",
+            level: 4,
+          },
+          {
+            key: "3",
+            userId: data[0].account,
+            module: "GENERAL",
+            menu: "MATERIAL TEST REPORT",
+            level: 2,
+          },
+        ]
+      : [],
+  );
 
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const total = data.length;
-
   const paginatedData = data.slice(
     (current - 1) * pageSize,
     current * pageSize,
@@ -32,22 +74,22 @@ export default function UserLimit() {
   const [selectedPermissionKey, setSelectedPermissionKey] = useState<
     string | null
   >(null);
-
   const [openModuleModal, setOpenModuleModal] = useState(false);
   const [openMenuModal, setOpenMenuModal] = useState(false);
 
   const rightColumns: ColumnsType<PermissionType> = [
-    { title: "User ID", dataIndex: "userId" },
-    { title: "Factory", dataIndex: "factory" },
-    { title: "Module", dataIndex: "module" },
+    { title: "User ID", dataIndex: "userId", width: 110 },
+    { title: "Factory", dataIndex: "factory", width: 90 },
+    { title: "Module", dataIndex: "module", width: 110 },
     { title: "Menu", dataIndex: "menu" },
     {
       title: "Level",
       dataIndex: "level",
+      width: 130,
       render: (_, record) => (
         <Select
           value={record.level}
-          style={{ width: 120 }}
+          style={{ width: 110 }}
           options={levelOptions}
           onChange={(value) => {
             setPermissionData((prev) =>
@@ -56,14 +98,13 @@ export default function UserLimit() {
               ),
             );
           }}
+          onMouseDown={(e) => e.stopPropagation()}
         />
       ),
     },
   ];
 
-  const handleFilter = (values: any) => {
-    console.log("Filter values:", values);
-  };
+  const handleFilter = (values: any) => console.log("Filter values:", values);
 
   const handleSelectUser = (record: DataType) => {
     if (selectedUser?.account === record.account) {
@@ -72,9 +113,7 @@ export default function UserLimit() {
       setSelectedPermissionKey(null);
       return;
     }
-
     setSelectedUser(record);
-
     setPermissionData([
       {
         key: "1",
@@ -98,26 +137,34 @@ export default function UserLimit() {
         level: 2,
       },
     ]);
-
     setSelectedPermissionKey(null);
   };
 
-  const handleSave = () => {
-    console.log("Saving permission:", permissionData);
-  };
+  const handleSave = () => console.log("Saving permission:", permissionData);
 
   const renderPermissionTable = () => (
     <Table
+      className="ul-perm-table"
       columns={rightColumns}
       dataSource={permissionData}
       rowKey="key"
       pagination={false}
       scroll={{ x: "max-content" }}
       onRow={(record) => ({
-        onClick: () =>
+        onClick: (e) => {
+          const target = e.target as HTMLElement;
+
+          if (
+            target.closest(".ant-select") ||
+            target.closest(".ant-select-dropdown")
+          ) {
+            return;
+          }
+
           setSelectedPermissionKey((prev) =>
             prev === record.key ? null : record.key,
-          ),
+          );
+        },
       })}
       rowClassName={(record) =>
         record.key === selectedPermissionKey
@@ -129,7 +176,7 @@ export default function UserLimit() {
 
   return (
     <div className="relative">
-      <Row gutter={[16, 16]} style={{ marginBottom: 10 }}>
+      <Row gutter={[16, 12]} style={{ marginBottom: 12 }}>
         <Col xs={24} lg={18}>
           <FilterCollapse
             form={form}
@@ -140,6 +187,7 @@ export default function UserLimit() {
               <>
                 <Form.Item>
                   <Button className="btn-custom" htmlType="submit">
+                    <Search size={13} />
                     Search
                   </Button>
                 </Form.Item>
@@ -148,6 +196,7 @@ export default function UserLimit() {
                     className="btn-custom"
                     onClick={() => setOpenModuleModal(true)}
                   >
+                    <Layers size={13} />
                     Module MGMT
                   </Button>
                 </Form.Item>
@@ -156,6 +205,7 @@ export default function UserLimit() {
                     className="btn-custom"
                     onClick={() => setOpenMenuModal(true)}
                   >
+                    <Menu size={13} />
                     Menu MGMT
                   </Button>
                 </Form.Item>
@@ -173,55 +223,29 @@ export default function UserLimit() {
         <Col xs={24} lg={6}>
           <Card
             size="small"
-            title="Permission"
-            className="adidas-font"
-            styles={{
-              header: {
-                background: "#000",
-                color: "#fff",
-                fontSize: 14,
-              },
-              body: {
-                fontSize: 13,
-                lineHeight: 1.6,
-              },
-            }}
+            className="ul-perm-card"
+            title={
+              <>
+                <Shield size={18} strokeWidth={2.5} />
+                Permission Levels
+              </>
+            }
           >
-            <div>
-              <strong>0</strong> – Administrator
-            </div>
-            <div>
-              <strong>1</strong> – All functions
-            </div>
-            <div>
-              <strong>2</strong> – View
-            </div>
-            <div>
-              <strong>3</strong> – No View
-            </div>
-            <div>
-              <strong>4</strong> – View + Edit
-            </div>
+            {permissionLevels.map(({ num, label, color }) => (
+              <div className="ul-perm-row" key={num}>
+                <div className="ul-perm-num" style={{ background: color }}>
+                  {num}
+                </div>
+                <span>{label}</span>
+              </div>
+            ))}
           </Card>
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 12]}>
         <Col xs={24} xl={8}>
-          <Card
-            style={{
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-            }}
-            styles={{
-              body: {
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-              },
-            }}
-          >
+          <Card className="ul-user-card" style={{ height: "100%" }}>
             <Table
               columns={columns}
               dataSource={paginatedData}
@@ -237,7 +261,6 @@ export default function UserLimit() {
                   : "cursor-pointer"
               }
             />
-
             <CustomPagination
               total={total}
               current={current}
@@ -249,40 +272,60 @@ export default function UserLimit() {
         </Col>
 
         <Col xs={24} xl={16}>
-          {selectedUser && (
-            <Card>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  marginBottom: 8,
-                }}
-              >
-                <Button
-                  className="btn-custom"
-                  onClick={handleSave}
-                  disabled={!selectedPermissionKey}
-                >
-                  Save
-                </Button>
-              </div>
+          <Card className="ul-right-card" style={{ height: "100%" }}>
+            {selectedUser ? (
+              <>
+                <div className="ul-toolbar">
+                  <div className="ul-toolbar-user">
+                    <div className="ul-toolbar-avatar">
+                      {" "}
+                      <User size={16} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <div className="ul-toolbar-name">
+                        {selectedUser.account}
+                      </div>
+                      <div className="ul-toolbar-sub">
+                        {permissionData.length} permission
+                        {permissionData.length !== 1 ? "s" : ""}
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    className="ul-save-btn"
+                    onClick={handleSave}
+                    disabled={!selectedPermissionKey}
+                  >
+                    <Save size={13} />
+                    Save
+                  </Button>
+                </div>
 
-              <Tabs
-                className="permission-tabs"
-                defaultActiveKey="GENERAL"
-                tabBarGutter={12}
-                moreIcon={null}
-                size="large"
-                items={["GENERAL", "CI", "ESG", "IT", "PLANNING", "VR"].map(
-                  (tab) => ({
-                    key: tab,
-                    label: tab,
-                    children: renderPermissionTable(),
-                  }),
-                )}
-              />
-            </Card>
-          )}
+                <Tabs
+                  className="ul-tabs"
+                  defaultActiveKey="GENERAL"
+                  tabBarGutter={4}
+                  size="small"
+                  items={["GENERAL", "CI", "ESG", "IT", "PLANNING", "VR"].map(
+                    (tab) => ({
+                      key: tab,
+                      label: tab,
+                      children: renderPermissionTable(),
+                    }),
+                  )}
+                />
+              </>
+            ) : (
+              <div className="ul-empty">
+                <div className="ul-empty-icon">
+                  <UserRoundKey size={22} />
+                </div>
+                <div className="ul-empty-text">
+                  Select an account to manage permissions
+                </div>
+              </div>
+            )}
+          </Card>
         </Col>
       </Row>
 
@@ -290,7 +333,6 @@ export default function UserLimit() {
         open={openModuleModal}
         onClose={() => setOpenModuleModal(false)}
       />
-
       <MenuMgmtModal
         open={openMenuModal}
         onClose={() => setOpenMenuModal(false)}

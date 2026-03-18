@@ -49,6 +49,8 @@ export default function MainLayout() {
 
   const isHome = location.pathname === "/";
 
+  const isUserInfo = !!matchPath("/user-info", location.pathname);
+
   const isMaterialShowInfo = !!matchPath(
     "/materials/show-info/:id",
     location.pathname,
@@ -135,7 +137,7 @@ export default function MainLayout() {
             // marginTop: 48,
             // height: "calc(100vh - 48px)",
             overflow: isSpecialLayout ? "hidden" : "auto",
-            padding: isSpecialLayout ? 0 : "0px 24px",
+            padding: isSpecialLayout || isUserInfo ? 0 : "0px 24px",
             // backgroundColor: "#f5f4f0",
           }}
         >

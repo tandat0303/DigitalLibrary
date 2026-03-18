@@ -74,12 +74,11 @@ const moduleOptions = [" ", "GENERAL", "CI", "ESG", "IT", "PLANNING", "VR"].map(
 );
 
 // Module MGMT
-export interface ModuleType {
-  key: string;
-  nameEn: string;
-  nameVn: string;
-  nameCn: string;
-  status?: string;
+export interface ModuleType extends CrudItem {
+  Name_EN: string;
+  Name_VN: string;
+  Name_CN: string;
+  Status?: boolean;
 }
 
 export interface ModalProps {
@@ -88,11 +87,11 @@ export interface ModalProps {
 }
 
 export const moduleFields = [
-  { name: "nameEn", label: "Name (EN)" },
-  { name: "nameVn", label: "Name (VN)" },
-  { name: "nameCn", label: "Name (CN)" },
+  { name: "Name_EN", label: "Name (EN)" },
+  { name: "Name_VN", label: "Name (VN)" },
+  { name: "Name_CN", label: "Name (CN)" },
   {
-    name: "status",
+    name: "Status",
     label: "Status",
     type: "select" as const,
     options: statusOptions,
@@ -102,27 +101,27 @@ export const moduleFields = [
 export const moduleColumns: ColumnsType<ModuleType> = [
   {
     title: "Name (EN)",
-    dataIndex: "nameEn",
-    sorter: (a, b) => a.nameEn.localeCompare(b.nameEn),
+    dataIndex: "Name_EN",
+    sorter: (a, b) => a.Name_EN.localeCompare(b.Name_EN),
     defaultSortOrder: "ascend",
   },
   {
     title: "Name (VN)",
-    dataIndex: "nameVn",
-    sorter: (a, b) => a.nameVn.localeCompare(b.nameVn),
+    dataIndex: "Name_VN",
+    sorter: (a, b) => a.Name_VN.localeCompare(b.Name_VN),
     sortDirections: ["ascend", "descend"],
   },
   {
     title: "Name (CN)",
-    dataIndex: "nameCn",
-    sorter: (a, b) => a.nameCn.localeCompare(b.nameCn),
+    dataIndex: "Name_CN",
+    sorter: (a, b) => a.Name_CN.localeCompare(b.Name_CN),
     sortDirections: ["ascend", "descend"],
   },
   {
     title: "Status",
-    dataIndex: "status",
-    sorter: (a, b) => (a.status ?? "").localeCompare(b.status ?? ""),
-    sortDirections: ["ascend", "descend"],
+    dataIndex: "Status",
+    // sorter: (a, b) => (a.Status ?? "").localeCompare(b.Status ?? ""),
+    // sortDirections: ["ascend", "descend"],
   },
 ];
 
@@ -130,10 +129,10 @@ export const moduleColumns: ColumnsType<ModuleType> = [
 export interface MenuType {
   key: string;
   module?: string;
-  nameEn: string;
-  nameVn: string;
-  nameCn: string;
-  status?: string;
+  Name_EN: string;
+  Name_VN: string;
+  Name_CN: string;
+  Status?: string;
 }
 
 export const menuFields = [
@@ -143,11 +142,11 @@ export const menuFields = [
     type: "select" as const,
     options: moduleOptions,
   },
-  { name: "nameEn", label: "Name (EN)" },
-  { name: "nameVn", label: "Name (VN)" },
-  { name: "nameCn", label: "Name (CN)" },
+  { name: "Name_EN", label: "Name (EN)" },
+  { name: "Name_VN", label: "Name (VN)" },
+  { name: "Name_CN", label: "Name (CN)" },
   {
-    name: "status",
+    name: "Status",
     label: "Status",
     type: "select" as const,
     options: statusOptions,
@@ -163,26 +162,26 @@ export const menuColumns: ColumnsType<MenuType> = [
   },
   {
     title: "Name (EN)",
-    dataIndex: "nameEn",
-    sorter: (a, b) => a.nameEn.localeCompare(b.nameEn),
+    dataIndex: "Name_EN",
+    sorter: (a, b) => a.Name_EN.localeCompare(b.Name_EN),
     sortDirections: ["ascend", "descend"],
   },
   {
     title: "Name (VN)",
-    dataIndex: "nameVn",
-    sorter: (a, b) => a.nameVn.localeCompare(b.nameVn),
+    dataIndex: "Name_VN",
+    sorter: (a, b) => a.Name_VN.localeCompare(b.Name_VN),
     sortDirections: ["ascend", "descend"],
   },
   {
     title: "Name (CN)",
-    dataIndex: "nameCn",
-    sorter: (a, b) => a.nameCn.localeCompare(b.nameCn),
+    dataIndex: "Name_CN",
+    sorter: (a, b) => a.Name_CN.localeCompare(b.Name_CN),
     sortDirections: ["ascend", "descend"],
   },
   {
     title: "Status",
-    dataIndex: "status",
-    sorter: (a, b) => (a.status ?? "").localeCompare(b.status ?? ""),
+    dataIndex: "Status",
+    sorter: (a, b) => (a.Status ?? "").localeCompare(b.Status ?? ""),
     sortDirections: ["ascend", "descend"],
   },
 ];

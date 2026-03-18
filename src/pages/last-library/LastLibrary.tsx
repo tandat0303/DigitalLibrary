@@ -23,6 +23,8 @@ import {
   type LastLibraryDataType,
 } from "../../types/lastLibrary";
 import { initialLastLibraryData } from "../../types/samples";
+import UploadAttachModal from "../../components/UploadAttachModal";
+import ThreeDMModal from "../../components/ThreeDMModal";
 
 export default function LastLibrary() {
   const [form] = Form.useForm();
@@ -41,12 +43,15 @@ export default function LastLibrary() {
   // const [mode, setMode] = useState<"create" | "edit">("create");
 
   // const [openImport, setOpenImport] = useState(false);
-  // const [openUploadAttach, setOpenUploadAttach] = useState(false);
+  const [openUploadAttach, setOpenUploadAttach] = useState(false);
 
   // const [previewImages, setPreviewImages] = useState<(Image | File)[]>([]);
   // const [openPreview, setOpenPreview] = useState(false);
 
   // const [openCapture, setOpenCapture] = useState(false);
+
+  const [open3D, setOpen3D] = useState(false);
+  const [active3DFile, setActive3DFile] = useState<File | null>(null);
 
   // const handlePreview = (images: (File | Image)[]) => {
   //   setPreviewImages(images);
@@ -57,14 +62,17 @@ export default function LastLibrary() {
   //   window.open(`/last-library/show-info/${record.ID}`, "_blank");
   // };
 
-  // const columns = getNewLibraryColumns(handlePreview, handleDetailView);
-
-  const columns = getLastLibraryColumns();
+  const columns = getLastLibraryColumns((file) => {
+    setActive3DFile(file);
+    setOpen3D(true);
+  });
 
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const data: LastLibraryDataType[] = initialLastLibraryData;
+  const [data, setData] = useState<LastLibraryDataType[]>(
+    initialLastLibraryData,
+  );
 
   const total = data.length;
 
@@ -237,26 +245,35 @@ export default function LastLibrary() {
   //   }
   // };
 
-  // const handleUploadAttach = async (file: File) => {
-  //   if (!selectedRow || !user) return;
+  const handleUploadAttach = async (file: File) => {
+    // if (!selectedRow || !user) return;
+    if (!selectedRow) return;
 
-  //   try {
-  //     const formData = new FormData();
+    setData((prev) =>
+      prev.map((item) =>
+        item.key === selectedRow.key ? { ...item, Test_3D: file } : item,
+      ),
+    );
 
-  //     formData.append("fileId", selectedRow.ID);
-  //     formData.append("user", user.userid);
-  //     formData.append("file", file);
+    setSelectedRow(null);
 
-  //     await newLibraryApi.attachFile(formData);
+    // try {
+    //   const formData = new FormData();
 
-  //     AppAlert({ icon: "success", title: "Success" });
+    //   formData.append("fileId", selectedRow.ID);
+    //   formData.append("user", user.userid);
+    //   formData.append("file", file);
 
-  //     await fetchMaterials();
-  //   } catch (error) {
-  //     console.error(error);
-  //     AppAlert({ icon: "error", title: getApiErrorMessage(error) });
-  //   }
-  // };
+    //   await newLibraryApi.attachFile(formData);
+
+    //   AppAlert({ icon: "success", title: "Success" });
+
+    //   await fetchMaterials();
+    // } catch (error) {
+    //   console.error(error);
+    //   AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    // }
+  };
 
   // const handleCreate = () => {
   //   setMode("create");
@@ -699,7 +716,7 @@ export default function LastLibrary() {
                         return;
                       }
 
-                      // setOpenUploadAttach(true);
+                      setOpenUploadAttach(true);
                     }}
                   >
                     Attach File
@@ -730,7 +747,7 @@ export default function LastLibrary() {
                 bordered
                 columns={columns}
                 dataSource={paginatedData}
-                rowKey="ID"
+                rowKey="key"
                 pagination={false}
                 scroll={{ x: "max-content" }}
                 onRow={(record) => ({
@@ -774,7 +791,7 @@ export default function LastLibrary() {
           handleImportExcel(file);
           setOpenImport(false);
         }}
-      />
+      /> */}
 
       <UploadAttachModal
         open={openUploadAttach}
@@ -786,7 +803,7 @@ export default function LastLibrary() {
         }}
       />
 
-      <ImagePreviewModal
+      {/* <ImagePreviewModal
         open={openPreview}
         onClose={() => setOpenPreview(false)}
         images={previewImages}
@@ -803,6 +820,15 @@ export default function LastLibrary() {
         onClose={() => setOpenCapture(false)}
         onCapture={handleCameraSearch}
       /> */}
+
+      <ThreeDMModal
+        open={open3D}
+        file={active3DFile}
+        onClose={() => {
+          setOpen3D(false);
+          setActive3DFile(null);
+        }}
+      />
     </>
   );
 }

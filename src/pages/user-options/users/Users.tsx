@@ -7,6 +7,7 @@ import UsersModal from "./UsersModal";
 import { AppAlert } from "../../../components/ui/AppAlert";
 import { sleep } from "../../../lib/helpers";
 import FilterCollapse from "../../../components/FilterCollapse";
+import { Search } from "lucide-react";
 
 export default function Users() {
   const [form] = Form.useForm();
@@ -130,6 +131,7 @@ export default function Users() {
                 <Form.Item>
                   <Button className="btn-custom" htmlType="submit">
                     Search
+                    <Search />
                   </Button>
                   {/* <Button onClick={() => form.resetFields()}>
                           Reset

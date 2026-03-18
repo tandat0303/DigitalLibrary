@@ -306,6 +306,10 @@ export default function HighAbrasionDetail() {
           >
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} lg={8}>
+                <strong>GE - 63</strong>
+                <div>{displayValue(material.GE_63)}</div>
+              </Col>
+              <Col xs={24} sm={12} lg={8}>
                 <strong>Material Id</strong>
                 <div>{displayValue(material.Material_ID)}</div>
               </Col>
@@ -389,16 +393,16 @@ export default function HighAbrasionDetail() {
                 <strong>Sample Leadtime</strong>
                 <div>{displayValue(material.Sample_Leadtime)}</div>
               </Col>
-
-              <Col xs={24} sm={12} lg={8}>
-                <strong>Min Qty Color</strong>
-                <div>{displayValue(material.Min_Qty_Color)}</div>
-              </Col>
             </Row>
 
             <Divider />
 
             <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12} lg={8}>
+                <strong>Min Qty Color</strong>
+                <div>{displayValue(material.Min_Qty_Color)}</div>
+              </Col>
+
               <Col xs={24} sm={12} lg={8}>
                 <strong>Min Qty Sample</strong>
                 <div>{displayValue(material.Min_Qty_Sample)}</div>
@@ -485,16 +489,16 @@ export default function HighAbrasionDetail() {
                 <strong>Diameter Inside Uom Price</strong>
                 <div>{displayValue(material.Diameter_Inside_Uom_Price)}</div>
               </Col>
-
-              <Col xs={24} sm={12} lg={8}>
-                <strong>Weight Price</strong>
-                <div>{displayValue(material.Weight_Price)}</div>
-              </Col>
             </Row>
 
             <Divider />
 
             <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12} lg={8}>
+                <strong>Weight Price</strong>
+                <div>{displayValue(material.Weight_Price)}</div>
+              </Col>
+
               <Col xs={24} sm={12} lg={8}>
                 <strong>Weight Uom Price</strong>
                 <div>{displayValue(material.Weight_Uom_Price)}</div>

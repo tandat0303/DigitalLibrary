@@ -1,7 +1,7 @@
 import { type ReactNode, useState } from "react";
 import { Collapse, Form, Row, Col, Space, Button, Grid } from "antd";
 import type { FormInstance } from "antd";
-import { DownOutlined, UpOutlined } from "@ant-design/icons";
+import { DownOutlined } from "@ant-design/icons";
 import type { Store } from "antd/es/form/interface";
 
 interface FilterCollapseProps {
@@ -60,7 +60,12 @@ export default function FilterCollapse({
           e.stopPropagation();
           setActive(!active);
         }}
-        icon={active ? <UpOutlined /> : <DownOutlined />}
+        // icon={active ? <UpOutlined /> : <DownOutlined />}
+        icon={
+          <DownOutlined
+            className={`transition-transform duration-200 ${active ? "rotate-180" : ""}`}
+          />
+        }
         style={{ color: "gray", fontWeight: "bold", padding: 0, marginLeft: 8 }}
       >
         {active ? "COLLAPSE" : "EXPAND"}

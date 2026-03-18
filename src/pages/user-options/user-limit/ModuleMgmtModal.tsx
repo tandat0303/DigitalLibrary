@@ -6,7 +6,7 @@ import {
   type ModalProps,
   type ModuleType,
 } from "../../../types/users";
-import { initialModuleData } from "../../../types/samples";
+import moduleMgmtApi from "../../../api/moduleMgmt.api";
 
 const ModuleMgmtModal: React.FC<ModalProps> = ({ open, onClose }) => {
   return (
@@ -16,12 +16,22 @@ const ModuleMgmtModal: React.FC<ModalProps> = ({ open, onClose }) => {
       title="Module MGMT"
       fields={moduleFields}
       columns={moduleColumns}
-      initialData={initialModuleData}
+      initialData={[]}
       buttonText={{
         add: "Add",
         refresh: "Refresh",
         edit: "Edit",
         remove: "Remove",
+      }}
+      apiHandlers={{
+        onFetch: async () => {
+          const res = await moduleMgmtApi.getAllModules();
+          return res;
+        },
+        onCreate: async (data) => {
+          const res = await moduleMgmtApi.createModule(data as ModuleType);
+          return res;
+        },
       }}
     />
   );

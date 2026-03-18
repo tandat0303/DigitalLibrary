@@ -9,6 +9,10 @@ export const useCrudTable = <T extends CrudItem>(initialData: T[]) => {
   const [dataSource, setDataSource] = useState<T[]>(initialData);
   const [selectedRowKey, setSelectedRowKey] = useState<string | null>(null);
 
+  const clearSelection = () => {
+    setSelectedRowKey(null);
+  };
+
   const selectRow = (record: T) => {
     setSelectedRowKey((prev) => (prev === record.key ? null : record.key));
   };
@@ -54,5 +58,6 @@ export const useCrudTable = <T extends CrudItem>(initialData: T[]) => {
     editItem,
     removeItem,
     setDataSource,
+    clearSelection,
   };
 };
