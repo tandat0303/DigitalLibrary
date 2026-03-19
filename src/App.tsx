@@ -20,8 +20,9 @@ import LastLibraryDetail from "./pages/last-library/LastLibraryDetail";
 
 export default function App() {
   return (
-    <AuthBootstrap>
-      <Routes>
+    // <AuthBootstrap>
+    <Routes>
+      <Route element={<AuthBootstrap />}>
         <Route path="/login" element={<Login />} />
 
         <Route element={<ProtectedRoute />}>
@@ -55,7 +56,8 @@ export default function App() {
         </Route>
 
         <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AuthBootstrap>
+      </Route>
+    </Routes>
+    // </AuthBootstrap>
   );
 }

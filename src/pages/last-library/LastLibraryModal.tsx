@@ -1,13 +1,13 @@
 import { Button, Col, Form, Grid, Input, Modal, Row } from "antd";
 import { useEffect, useState } from "react";
 import { AppAlert } from "../../components/ui/AppAlert";
-import ImageUploader from "../../components/ImageUploader";
+// import ImageUploader from "../../components/ImageUploader";
 // import { requiredMessage } from "../../lib/helpers";
-import type { Image } from "../../types/images";
-import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
-import { IMAGE_LABELS, mapImagesToLabels } from "../../lib/helpers";
-import type { NewLibraryModalProps } from "../../types/newLibrary";
-import newLibraryApi from "../../api/newLibrary.api";
+// import type { Image } from "../../types/images";
+// import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
+// import { IMAGE_LABELS, mapImagesToLabels } from "../../lib/helpers";
+import type { LastLibraryModalProps } from "../../types/lastLibrary";
+// import newLibraryApi from "../../api/newLibrary.api";
 
 export default function LastLibraryModal({
   open,
@@ -15,7 +15,7 @@ export default function LastLibraryModal({
   initialValues,
   onCancel,
   onSubmit,
-}: NewLibraryModalProps) {
+}: LastLibraryModalProps) {
   const { useBreakpoint } = Grid;
   const screens = useBreakpoint();
 
@@ -40,7 +40,7 @@ export default function LastLibraryModal({
     if (mode === "edit" && initialValues) {
       form.setFieldsValue({
         ...initialValues,
-        Images: mapImagesToLabels(initialValues.Images, IMAGE_LABELS, 2),
+        // Images: mapImagesToLabels(initialValues.Images, IMAGE_LABELS, 2),
       });
     } else {
       form.resetFields();
@@ -70,22 +70,22 @@ export default function LastLibraryModal({
     onCancel();
   };
 
-  const handleDeleteExistingImage = async (image: Image) => {
-    try {
-      const res = await newLibraryApi.deleteMaterialImage(image.ImageID);
+  // const handleDeleteExistingImage = async (image: Image) => {
+  //   try {
+  //     const res = await newLibraryApi.deleteMaterialImage(image.ImageID);
 
-      if (res.success) {
-        AppAlert({ icon: "success", title: res.message });
-      }
-    } catch (error) {
-      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
-      throw error;
-    }
-  };
+  //     if (res.success) {
+  //       AppAlert({ icon: "success", title: res.message });
+  //     }
+  //   } catch (error) {
+  //     AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+  //     throw error;
+  //   }
+  // };
 
   return (
     <Modal
-      title={mode === "create" ? "New Material" : "Edit Material"}
+      title={mode === "create" ? "New Item" : "Edit Item"}
       open={open}
       onCancel={handleClose}
       footer={null}
@@ -119,438 +119,398 @@ export default function LastLibraryModal({
                 <Row gutter={[24, 1]}>
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Material ID"
-                      name="Material_ID"
+                      label="Season (M)"
+                      name="Season_M"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Material ID" />
+                      <Input placeholder="Enter your Season (M)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Vendor Code"
-                      name="Vendor_Code"
+                      label="Creation Workflow (M)"
+                      name="Creation_Workflow_M"
                       // rules={[{ required: true }]}
                     >
-                      <Input placeholder="Enter your Vendor Code" />
+                      <Input placeholder="Enter your Creation Workflow (M)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Supplier"
-                      name="Supplier"
+                      label="Model Number (M)"
+                      name="Model_Number_M"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Supplier" />
+                      <Input placeholder="Model Number (M)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Supplier material ID"
-                      name="Supplier_Material_ID"
+                      label="Article Number (A)"
+                      name="Article_Number_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Supplier material ID" />
+                      <Input placeholder="Enter your Article Number (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Supplier Material Name"
-                      name="Supplier_Material_Name"
+                      label="Model Name Short (M)"
+                      name="Model_Name_Short_M"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Supplier Material Name" />
+                      <Input placeholder="Enter your Model Name Short (M)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Mtl - Supp Lifecycle State"
-                      name="Mtl_Supp_Lifecycle_State"
+                      label="Sports Category (M)"
+                      name="Sports_Category_M"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Mtl - Supp Lifecycle State" />
+                      <Input placeholder="Enter your Sports Category (M)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Material Type Level 1"
-                      name="Material_Type_Level_1"
+                      label="Development Type (A)"
+                      name="Development_Type_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Material Type Level 1" />
+                      <Input placeholder="Enter your Development Type (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Composition"
-                      name="Composition"
+                      label="Group Name (A)"
+                      name="Group_Name_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Composition" />
+                      <Input placeholder="Enter your Group Name (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Classification"
-                      name="Classification"
+                      label="Development Factory (M)"
+                      name="Development_Factory_M"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Classification" />
+                      <Input placeholder="Enter your Development Factory (M)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Material Thickness"
-                      name="Material_Thickness"
+                      label="Digital Scope (A)"
+                      name="Digital_Scope_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Material Thickness" />
+                      <Input placeholder="Enter your Digital Scope (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Comparison UOM"
-                      name="Comparison_UOM"
+                      label="Digital Scope Update Date (A)"
+                      name="Digital_Scope_Update_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Comparison UOM" />
+                      <Input placeholder="Enter your Digital Scope Update Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Price Remark"
-                      name="Price_Remark"
+                      label="Marketing Department (A)"
+                      name="Marketing_Department_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Price Remark" />
+                      <Input placeholder="Enter your Marketing Department (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Skin Size"
-                      name="Skin_Size"
+                      label="Preview Final Rendering available Downstream Date (A)"
+                      name="Preview_Final_Rendering_available_Downstream_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Skin Size" />
+                      <Input placeholder="Enter your Preview Final Rendering available Downstream Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="QC%"
-                      name="QC_Percent"
+                      label="Pre-sell Final Rendering available Downstream Date (A)"
+                      name="Presell_Final_Rendering_available_Downstream_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your QC%" />
+                      <Input placeholder="Enter your Pre-sell Final Rendering available Downstream Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Leadtime"
-                      name="Leadtime"
+                      label="SMS Final Rendering available Downstream Date (A)"
+                      name="SMS_Final_Rendering_available_Downstream_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Leadtime" />
+                      <Input placeholder="Enter your SMS Final Rendering available Downstream Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Sample Leadtime"
-                      name="Sample_Leadtime"
+                      label="MCS Final rendering available Downstream Date (A)"
+                      name="MCS_Final_rendering_available_Downstream_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Sample Leadtime" />
+                      <Input placeholder="Enter your MCS Final rendering available Downstream Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Min Qty/ Color"
-                      name="Min_Qty_Color"
+                      label="Article Status (A)"
+                      name="Article_Status_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Min Qty/ Color" />
+                      <Input placeholder="Enter your Article Status (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Min Qty/ Sample"
-                      name="Min_Qty_Sample"
+                      label="Carry Over Season (A)"
+                      name="Carry_Over_Season_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Min Qty/ Sample" />
+                      <Input placeholder="Enter your Carry Over Season (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Production Location"
-                      name="Production_Location"
+                      label="Consumer Testing (A)"
+                      name="Consumer_Testing_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Production Location" />
+                      <Input placeholder="Enter your Consumer Testing (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Terms of Delivery per T1 Country"
-                      name="Terms_of_Delivery_per_T1_Country"
+                      label="Image Launch Date (A)"
+                      name="Image_Launch_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Terms of Delivery per T1 Country" />
+                      <Input placeholder="Enter your Image Launch Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Valid From (Price)"
-                      name="Valid_From_Price"
+                      label="Developer (A)"
+                      name="Developer_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Valid From (Price)" />
+                      <Input placeholder="Enter your Developer (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Valid To (Price)"
-                      name="Valid_To_Price"
+                      label="Senior Developer (A)"
+                      name="Senior_Developer_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Valid To (Price)" />
+                      <Input placeholder="Enter your Senior Developer (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Price Type"
-                      name="Price_Type"
+                      label="Drop Date (A)"
+                      name="Drop_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Price Type" />
+                      <Input placeholder="Enter your Drop Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Color Code (Price)"
-                      name="Color_Code_Price"
+                      label="3D Factory (A)"
+                      name="Factory_3D_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Color Code (Price)" />
+                      <Input placeholder="Enter your 3D Factory (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Color (Price)"
-                      name="Color_Price"
+                      label="Tags (A)"
+                      name="Tags_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Color (Price)" />
+                      <Input placeholder="Enter your Tags (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Treatment (Price)"
-                      name="Treatment_Price"
+                      label="Preview Approval/Publish Date (A)"
+                      name="Preview_Approval_Publish_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Treatment (Price)" />
+                      <Input placeholder="Enter your Preview Approval/Publish Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Width (Price)"
-                      name="Width_Price"
+                      label="Pre-sell Approval/Publish Date (A)"
+                      name="Presell_Approval_Publish_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Width (Price)" />
+                      <Input placeholder="Enter your Pre-sell Approval/Publish Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Width Uom (Price)"
-                      name="Width_Uom_Price"
+                      label="SMS Approval/Publish Date (A)"
+                      name="SMS_Approval_Publish_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Width Uom (Price)" />
+                      <Input placeholder="Enter your SMS Approval/Publish Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Length (Price)"
-                      name="Length_Price"
+                      label="MCS Approval/Publish Date (A)"
+                      name="MCS_Approval_Publish_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Length (Price)" />
+                      <Input placeholder="Enter your MCS Approval/Publish Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Length Uom (Price)"
-                      name="Length_Uom_Price"
+                      label="Published by (A)"
+                      name="Published_by_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Length Uom (Price)" />
+                      <Input placeholder="Enter your Published by (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Thickness (Price)"
-                      name="Thickness_Price"
+                      label="Published Milestone Timestamp (A)"
+                      name="Published_Milestone_Timestamp_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Thickness (Price)" />
+                      <Input placeholder="Enter your Published Milestone Timestamp (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Thickness Uom (Price)"
-                      name="Thickness_Uom_Price"
+                      label="Published Milestone (A)"
+                      name="Published_Milestone_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Thickness Uom (Price)" />
+                      <Input placeholder="Enter your Published Milestone (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Diameter Inside (Price)"
-                      name="Diameter_Inside_Price"
+                      label="Expected Milestone (A)"
+                      name="Expected_Milestone_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Diameter Inside (Price)" />
+                      <Input placeholder="Enter your Expected Milestone (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Diameter Inside Uom (Price)"
-                      name="Diameter_Inside_Uom_Price"
+                      label="HQ Render Status Timestamp (A)"
+                      name="HQ_Render_Status_Timestamp_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Diameter Inside Uom (Price)" />
+                      <Input placeholder="Enter your HQ Render Status Timestamp (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Weight (Price)"
-                      name="Weight_Price"
+                      label="HQ Render Status (A)"
+                      name="HQ_Render_Status_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Weight (Price)" />
+                      <Input placeholder="Enter your HQ Render Status (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Weight Uom (Price)"
-                      name="Weight_Uom_Price"
+                      label="Design Sketch Latest Update (A)"
+                      name="Design_Sketch_Latest_Update_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Weight Uom (Price)" />
+                      <Input placeholder="Design Sketch Latest Update (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Quantity (Price)"
-                      name="Quantity_Price"
+                      label="Feasibility Checked Date (A)"
+                      name="Feasibility_Checked_Date_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Quantity (Price)" />
+                      <Input placeholder="Enter your Feasibility Checked Date (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Quantity Uom (Price)"
-                      name="Quantity_Uom_Price"
+                      label="Image Confidential (A)"
+                      name="Image_Confidential_A"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Quantity Uom (Price)" />
+                      <Input placeholder="Enter your Image Confidential (A)" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} sm={12} lg={6}>
                     <Form.Item
-                      label="Uom String (Price)"
-                      name="Uom_String_Price"
+                      label="Last (M)"
+                      name="Last_M"
                       // rules={[{ required: true, message: requiredMessage }]}
                     >
-                      <Input placeholder="Enter your Uom String (Price)" />
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} sm={12} lg={6}>
-                    <Form.Item
-                      label="SS26 Final Price (USD)"
-                      name="SS26_Final_Price_USD"
-                      // rules={[{ required: true, message: requiredMessage }]}
-                    >
-                      <Input placeholder="Enter your SS26 Final Price (USD)" />
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} sm={12} lg={6}>
-                    <Form.Item
-                      label="Comparison Price (Price) (USD)"
-                      name="Comparison_Price_Price_USD"
-                      // rules={[{ required: true, message: requiredMessage }]}
-                    >
-                      <Input placeholder="Enter your Comparison Price (Price) (USD)" />
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} sm={12} lg={6}>
-                    <Form.Item
-                      label="Approved as Final Price Y/N (Price)"
-                      name="Approved_As_Final_Price_Y_N_Price"
-                      // rules={[{ required: true, message: requiredMessage }]}
-                    >
-                      <Input placeholder="Enter your Approved as Final Price Y/N (Price)" />
-                    </Form.Item>
-                  </Col>
-
-                  <Col xs={24} sm={12} lg={6}>
-                    <Form.Item
-                      label="Season"
-                      name="Season"
-                      // rules={[{ required: true, message: requiredMessage }]}
-                    >
-                      <Input placeholder="Enter your Season" />
+                      <Input placeholder="Enter your Last (M)" />
                     </Form.Item>
                   </Col>
                 </Row>
               </div>
             </Col>
 
-            <Col span={24} className="mt-1">
+            {/* <Col span={24} className="mt-1">
               <Form.Item
                 name="Images"
                 valuePropName="value"
@@ -567,7 +527,7 @@ export default function LastLibraryModal({
                   }
                 />
               </Form.Item>
-            </Col>
+            </Col> */}
           </Row>
         </Form>
 

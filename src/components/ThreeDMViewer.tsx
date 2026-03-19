@@ -139,7 +139,16 @@ function Scene({ geometries }: { geometries: THREE.BufferGeometry[] }) {
   useFrame(() => {
     if (fitted.current || !groupRef.current || !geometries.length) return;
 
-    const box = new THREE.Box3().setFromObject(groupRef.current);
+    const group = groupRef.current;
+
+    // SET HƯỚNG MODEL BAN ĐẦU
+    // group.rotation.set(
+    //   -Math.PI / 2, // rotate X
+    //   0, // rotate Y
+    //   0, // rotate Z
+    // );
+
+    const box = new THREE.Box3().setFromObject(group);
     if (box.isEmpty()) return;
 
     const center = new THREE.Vector3();

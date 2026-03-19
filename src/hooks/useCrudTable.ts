@@ -1,63 +1,34 @@
 import { useState } from "react";
 
 export interface CrudItem {
-  key: string;
   [key: string]: any;
 }
 
-export const useCrudTable = <T extends CrudItem>(initialData: T[]) => {
-  const [dataSource, setDataSource] = useState<T[]>(initialData);
-  const [selectedRowKey, setSelectedRowKey] = useState<string | null>(null);
+export const useCrudTable = <T extends CrudItem>(idField: keyof T) => {
+  const [dataSource, setDataSource] = useState<T[]>([]);
+  const [selectedRowId, setSelectedRowId] = useState<T[keyof T] | null>(null);
 
   const clearSelection = () => {
-    setSelectedRowKey(null);
+    setSelectedRowId(null);
   };
 
   const selectRow = (record: T) => {
-    setSelectedRowKey((prev) => (prev === record.key ? null : record.key));
+    const id = record[idField];
+
+    setSelectedRowId((prev) => (prev === id ? null : id));
   };
 
-  const addItem = (values: Omit<T, "key">) => {
-    const newItem = {
-      key: Date.now().toString(),
-      ...values,
-    } as T;
-
-    setDataSource((prev) => [...prev, newItem]);
-    setSelectedRowKey(null);
-  };
-
-  const editItem = (values: Partial<T>) => {
-    if (!selectedRowKey) return;
-
-    setDataSource((prev) =>
-      prev.map((item) =>
-        item.key === selectedRowKey ? { ...item, ...values } : item,
-      ),
-    );
-
-    setSelectedRowKey(null);
-  };
-
-  const removeItem = () => {
-    if (!selectedRowKey) return;
-
-    setDataSource((prev) => prev.filter((item) => item.key !== selectedRowKey));
-
-    setSelectedRowKey(null);
-  };
-
-  const selectedRow = dataSource.find((item) => item.key === selectedRowKey);
+  const selectedRow = dataSource.find(
+    (item) => item[idField] === selectedRowId,
+  );
 
   return {
     dataSource,
-    selectedRowKey,
+    setDataSource,
+    selectedRowId,
     selectedRow,
     selectRow,
-    addItem,
-    editItem,
-    removeItem,
-    setDataSource,
     clearSelection,
+    idField,
   };
 };

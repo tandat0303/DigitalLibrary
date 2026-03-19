@@ -39,20 +39,30 @@ export const levelOptions = [0, 1, 2, 3, 4].map((num) => ({
   label: num.toString(),
 }));
 
-interface FieldConfig {
+type SelectOption<T = string | boolean | number> = {
+  label: string;
+  value: T;
+};
+
+interface FieldConfig<T = any> {
   name: string;
   label: string;
   type?: "input" | "select";
-  options?: { label: string; value: string }[];
+  options?: SelectOption<T>[];
+  disabledOnEdit?: boolean;
+  disabledOnCreate?: boolean;
+  hiddenOnEdit?: boolean;
+  hiddenOnCreate?: boolean;
 }
 
 export interface CrudModalProps<T extends CrudItem> {
   open: boolean;
   onClose: () => void;
+  topic: string;
   title: string;
   fields: FieldConfig[];
   columns: ColumnsType<T>;
-  initialData: T[];
+  idField: keyof T;
   buttonText?: {
     add?: string;
     refresh?: string;
@@ -61,20 +71,14 @@ export interface CrudModalProps<T extends CrudItem> {
   };
 }
 
-const statusOptions = [" ", "Active", "Inactive"].map((obj) => ({
-  value: obj,
-  label: obj,
-}));
-
-const moduleOptions = [" ", "GENERAL", "CI", "ESG", "IT", "PLANNING", "VR"].map(
-  (obj) => ({
-    value: obj,
-    label: obj,
-  }),
-);
+const statusOptions = [
+  { label: "Active", value: true },
+  { label: "Inactive", value: false },
+];
 
 // Module MGMT
 export interface ModuleType extends CrudItem {
+  ModuleID: string;
   Name_EN: string;
   Name_VN: string;
   Name_CN: string;
@@ -120,27 +124,32 @@ export const moduleColumns: ColumnsType<ModuleType> = [
   {
     title: "Status",
     dataIndex: "Status",
-    // sorter: (a, b) => (a.Status ?? "").localeCompare(b.Status ?? ""),
-    // sortDirections: ["ascend", "descend"],
+    sorter: (a, b) => Number(a.Status ?? false) - Number(b.Status ?? false),
+    sortDirections: ["ascend", "descend"],
+    render: (status?: boolean) => (status ? "Active" : "Inactive"),
   },
 ];
 
 // Menu MGMT
-export interface MenuType {
-  key: string;
-  module?: string;
+export interface MenuType extends CrudItem {
+  MenuID: string;
+  ModuleID: string;
+  ModuleName: string;
   Name_EN: string;
   Name_VN: string;
   Name_CN: string;
-  Status?: string;
+  Status?: boolean;
 }
 
-export const menuFields = [
+export const getMenuFields = (
+  moduleOptions: { label: string; value: string }[],
+) => [
   {
-    name: "module",
+    name: "ModuleID",
     label: "Module",
     type: "select" as const,
     options: moduleOptions,
+    disabledOnEdit: true,
   },
   { name: "Name_EN", label: "Name (EN)" },
   { name: "Name_VN", label: "Name (VN)" },
@@ -156,8 +165,8 @@ export const menuFields = [
 export const menuColumns: ColumnsType<MenuType> = [
   {
     title: "Module",
-    dataIndex: "module",
-    sorter: (a, b) => (a.module ?? "").localeCompare(b.module ?? ""),
+    dataIndex: "ModuleName",
+    sorter: (a, b) => (a.ModuleName ?? "").localeCompare(b.ModuleName ?? ""),
     defaultSortOrder: "ascend",
   },
   {
@@ -181,8 +190,9 @@ export const menuColumns: ColumnsType<MenuType> = [
   {
     title: "Status",
     dataIndex: "Status",
-    sorter: (a, b) => (a.Status ?? "").localeCompare(b.Status ?? ""),
+    sorter: (a, b) => Number(a.Status ?? false) - Number(b.Status ?? false),
     sortDirections: ["ascend", "descend"],
+    render: (status?: boolean) => (status ? "Active" : "Inactive"),
   },
 ];
 

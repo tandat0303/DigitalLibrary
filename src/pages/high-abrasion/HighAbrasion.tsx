@@ -17,7 +17,14 @@ import { AppAlert } from "../../components/ui/AppAlert";
 
 import AddFilter from "../../components/AddFilter";
 import { FILTER_OPTIONS } from "../../components/ui/HighAbrasionFilterOption";
-import { Download, QrCode, Search, Upload } from "lucide-react";
+import {
+  Download,
+  Info,
+  Paperclip,
+  QrCode,
+  Search,
+  Upload,
+} from "lucide-react";
 import ImportExcelModal from "../../components/ImportExcelModal";
 import FilterCollapse from "../../components/FilterCollapse";
 import {
@@ -573,8 +580,8 @@ export default function HighAbrasion() {
               <>
                 <Form.Item>
                   <Button className="btn-custom" htmlType="submit">
+                    <Search size={13} />
                     Search
-                    <Search />
                   </Button>
                 </Form.Item>
                 <Form.Item name="hasImage" valuePropName="checked">
@@ -689,6 +696,7 @@ export default function HighAbrasion() {
                     className="extra-actions-btn w-full lg:w-auto"
                     onClick={() => setOpenCapture(true)}
                   >
+                    <Info className="w-4 h-4" />
                     Detail Material
                   </Button>
                 </SafeTooltip>
@@ -709,6 +717,7 @@ export default function HighAbrasion() {
                       setOpenUploadAttach(true);
                     }}
                   >
+                    <Paperclip className="w-4 h-4" />
                     Attach File
                   </Button>
                 </SafeTooltip>

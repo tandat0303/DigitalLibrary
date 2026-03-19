@@ -9,7 +9,7 @@ export interface LastLibraryResponse {
 }
 
 export interface LastLibraryDataType {
-  key: number;
+  LastLibraryID: string;
   Season_M: string;
   Creation_Workflow_M: string;
   Model_Number_M: string;
@@ -49,7 +49,7 @@ export interface LastLibraryDataType {
   Feasibility_Checked_Date_A: string;
   Image_Confidential_A: string;
   Last_M: string;
-  Test_3D: File | string;
+  Test_3D?: File | string;
 }
 
 interface LastLibraryFormValues {
@@ -93,7 +93,7 @@ interface LastLibraryFormValues {
   Feasibility_Checked_Date_A: string;
   Image_Confidential_A: string;
   Last_M: string;
-  Test_3D: File | string;
+  Test_3D?: File | string;
 }
 
 export interface LastLibraryModalProps {
@@ -311,6 +311,10 @@ export const getLastLibraryColumns = (
     {
       title: "Published Milestone (A)",
       dataIndex: "Published_Milestone_A",
+    },
+    {
+      title: "Expected Milestone (A)",
+      dataIndex: "Expected_Milestone_A",
     },
     {
       title: "HQ Render Status Timestamp (A)",

@@ -313,8 +313,8 @@ export default function ColorsPage() {
               <>
                 <Form.Item>
                   <Button className="btn-custom" htmlType="submit">
+                    <Search size={13} />
                     Search
-                    <Search />
                   </Button>
                 </Form.Item>
                 {/* <Button onClick={() => form.resetFields()}>

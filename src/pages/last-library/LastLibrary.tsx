@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   Input,
@@ -9,6 +9,7 @@ import {
   Col,
   Form,
   Checkbox,
+  Modal,
 } from "antd";
 import CustomPagination from "../../components/CustomPagination";
 import { AppAlert } from "../../components/ui/AppAlert";
@@ -16,15 +17,20 @@ import { AppAlert } from "../../components/ui/AppAlert";
 import AddFilter from "../../components/AddFilter";
 import { FILTER_OPTIONS } from "../../components/ui/LastLibraryFilterOption";
 import { Download, QrCode, Search, Upload } from "lucide-react";
+import { TbFile3D, TbCube3dSphere } from "react-icons/tb";
 import FilterCollapse from "../../components/FilterCollapse";
 import { SafeTooltip } from "../../components/ui/Tooltip";
 import {
   getLastLibraryColumns,
   type LastLibraryDataType,
 } from "../../types/lastLibrary";
-import { initialLastLibraryData } from "../../types/samples";
 import UploadAttachModal from "../../components/UploadAttachModal";
 import ThreeDMModal from "../../components/ThreeDMModal";
+import LastLibraryModal from "./LastLibraryModal";
+import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
+import { buildQueryFilters } from "../../lib/buildQueryFilters";
+import { lastLibraryApi } from "../../api/lastLibrary.api";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
 
 export default function LastLibrary() {
   const [form] = Form.useForm();
@@ -33,14 +39,14 @@ export default function LastLibrary() {
 
   const [dynamicCount, setDynamicCount] = useState(0);
 
-  // const [data, setData] = useState<LastLibraryDataType[]>([]);
-  // const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<LastLibraryDataType[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState<LastLibraryDataType | null>(
     null,
   );
 
-  // const [openModal, setOpenModal] = useState(false);
-  // const [mode, setMode] = useState<"create" | "edit">("create");
+  const [openModal, setOpenModal] = useState(false);
+  const [mode, setMode] = useState<"create" | "edit">("create");
 
   // const [openImport, setOpenImport] = useState(false);
   const [openUploadAttach, setOpenUploadAttach] = useState(false);
@@ -70,56 +76,45 @@ export default function LastLibrary() {
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const [data, setData] = useState<LastLibraryDataType[]>(
-    initialLastLibraryData,
-  );
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<any>({});
 
-  const total = data.length;
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
 
-  const paginatedData = data.slice(
-    (current - 1) * pageSize,
-    current * pageSize,
-  );
+      const params = { ...filters, page: current, limit: pageSize };
 
-  // const [total, setTotal] = useState(0);
-  // const [filters, setFilters] = useState<any>({});
+      const res = await lastLibraryApi.getAllItems(params);
 
-  // const fetchMaterials = async () => {
-  //   try {
-  //     setLoading(true);
+      const rows = res.data.map((item: any) => ({
+        ...item,
+        key: item.ID,
+      }));
 
-  //     const params = { ...filters, page: current, limit: pageSize };
+      setData(rows);
+      setTotal(res.total);
+    } catch (error) {
+      console.log("Failed to fetch item: ", error);
+      AppAlert({ icon: "error", title: "Failed to fetch item" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  //     const res = await newLibraryApi.getAllMaterials(params);
+  useEffect(() => {
+    fetchItems();
+  }, [current, pageSize, filters]);
 
-  //     const rows = res.data.map((item) => ({
-  //       ...item,
-  //       key: item.ID,
-  //     }));
+  const handleFilter = (values: any) => {
+    const newFilters = buildQueryFilters(values);
 
-  //     setData(rows);
-  //     setTotal(res.total);
-  //   } catch (error) {
-  //     console.log("Failed to fetch material: ", error);
-  //     AppAlert({ icon: "error", title: "Failed to fetch material" });
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+    setFilters(newFilters);
+    setCurrent(1);
+  };
 
-  // useEffect(() => {
-  //   fetchMaterials();
-  // }, [current, pageSize, filters]);
-
-  // const handleFilter = (values: any) => {
-  //   const newFilters = buildQueryFilters(values);
-
-  //   setFilters(newFilters);
-  //   setCurrent(1);
-  // };
-
-  const handleSelectMaterial = (record: LastLibraryDataType) => {
-    if (selectedRow?.key === record.key) {
+  const handleSelectItem = (record: LastLibraryDataType) => {
+    if (selectedRow?.LastLibraryID === record.LastLibraryID) {
       setSelectedRow(null);
       return;
     }
@@ -251,7 +246,9 @@ export default function LastLibrary() {
 
     setData((prev) =>
       prev.map((item) =>
-        item.key === selectedRow.key ? { ...item, Test_3D: file } : item,
+        item.LastLibraryID === selectedRow.LastLibraryID
+          ? { ...item, Test_3D: file }
+          : item,
       ),
     );
 
@@ -275,56 +272,56 @@ export default function LastLibrary() {
     // }
   };
 
-  // const handleCreate = () => {
-  //   setMode("create");
-  //   setSelectedRow(null);
-  //   setOpenModal(true);
-  // };
+  const handleCreate = () => {
+    setMode("create");
+    setSelectedRow(null);
+    setOpenModal(true);
+  };
 
-  // const handleEdit = () => {
-  //   if (!selectedRow) {
-  //     AppAlert({ icon: "warning", title: "Please choose a row data" });
-  //     return;
-  //   }
+  const handleEdit = () => {
+    if (!selectedRow) {
+      AppAlert({ icon: "warning", title: "Please choose a row data" });
+      return;
+    }
 
-  //   setMode("edit");
-  //   setOpenModal(true);
-  // };
+    setMode("edit");
+    setOpenModal(true);
+  };
 
-  // const handleDelete = async () => {
-  //   try {
-  //     if (!selectedRow) return;
+  const handleDelete = async () => {
+    try {
+      if (!selectedRow) return;
 
-  //     const res = await newLibraryApi.deleteMaterial(selectedRow.ID);
+      const res = await lastLibraryApi.deleteItem(selectedRow.LastLibraryID);
 
-  //     if (res.success) {
-  //       setSelectedRow(null);
-  //       AppAlert({ icon: "success", title: res.message });
-  //     }
+      if (res.success) {
+        setSelectedRow(null);
+        AppAlert({ icon: "success", title: res.message });
+      }
 
-  //     await fetchMaterials();
-  //   } catch (error) {
-  //     AppAlert({ icon: "error", title: getApiErrorMessage(error) });
-  //   }
-  // };
+      await fetchItems();
+    } catch (error) {
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
+  };
 
-  // const confirmRemove = () => {
-  //   if (!selectedRow) {
-  //     AppAlert({ icon: "warning", title: "Please choose a row data" });
-  //     return;
-  //   }
+  const confirmRemove = () => {
+    if (!selectedRow) {
+      AppAlert({ icon: "warning", title: "Please choose a row data" });
+      return;
+    }
 
-  //   Modal.confirm({
-  //     title: "REMOVE MATERIAL",
-  //     content: "Are you sure to remove this material?",
-  //     okText: "Yes",
-  //     cancelText: "No",
-  //     okType: "danger",
-  //     centered: true,
-  //     icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
-  //     onOk: () => handleDelete(),
-  //   });
-  // };
+    Modal.confirm({
+      title: "REMOVE MATERIAL",
+      content: "Are you sure to remove this item?",
+      okText: "Yes",
+      cancelText: "No",
+      okType: "danger",
+      centered: true,
+      icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
+      onOk: () => handleDelete(),
+    });
+  };
 
   // const handleImportExcel = async (file: File) => {
   //   try {
@@ -349,201 +346,47 @@ export default function LastLibrary() {
   //   }
   // };
 
-  // const handleSubmit = async (values: any) => {
-  //   if (mode === "create") {
-  //     try {
-  //       const formData = new FormData();
+  const handleSubmit = async () => {
+    if (mode === "create") {
+      const values = form.getFieldsValue();
 
-  //       formData.append("materialID", values.Material_ID);
-  //       formData.append("vendorCode", values.Vendor_Code);
-  //       formData.append("supplier", values.Supplier);
-  //       formData.append("supplierMaterialID", values.Supplier_Material_ID);
-  //       formData.append("supplierMaterialName", values.Supplier_Material_Name);
-  //       formData.append(
-  //         "mtlSuppLifecycleState",
-  //         values.Mtl_Supp_Lifecycle_State,
-  //       );
-  //       formData.append("materialTypeLevel1", values.Material_Type_Level_1);
-  //       formData.append("composition", values.Composition);
-  //       formData.append("classification", values.Classification);
-  //       formData.append("materialThickness", values.Material_Thickness);
-  //       formData.append("materialThicknessUOM", values.Material_Thickness_UOM);
-  //       formData.append("comparisonUOM", values.Comparison_UOM);
-  //       formData.append("priceRemark", values.Price_Remark);
-  //       formData.append("skinSize", values.Skin_Size);
-  //       formData.append("qCPercent", values.QC_Percent);
-  //       formData.append("leadtime", values.Leadtime);
-  //       formData.append("sampleLeadtime", values.Sample_Leadtime);
-  //       formData.append("minQtyColor", values.Min_Qty_Color);
-  //       formData.append("minQtySample", values.Min_Qty_Sample);
-  //       formData.append("productionLocation", values.Production_Location);
-  //       formData.append(
-  //         "termsofDeliveryperT1Country",
-  //         values.Terms_of_Delivery_per_T1_Country,
-  //       );
-  //       formData.append("validFromPrice", values.Valid_From_Price);
-  //       formData.append("validToPrice", values.Valid_To_Price);
-  //       formData.append("priceType", values.Price_Type);
-  //       formData.append("colorCodePrice", values.Color_Code_Price);
-  //       formData.append("colorPrice", values.Color_Price);
-  //       formData.append("treatmentPrice", values.Treatment_Price);
-  //       formData.append("widthPrice", values.Width_Price);
-  //       formData.append("widthUomPrice", values.Width_Uom_Price);
-  //       formData.append("lengthPrice", values.Length_Price);
-  //       formData.append("lengthUomPrice", values.Length_Uom_Price);
-  //       formData.append("thicknessPrice", values.Thickness_Price);
-  //       formData.append("thicknessUomPrice", values.Thickness_Uom_Price);
-  //       formData.append("diameterInsidePrice", values.Diameter_Inside_Price);
-  //       formData.append(
-  //         "diameterInsideUomPrice",
-  //         values.Diameter_Inside_Uom_Price,
-  //       );
-  //       formData.append("weightPrice", values.Weight_Price);
-  //       formData.append("weightUomPrice", values.Weight_Uom_Price);
-  //       formData.append("quantityPrice", values.Quantity_Price);
-  //       formData.append("quantityUomPrice", values.Quantity_Uom_Price);
-  //       formData.append("uomStringPrice", values.Uom_String_Price);
-  //       formData.append("sS26FinalPriceUSD", values.SS26_Final_Price_USD);
-  //       formData.append(
-  //         "comparisonPricePriceUSD",
-  //         values.Comparison_Price_Price_USD,
-  //       );
-  //       formData.append(
-  //         "approvedAsFinalPriceYNPrice",
-  //         values.Approved_As_Final_Price_Y_N_Price,
-  //       );
-  //       formData.append("season", values.Season);
+      try {
+        await lastLibraryApi.createItem(values);
 
-  //       const images = values.Images ?? [];
+        AppAlert({ icon: "success", title: "Added new item successfully" });
 
-  //       images.forEach((img: any, index: number) => {
-  //         if (!(img instanceof File)) return;
+        setOpenModal(false);
+        setSelectedRow(null);
+        await fetchItems();
+      } catch (error) {
+        AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+      }
+    } else {
+      try {
+        if (!selectedRow) return;
 
-  //         const label = IMAGE_LABELS[index];
-  //         const fieldName = IMAGE_FIELD_MAP[label];
+        const values = form.getFieldsValue();
 
-  //         if (fieldName) {
-  //           formData.append(fieldName, img);
-  //         }
-  //       });
+        await lastLibraryApi.updateItem(selectedRow.LastLibraryID, values);
+        AppAlert({ icon: "success", title: "Item updated successfully" });
+        setOpenModal(false);
+        setSelectedRow(null);
+        await fetchItems();
+      } catch (error) {
+        console.log(error);
+        AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+      }
+    }
+  };
 
-  //       await newLibraryApi.createMaterial(formData);
+  const handle3DViewer = () => {
+    if (!selectedRow?.Test_3D) return;
 
-  //       AppAlert({ icon: "success", title: "Added new material successfully" });
-
-  //       setOpenModal(false);
-  //       setSelectedRow(null);
-
-  //       await fetchMaterials();
-  //     } catch (error) {
-  //       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
-  //     }
-  //   } else {
-  //     try {
-  //       if (!selectedRow) return;
-
-  //       const formData = new FormData();
-
-  //       formData.append("materialID", values.Material_ID);
-  //       formData.append("vendorCode", values.Vendor_Code);
-  //       formData.append("supplier", values.Supplier);
-  //       formData.append("supplierMaterialID", values.Supplier_Material_ID);
-  //       formData.append("supplierMaterialName", values.Supplier_Material_Name);
-  //       formData.append(
-  //         "mtlSuppLifecycleState",
-  //         values.Mtl_Supp_Lifecycle_State,
-  //       );
-  //       formData.append("materialTypeLevel1", values.Material_Type_Level_1);
-  //       formData.append("composition", values.Composition);
-  //       formData.append("classification", values.Classification);
-  //       formData.append("materialThickness", values.Material_Thickness);
-  //       formData.append("materialThicknessUOM", values.Material_Thickness_UOM);
-  //       formData.append("comparisonUOM", values.Comparison_UOM);
-  //       formData.append("priceRemark", values.Price_Remark);
-  //       formData.append("skinSize", values.Skin_Size);
-  //       formData.append("qCPercent", values.QC_Percent);
-  //       formData.append("leadtime", values.Leadtime);
-  //       formData.append("sampleLeadtime", values.Sample_Leadtime);
-  //       formData.append("minQtyColor", values.Min_Qty_Color);
-  //       formData.append("minQtySample", values.Min_Qty_Sample);
-  //       formData.append("productionLocation", values.Production_Location);
-  //       formData.append(
-  //         "termsofDeliveryperT1Country",
-  //         values.Terms_of_Delivery_per_T1_Country,
-  //       );
-  //       formData.append("validFromPrice", values.Valid_From_Price);
-  //       formData.append("validToPrice", values.Valid_To_Price);
-  //       formData.append("priceType", values.Price_Type);
-  //       formData.append("colorCodePrice", values.Color_Code_Price);
-  //       formData.append("colorPrice", values.Color_Price);
-  //       formData.append("treatmentPrice", values.Treatment_Price);
-  //       formData.append("widthPrice", values.Width_Price);
-  //       formData.append("widthUomPrice", values.Width_Uom_Price);
-  //       formData.append("lengthPrice", values.Length_Price);
-  //       formData.append("lengthUomPrice", values.Length_Uom_Price);
-  //       formData.append("thicknessPrice", values.Thickness_Price);
-  //       formData.append("thicknessUomPrice", values.Thickness_Uom_Price);
-  //       formData.append("diameterInsidePrice", values.Diameter_Inside_Price);
-  //       formData.append(
-  //         "diameterInsideUomPrice",
-  //         values.Diameter_Inside_Uom_Price,
-  //       );
-  //       formData.append("weightPrice", values.Weight_Price);
-  //       formData.append("weightUomPrice", values.Weight_Uom_Price);
-  //       formData.append("quantityPrice", values.Quantity_Price);
-  //       formData.append("quantityUomPrice", values.Quantity_Uom_Price);
-  //       formData.append("uomStringPrice", values.Uom_String_Price);
-  //       formData.append("sS26FinalPriceUSD", values.SS26_Final_Price_USD);
-  //       formData.append(
-  //         "comparisonPricePriceUSD",
-  //         values.Comparison_Price_Price_USD,
-  //       );
-  //       formData.append(
-  //         "approvedAsFinalPriceYNPrice",
-  //         values.Approved_As_Final_Price_Y_N_Price,
-  //       );
-  //       formData.append("season", values.Season);
-
-  //       const images = values.Images ?? [];
-
-  //       images.forEach((img: any, index: number) => {
-  //         if (!(img instanceof File)) return;
-
-  //         const label = IMAGE_LABELS[index];
-  //         const fieldName = IMAGE_FIELD_MAP[label];
-
-  //         if (fieldName) {
-  //           formData.append(fieldName, img);
-  //         }
-  //       });
-
-  //       await newLibraryApi.updateMaterial(selectedRow.ID, formData);
-
-  //       AppAlert({ icon: "success", title: "Material updated successfully" });
-
-  //       setOpenModal(false);
-  //       setSelectedRow(null);
-
-  //       await fetchMaterials();
-  //     } catch (error) {
-  //       console.log(error);
-  //       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
-  //     }
-  //   }
-  // };
-
-  // const handleDownloadReport = () => {
-  //   if (!selectedRow?.FilePath || !selectedRow?.FileName) return;
-
-  //   const link = document.createElement("a");
-  //   link.href = selectedRow.FilePath;
-  //   link.download = selectedRow.FileName;
-  //   link.target = "_blank";
-  //   link.rel = "noopener noreferrer";
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // };
+    if (selectedRow.Test_3D instanceof File) {
+      setActive3DFile(selectedRow.Test_3D);
+    }
+    setOpen3D(true);
+  };
 
   return (
     <>
@@ -551,7 +394,7 @@ export default function LastLibrary() {
         <Col span={24}>
           <FilterCollapse
             form={form}
-            onFinish={() => {}} //handleFilter
+            onFinish={handleFilter}
             title="FILTERS"
             extraFilters={
               <AddFilter
@@ -583,8 +426,8 @@ export default function LastLibrary() {
               <>
                 <Form.Item>
                   <Button className="btn-custom" htmlType="submit">
+                    <Search size={13} />
                     Search
-                    <Search />
                   </Button>
                 </Form.Item>
                 <Form.Item name="hasImage" valuePropName="checked">
@@ -635,32 +478,32 @@ export default function LastLibrary() {
                 wrap
                 className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
               >
-                <SafeTooltip title={"Create new material"}>
+                <SafeTooltip title={"Create new item"}>
                   <Button
                     className="add-btn w-full lg:w-auto"
-                    // onClick={handleCreate}
+                    onClick={handleCreate}
                   >
-                    NEW MATERIAL
+                    NEW ITEM
                   </Button>
                 </SafeTooltip>
 
-                <SafeTooltip title={"Update material information"}>
+                <SafeTooltip title={"Update item information"}>
                   <Button
                     className="edit-btn w-full lg:w-auto"
                     // disabled={!selectedRow}
-                    // onClick={handleEdit}
+                    onClick={handleEdit}
                   >
-                    EDIT MATERIAL
+                    EDIT ITEM
                   </Button>
                 </SafeTooltip>
 
-                <SafeTooltip title={"Delete material"}>
+                <SafeTooltip title={"Delete item"}>
                   <Button
                     className="delete-btn w-full lg:w-auto"
                     // disabled={!selectedRow}
-                    // onClick={confirmRemove}
+                    onClick={confirmRemove}
                   >
-                    REMOVE MATERIAL
+                    REMOVE ITEM
                   </Button>
                 </SafeTooltip>
 
@@ -694,16 +537,16 @@ export default function LastLibrary() {
                   </Button>
                 </SafeTooltip>
 
-                <SafeTooltip title={"Scan material image"}>
+                {/* <SafeTooltip title={"Scan material image"}>
                   <Button
                     className="extra-actions-btn w-full lg:w-auto"
                     // onClick={() => setOpenCapture(true)}
                   >
                     Detail Material
                   </Button>
-                </SafeTooltip>
+                </SafeTooltip> */}
 
-                <SafeTooltip title={"Upload attach file"}>
+                <SafeTooltip title={"Upload 3D Modal file"}>
                   <Button
                     className="extra-actions-btn w-full lg:w-auto"
                     // disabled={!selectedRow}
@@ -719,44 +562,46 @@ export default function LastLibrary() {
                       setOpenUploadAttach(true);
                     }}
                   >
-                    Attach File
+                    <TbFile3D className="w-4 h-4" />
+                    Attach 3DM file
                   </Button>
                 </SafeTooltip>
 
-                {/* {selectedRow && selectedRow.FileName && (
-                  <SafeTooltip title={"Download attach file"}>
+                {selectedRow && selectedRow.Test_3D && (
+                  <SafeTooltip title={"Show 3D Modal"}>
                     <Button
                       className="extra-actions-btn w-full lg:w-auto"
-                      onClick={handleDownloadReport}
+                      onClick={handle3DViewer}
                     >
-                      <Download className="h-4 w-4" />
-                      Download Report
+                      <TbCube3dSphere className="h-4 w-4" />
+                      3D Viewer
                     </Button>
                   </SafeTooltip>
-                )} */}
+                )}
               </Space>
 
               <span className="adidas-font text-left lg:text-right">
-                {total} materials
+                {total} items
               </span>
             </div>
 
             <div className="w-full mt-1">
               <Table
-                // loading={loading}
+                loading={loading}
                 bordered
                 columns={columns}
-                dataSource={paginatedData}
+                dataSource={data}
                 rowKey="key"
                 pagination={false}
                 scroll={{ x: "max-content" }}
                 onRow={(record) => ({
                   onClick: () => {
-                    handleSelectMaterial(record);
+                    handleSelectItem(record);
                   },
                 })}
                 rowClassName={(record) =>
-                  record.key && record.key === selectedRow?.key
+                  record.LastLibraryID &&
+                  record.LastLibraryID === selectedRow?.LastLibraryID
                     ? "custom-selected-row"
                     : ""
                 }
@@ -774,7 +619,7 @@ export default function LastLibrary() {
         </Col>
       </Row>
 
-      {/* <LastLibraryModal
+      <LastLibraryModal
         open={openModal}
         mode={mode}
         initialValues={mode === "edit" ? selectedRow : undefined}
@@ -782,7 +627,7 @@ export default function LastLibrary() {
         onSubmit={handleSubmit}
       />
 
-      <ImportExcelModal
+      {/* <ImportExcelModal
         open={openImport}
         onClose={() => setOpenImport(false)}
         sampleFileName="Ex_File_New_Library"

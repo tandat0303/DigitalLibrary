@@ -130,8 +130,8 @@ export default function Users() {
               <>
                 <Form.Item>
                   <Button className="btn-custom" htmlType="submit">
+                    <Search size={13} />
                     Search
-                    <Search />
                   </Button>
                   {/* <Button onClick={() => form.resetFields()}>
                           Reset

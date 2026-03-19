@@ -13,10 +13,11 @@ const ModuleMgmtModal: React.FC<ModalProps> = ({ open, onClose }) => {
     <CrudModal<ModuleType>
       open={open}
       onClose={onClose}
+      topic="module"
       title="Module MGMT"
       fields={moduleFields}
       columns={moduleColumns}
-      initialData={[]}
+      idField="ModuleID"
       buttonText={{
         add: "Add",
         refresh: "Refresh",
@@ -30,6 +31,14 @@ const ModuleMgmtModal: React.FC<ModalProps> = ({ open, onClose }) => {
         },
         onCreate: async (data) => {
           const res = await moduleMgmtApi.createModule(data as ModuleType);
+          return res;
+        },
+        onUpdate: async (id, data) => {
+          const res = await moduleMgmtApi.updateModule(id, data as ModuleType);
+          return res;
+        },
+        onDelete: async (id) => {
+          const res = await moduleMgmtApi.deleteModule(id);
           return res;
         },
       }}

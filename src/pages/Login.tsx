@@ -119,9 +119,7 @@ export default function Login() {
             </Form.Item>
           </Form>
 
-          <p className="login-footer">
-            LYG © {dayjs().year()} — Digital Library
-          </p>
+          <p className="login-footer">LYG © {dayjs().year()} — Smart Library</p>
         </div>
 
         {/* ── RIGHT: Lottie banner ── */}

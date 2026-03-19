@@ -141,7 +141,7 @@ export const FILTER_OPTIONS = [
     value: "sms_final_render_available_downs_date_a",
     render: () => (
       <Form.Item
-        name="SMS_Final_Rendering_available_Downstream_Date_A"
+        name="Sms_Final_Rendering_available_Downstream_Date_A"
         label="SMS Final Rendering available Downstream Date (A)"
       >
         <Input />
@@ -149,12 +149,12 @@ export const FILTER_OPTIONS = [
     ),
   },
   {
-    label: "MCS Final rendering available Downstream Date (A)",
+    label: "MCS Final Rendering available Downstream Date (A)",
     value: "mcs_final_render_available_downs_date_a",
     render: () => (
       <Form.Item
-        name="MCS_Final_rendering_available_Downstream_Date_A"
-        label="MCS Final rendering available Downstream Date (A)"
+        name="Mcs_Final_Rendering_Available_Downstream_Date_A"
+        label="MCS Final Rendering available Downstream Date (A)"
       >
         <Input />
       </Form.Item>
@@ -227,7 +227,7 @@ export const FILTER_OPTIONS = [
     label: "3D Factory (A)",
     value: "3d_factory_a",
     render: () => (
-      <Form.Item name="Factory_3D_A" label="3D Factory (A)">
+      <Form.Item name="Factory_3d_A" label="3D Factory (A)">
         <Input />
       </Form.Item>
     ),
@@ -270,7 +270,7 @@ export const FILTER_OPTIONS = [
     value: "sms_approval_pub_date_a",
     render: () => (
       <Form.Item
-        name="SMS_Approval_Publish_Date_A"
+        name="Sms_Approval_Publish_Date_A"
         label="SMS Approval/Publish Date (A)"
       >
         <Input />
@@ -282,7 +282,7 @@ export const FILTER_OPTIONS = [
     value: "mcs_approval_pub_date_a",
     render: () => (
       <Form.Item
-        name="MCS_Approval_Publish_Date_A"
+        name="Mcs_Approval_Publish_Date_A"
         label="MCS Approval/Publish Date (A)"
       >
         <Input />
@@ -324,7 +324,7 @@ export const FILTER_OPTIONS = [
     value: "hq_render_stat_times_a",
     render: () => (
       <Form.Item
-        name="HQ_Render_Status_Timestamp_A"
+        name="Hq_Render_Status_Timestamp_A"
         label="HQ Render Status Timestamp (A)"
       >
         <Input />
@@ -335,7 +335,7 @@ export const FILTER_OPTIONS = [
     label: "HQ Render Status (A)",
     value: "hq_render_stat_a",
     render: () => (
-      <Form.Item name="HQ_Render_Status_A" label="HQ Render Status (A)">
+      <Form.Item name="Hq_Render_Status_A" label="HQ Render Status (A)">
         <Input />
       </Form.Item>
     ),
@@ -360,6 +360,15 @@ export const FILTER_OPTIONS = [
         name="Feasibility_Checked_Date_A"
         label="Feasibility Checked Date (A)"
       >
+        <Input />
+      </Form.Item>
+    ),
+  },
+  {
+    label: "Image Confidential (A)",
+    value: "img_confident_a",
+    render: () => (
+      <Form.Item name="Image_Confidential_A" label="Image Confidential (A)">
         <Input />
       </Form.Item>
     ),

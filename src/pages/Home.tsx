@@ -85,7 +85,7 @@ export default function Home() {
           {/* ── Logo / Shine Text ── */}
           <div className="mb-8">
             <h1 className="home-logo-pill w-fit text-xl">
-              <ShineText>LYG</ShineText>
+              <ShineText>LYG - Smart Library</ShineText>
             </h1>
           </div>
 
