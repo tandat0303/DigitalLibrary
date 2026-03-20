@@ -1,23 +1,12 @@
 import { useEffect, useState } from "react";
-import {
-  Card,
-  Input,
-  Button,
-  Table,
-  Space,
-  Row,
-  Col,
-  Form,
-  Checkbox,
-  Modal,
-} from "antd";
+import { Card, Input, Button, Table, Space, Row, Col, Form, Modal } from "antd";
 import CustomPagination from "../../components/CustomPagination";
 import { AppAlert } from "../../components/ui/AppAlert";
 
 import AddFilter from "../../components/AddFilter";
 import { FILTER_OPTIONS } from "../../components/ui/LastLibraryFilterOption";
-import { Download, QrCode, Search, Upload } from "lucide-react";
-import { TbFile3D, TbCube3dSphere } from "react-icons/tb";
+import { FileBox, Search, Upload } from "lucide-react";
+import { TbCube3dSphere } from "react-icons/tb";
 import FilterCollapse from "../../components/FilterCollapse";
 import { SafeTooltip } from "../../components/ui/Tooltip";
 import {
@@ -31,11 +20,16 @@ import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
 import { buildQueryFilters } from "../../lib/buildQueryFilters";
 import { lastLibraryApi } from "../../api/lastLibrary.api";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { useAppSelector } from "../../hooks/auth";
+import { SwalLoading } from "../../components/ui/SwalLoading";
+import Swal from "sweetalert2";
+import { SwalNotification } from "../../components/ui/SwalNotification";
+import ImportExcelModal from "../../components/ImportExcelModal";
 
 export default function LastLibrary() {
   const [form] = Form.useForm();
 
-  // const user = useAppSelector((state) => state.auth.user);
+  const user = useAppSelector((state) => state.auth.user);
 
   const [dynamicCount, setDynamicCount] = useState(0);
 
@@ -48,28 +42,16 @@ export default function LastLibrary() {
   const [openModal, setOpenModal] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
 
-  // const [openImport, setOpenImport] = useState(false);
+  const [openImport, setOpenImport] = useState(false);
   const [openUploadAttach, setOpenUploadAttach] = useState(false);
 
-  // const [previewImages, setPreviewImages] = useState<(Image | File)[]>([]);
-  // const [openPreview, setOpenPreview] = useState(false);
-
-  // const [openCapture, setOpenCapture] = useState(false);
-
   const [open3D, setOpen3D] = useState(false);
-  const [active3DFile, setActive3DFile] = useState<File | null>(null);
+  const [active3DUrl, setActive3DUrl] = useState<string | null>(null);
+  const [active3DName, setActive3DName] = useState<string>("");
 
-  // const handlePreview = (images: (File | Image)[]) => {
-  //   setPreviewImages(images);
-  //   setOpenPreview(true);
-  // };
-
-  // const handleDetailView = (record: NewLibraryDataType) => {
-  //   window.open(`/last-library/show-info/${record.ID}`, "_blank");
-  // };
-
-  const columns = getLastLibraryColumns((file) => {
-    setActive3DFile(file);
+  const columns = getLastLibraryColumns((filePath, fileName) => {
+    setActive3DUrl(filePath);
+    setActive3DName(fileName);
     setOpen3D(true);
   });
 
@@ -122,154 +104,26 @@ export default function LastLibrary() {
     setSelectedRow(record);
   };
 
-  // const handleExportExcel = async () => {
-  //   try {
-  //     const params = { ...filters };
-
-  //     SwalLoading("Exporting Excel file...");
-
-  //     const start = Date.now();
-
-  //     const response = await newLibraryApi.exportExcel(params);
-
-  //     const url = window.URL.createObjectURL(new Blob([response]));
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     const fileName = `Materials (Last Library) Data_${new Date()
-  //       .toISOString()
-  //       .slice(0, 10)}.xlsx`;
-  //     link.setAttribute("download", fileName);
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     link.parentNode?.removeChild(link);
-  //     window.URL.revokeObjectURL(url);
-
-  //     const elapsed = Date.now() - start;
-  //     if (elapsed < 1000) {
-  //       await sleep(1000 - elapsed);
-  //     }
-
-  //     Swal.close();
-
-  //     SwalNotification("success", "Export successfully");
-  //   } catch (error) {
-  //     Swal.close();
-
-  //     SwalNotification("error", getApiErrorMessage(error));
-  //   }
-  // };
-
-  // const handleExportExcelQR = async () => {
-  //   if (Object.keys(filters).length === 0) {
-  //     AppAlert({ icon: "warning", title: "Please choose filter" });
-  //     return;
-  //   }
-
-  //   try {
-  //     const params = { ...filters };
-
-  //     SwalLoading("Exporting QR Excel file...");
-
-  //     const start = Date.now();
-
-  //     const response = await newLibraryApi.exportExcelQR(params);
-
-  //     const url = window.URL.createObjectURL(new Blob([response]));
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     const fileName = `Materials (Last Library) QR Data_${new Date().toISOString().slice(0, 10)}.xlsx`;
-  //     link.setAttribute("download", fileName);
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     link.parentNode?.removeChild(link);
-  //     window.URL.revokeObjectURL(url);
-
-  //     const elapsed = Date.now() - start;
-  //     if (elapsed < 1000) {
-  //       await sleep(1000 - elapsed);
-  //     }
-
-  //     Swal.close();
-
-  //     SwalNotification("success", "Export successfully");
-  //   } catch (error) {
-  //     Swal.close();
-
-  //     SwalNotification("error", getApiErrorMessage(error));
-  //   }
-  // };
-
-  // const handleCameraSearch = (response: any) => {
-  //   try {
-  //     if (!response?.results?.length) {
-  //       AppAlert({ icon: "warning", title: "No search results found" });
-  //       return;
-  //     }
-
-  //     const topResult = response.results.find(
-  //       (item: any) => item.advanced_rank === 1,
-  //     );
-
-  //     if (!topResult) {
-  //       AppAlert({ icon: "warning", title: "No result with rank 1" });
-  //       return;
-  //     }
-
-  //     const formattedCluster = topResult.cluster.replace(/_/g, "//");
-
-  //     // AppAlert({
-  //     //   icon: "success",
-  //     //   title: `Detected: ${formattedCluster}`,
-  //     // });
-
-  //     form.setFieldsValue({
-  //       Classification: formattedCluster,
-  //     });
-
-  //     const newFilters = buildQueryFilters({
-  //       Classification: formattedCluster,
-  //     });
-
-  //     setFilters(newFilters);
-  //     setCurrent(1);
-
-  //     setOpenCapture(false);
-  //   } catch (error) {
-  //     console.error(error);
-  //     AppAlert({ icon: "error", title: "Failed to process search result" });
-  //   }
-  // };
-
   const handleUploadAttach = async (file: File) => {
-    // if (!selectedRow || !user) return;
-    if (!selectedRow) return;
+    if (!selectedRow || !user) return;
 
-    setData((prev) =>
-      prev.map((item) =>
-        item.LastLibraryID === selectedRow.LastLibraryID
-          ? { ...item, Test_3D: file }
-          : item,
-      ),
-    );
+    try {
+      const formData = new FormData();
 
-    setSelectedRow(null);
+      formData.append("file", file);
 
-    // try {
-    //   const formData = new FormData();
+      const res = await lastLibraryApi.attach3DM(
+        selectedRow.LastLibraryID,
+        formData,
+      );
 
-    //   formData.append("fileId", selectedRow.ID);
-    //   formData.append("user", user.userid);
-    //   formData.append("file", file);
+      if (res.data) AppAlert({ icon: "success", title: res.message });
 
-    //   await newLibraryApi.attachFile(formData);
-
-    //   AppAlert({ icon: "success", title: "Success" });
-
-    //   await fetchMaterials();
-    // } catch (error) {
-    //   console.error(error);
-    //   AppAlert({ icon: "error", title: getApiErrorMessage(error) });
-    // }
+      await fetchItems();
+    } catch (error) {
+      console.error(error);
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
   };
 
   const handleCreate = () => {
@@ -323,33 +177,31 @@ export default function LastLibrary() {
     });
   };
 
-  // const handleImportExcel = async (file: File) => {
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append("file", file);
+  const handleImportExcel = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
 
-  //     SwalLoading("Uploading Excel file...");
+      SwalLoading("Uploading Excel file...");
 
-  //     const res = await newLibraryApi.importExcelFile(formData);
+      const res = await lastLibraryApi.importExcelFile(formData);
 
-  //     Swal.close();
+      Swal.close();
 
-  //     if (res.success) {
-  //       SwalNotification("success", res.message);
+      if (res) {
+        SwalNotification("success", res.message);
 
-  //       await fetchMaterials();
-  //     }
-  //   } catch (error) {
-  //     Swal.close();
+        await fetchItems();
+      }
+    } catch (error) {
+      Swal.close();
 
-  //     SwalNotification("error", getApiErrorMessage(error));
-  //   }
-  // };
+      SwalNotification("error", getApiErrorMessage(error));
+    }
+  };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (values: any) => {
     if (mode === "create") {
-      const values = form.getFieldsValue();
-
       try {
         await lastLibraryApi.createItem(values);
 
@@ -365,8 +217,6 @@ export default function LastLibrary() {
       try {
         if (!selectedRow) return;
 
-        const values = form.getFieldsValue();
-
         await lastLibraryApi.updateItem(selectedRow.LastLibraryID, values);
         AppAlert({ icon: "success", title: "Item updated successfully" });
         setOpenModal(false);
@@ -380,11 +230,18 @@ export default function LastLibrary() {
   };
 
   const handle3DViewer = () => {
-    if (!selectedRow?.Test_3D) return;
+    if (!selectedRow) return;
 
-    if (selectedRow.Test_3D instanceof File) {
-      setActive3DFile(selectedRow.Test_3D);
+    if (!selectedRow.FilePath) {
+      AppAlert({
+        icon: "warning",
+        title: "No 3D file attached",
+      });
+      return;
     }
+
+    setActive3DUrl(selectedRow.FilePath);
+    setActive3DName(selectedRow.FileName ?? "3D Model");
     setOpen3D(true);
   };
 
@@ -405,23 +262,6 @@ export default function LastLibrary() {
               />
             }
             visibleFilterCount={3 + dynamicCount}
-            // onValuesChange={(changedValues, allValues) => {
-            //   if ("hasImage" in changedValues) {
-            //     setFilters((prev: any) => {
-            //       const newFilters = { ...prev };
-
-            //       if (allValues.hasImage) {
-            //         newFilters.hasImage = false;
-            //       } else {
-            //         delete newFilters.hasImage;
-            //       }
-
-            //       return newFilters;
-            //     });
-
-            //     setCurrent(1);
-            //   }
-            // }}
             actions={
               <>
                 <Form.Item>
@@ -429,9 +269,6 @@ export default function LastLibrary() {
                     <Search size={13} />
                     Search
                   </Button>
-                </Form.Item>
-                <Form.Item name="hasImage" valuePropName="checked">
-                  <Checkbox>No Image</Checkbox>
                 </Form.Item>
               </>
             }
@@ -511,40 +348,11 @@ export default function LastLibrary() {
                   <Button
                     className="actions-btn w-full lg:w-auto"
                     // icon={<Upload className="h-5" />}
-                    // onClick={() => setOpenImport(true)}
+                    onClick={() => setOpenImport(true)}
                   >
                     <Upload />
                   </Button>
                 </SafeTooltip>
-
-                <SafeTooltip title={"Export Excel file"}>
-                  <Button
-                    className="actions-btn w-full lg:w-auto"
-                    // icon={<Download className="h-5" />}
-                    // onClick={handleExportExcel}
-                  >
-                    <Download />
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Export QR Excel file"}>
-                  <Button
-                    className="actions-btn w-full lg:w-auto"
-                    // onClick={handleExportExcelQR}
-                    // icon={<QrCode className="h-5" />}
-                  >
-                    <QrCode />
-                  </Button>
-                </SafeTooltip>
-
-                {/* <SafeTooltip title={"Scan material image"}>
-                  <Button
-                    className="extra-actions-btn w-full lg:w-auto"
-                    // onClick={() => setOpenCapture(true)}
-                  >
-                    Detail Material
-                  </Button>
-                </SafeTooltip> */}
 
                 <SafeTooltip title={"Upload 3D Modal file"}>
                   <Button
@@ -562,12 +370,12 @@ export default function LastLibrary() {
                       setOpenUploadAttach(true);
                     }}
                   >
-                    <TbFile3D className="w-4 h-4" />
+                    <FileBox className="w-4 h-4" />
                     Attach 3DM file
                   </Button>
                 </SafeTooltip>
 
-                {selectedRow && selectedRow.Test_3D && (
+                {selectedRow && selectedRow.FileName && (
                   <SafeTooltip title={"Show 3D Modal"}>
                     <Button
                       className="extra-actions-btn w-full lg:w-auto"
@@ -591,7 +399,7 @@ export default function LastLibrary() {
                 bordered
                 columns={columns}
                 dataSource={data}
-                rowKey="key"
+                rowKey="LastLibraryID"
                 pagination={false}
                 scroll={{ x: "max-content" }}
                 onRow={(record) => ({
@@ -627,16 +435,16 @@ export default function LastLibrary() {
         onSubmit={handleSubmit}
       />
 
-      {/* <ImportExcelModal
+      <ImportExcelModal
         open={openImport}
         onClose={() => setOpenImport(false)}
-        sampleFileName="Ex_File_New_Library"
+        sampleFileName="Ex_File_Last_Library"
         onImport={(file) => {
           if (!file) return;
           handleImportExcel(file);
           setOpenImport(false);
         }}
-      /> */}
+      />
 
       <UploadAttachModal
         open={openUploadAttach}
@@ -645,33 +453,20 @@ export default function LastLibrary() {
           if (!file || !selectedRow) return;
           handleUploadAttach(file);
           setOpenUploadAttach(false);
+          setSelectedRow(null);
         }}
+        acceptedFormat=".3dm"
       />
-
-      {/* <ImagePreviewModal
-        open={openPreview}
-        onClose={() => setOpenPreview(false)}
-        images={previewImages}
-        columns={2}
-        maxImages={2}
-        imageSize={400}
-        emptyImage={EmptyImg}
-        labels={["Top side", "Bottom side"]}
-        previewSize={500}
-      />
-
-      <CameraModal
-        open={openCapture}
-        onClose={() => setOpenCapture(false)}
-        onCapture={handleCameraSearch}
-      /> */}
 
       <ThreeDMModal
         open={open3D}
-        file={active3DFile}
+        fileUrl={active3DUrl}
+        fileName={active3DName}
         onClose={() => {
           setOpen3D(false);
-          setActive3DFile(null);
+          setActive3DUrl(null);
+          setActive3DName("");
+          setSelectedRow(null);
         }}
       />
     </>

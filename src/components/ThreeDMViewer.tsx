@@ -7,15 +7,18 @@ import {
   //   OrbitControls,
   TrackballControls,
 } from "@react-three/drei";
+import { useAppSelector } from "../hooks/auth";
 import { AppAlert } from "./ui/AppAlert";
 
-function useRhino3dm(file: File | null) {
+function useRhino3dm(url: string | null) {
+  const token = useAppSelector((state) => state.auth.accessToken);
+
   const [meshes, setMeshes] = useState<THREE.BufferGeometry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!file) return;
+    if (!url) return;
 
     let cancelled = false;
 
@@ -24,6 +27,7 @@ function useRhino3dm(file: File | null) {
 
       return new Promise<void>((resolve, reject) => {
         const existing = document.querySelector('script[src*="rhino3dm"]');
+
         if (existing) {
           existing.addEventListener("load", () => resolve());
           return;
@@ -32,14 +36,10 @@ function useRhino3dm(file: File | null) {
         const script = document.createElement("script");
         script.src =
           "https://cdn.jsdelivr.net/npm/rhino3dm@8.4.0/rhino3dm.min.js";
+
         script.onload = () => resolve();
-        script.onerror = () =>
-          reject(
-            AppAlert({
-              icon: "error",
-              title: "Failed to load rhino3dm from CDN",
-            }),
-          );
+        script.onerror = () => reject(new Error("Failed to load rhino3dm"));
+
         document.head.appendChild(script);
       });
     };
@@ -52,23 +52,33 @@ function useRhino3dm(file: File | null) {
         await loadRhinoScript();
 
         const rhinoInit = (window as any).rhino3dm;
-        if (typeof rhinoInit !== "function") {
+        const rhino = await rhinoInit();
+
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/octet-stream",
+          },
+        });
+        if (!response.ok)
+          AppAlert({ icon: "error", title: "Failed to fetch 3D file" });
+
+        const contentType = response.headers.get("content-type");
+
+        if (!contentType?.includes("application")) {
+          const text = await response.text();
+          console.error("Server returned:", text.slice(0, 200));
           AppAlert({
             icon: "error",
-            title: "rhino3dm not available on window",
+            title: "Server did not return a 3DM file",
           });
         }
 
-        const rhino = await rhinoInit();
-        const buffer = await file.arrayBuffer();
+        const buffer = await response.arrayBuffer();
         const arr = new Uint8Array(buffer);
 
         const doc = rhino.File3dm.fromByteArray(arr);
-        if (!doc)
-          AppAlert({
-            icon: "error",
-            title: "Failed to parse .3dm file",
-          });
+        if (!doc) throw new Error("Failed to parse .3dm");
 
         const geometries: THREE.BufferGeometry[] = [];
         const objects = doc.objects();
@@ -81,23 +91,18 @@ function useRhino3dm(file: File | null) {
             const verts = geo.vertices();
             const faces = geo.faces();
 
-            // Build positions array
             const positions: number[] = [];
             for (let v = 0; v < verts.count; v++) {
-              const pt = verts.get(v) as number[];
+              const pt = verts.get(v);
               positions.push(pt[0], pt[1], pt[2]);
             }
 
-            // Build indices — quad [a,b,c,d] → 2 triangles [a,b,c] + [a,c,d]
             const indices: number[] = [];
             for (let f = 0; f < faces.count; f++) {
-              const face = faces.get(f) as number[];
+              const face = faces.get(f);
 
-              if (face.length === 3) {
-                // Triangle
-                indices.push(face[0], face[1], face[2]);
-              } else if (face.length === 4) {
-                // Quad → split into 2 triangles
+              if (face.length === 3) indices.push(face[0], face[1], face[2]);
+              else if (face.length === 4) {
                 indices.push(face[0], face[1], face[2]);
                 indices.push(face[0], face[2], face[3]);
               }
@@ -110,6 +115,7 @@ function useRhino3dm(file: File | null) {
             );
             bufGeo.setIndex(indices);
             bufGeo.computeVertexNormals();
+
             geometries.push(bufGeo);
           }
         }
@@ -123,10 +129,11 @@ function useRhino3dm(file: File | null) {
     };
 
     load();
+
     return () => {
       cancelled = true;
     };
-  }, [file]);
+  }, [url]);
 
   return { meshes, loading, error };
 }
@@ -188,11 +195,11 @@ function Scene({ geometries }: { geometries: THREE.BufferGeometry[] }) {
 }
 
 interface ThreeDMViewerProps {
-  file: File;
+  url: string;
 }
 
-export default function ThreeDMViewer({ file }: ThreeDMViewerProps) {
-  const { meshes, loading, error } = useRhino3dm(file);
+export default function ThreeDMViewer({ url }: ThreeDMViewerProps) {
+  const { meshes, loading, error } = useRhino3dm(url);
 
   useEffect(() => {
     return () => {

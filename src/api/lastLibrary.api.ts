@@ -25,4 +25,20 @@ export const lastLibraryApi = {
     const res = await axiosConfig.delete(`/last-library/${id}`);
     return res.data;
   },
+  importExcelFile: async (formData: FormData) => {
+    const res = await axiosConfig.post(`/last-library/import`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return res.data;
+  },
+  attach3DM: async (id: string, formData: FormData) => {
+    const res = await axiosConfig.post(`/last-library/${id}/3dm`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return res.data;
+  },
 };

@@ -7,6 +7,7 @@ import {
   sortImagesByType,
 } from "../lib/helpers";
 import { SafeTooltip } from "../components/ui/Tooltip";
+import { TbFileDownload } from "react-icons/tb";
 
 export interface NewLibraryResponse {
   data: NewLibraryDataType[];
@@ -398,9 +399,10 @@ export const getNewLibraryColumns = (
             href={record.FilePath}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-600 font-medium hover:underline"
+            className="flex text-gray-600 font-medium hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
+            <TbFileDownload size={20} className="mr-1" />
             {value}
           </a>
         ) : null,

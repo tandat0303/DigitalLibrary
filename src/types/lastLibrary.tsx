@@ -1,4 +1,5 @@
 import type { ColumnsType } from "antd/es/table";
+import { FileBox } from "lucide-react";
 
 export interface LastLibraryResponse {
   data: LastLibraryDataType[];
@@ -49,7 +50,9 @@ export interface LastLibraryDataType {
   Feasibility_Checked_Date_A: string;
   Image_Confidential_A: string;
   Last_M: string;
-  Test_3D?: File | string;
+  LastLibrary3DMID: string;
+  FileName: string;
+  FilePath: string;
 }
 
 interface LastLibraryFormValues {
@@ -93,7 +96,9 @@ interface LastLibraryFormValues {
   Feasibility_Checked_Date_A: string;
   Image_Confidential_A: string;
   Last_M: string;
-  Test_3D?: File | string;
+  LastLibrary3DMID: string;
+  FileName: string;
+  FilePath: string;
 }
 
 export interface LastLibraryModalProps {
@@ -105,85 +110,11 @@ export interface LastLibraryModalProps {
 }
 
 export const getLastLibraryColumns = (
-  //   onPreview: (images: (Image | File)[]) => void,
-  //   onView: (record: LastLibraryDataType) => void,
-  onView3D: (file: File) => void,
+  onView3D: (filePath: string, fileName: string) => void,
 ): ColumnsType<LastLibraryDataType> =>
   // {
   // const columns: ColumnsType<LastLibraryDataType> =
   [
-    // {
-    //   title: "Action",
-    //   key: "action",
-    //   width: 70,
-    //   align: "center",
-    //   render: (_, record) => (
-    //     <div className="flex items-center justify-center h-full">
-    //       <SafeTooltip title={"Show material detail information"}>
-    //         <Eye
-    //           className="cursor-pointer h-4"
-    //           onClick={(e) => {
-    //             e.stopPropagation();
-    //             onView(record);
-    //           }}
-    //         />
-    //       </SafeTooltip>
-    //     </div>
-    //   ),
-    // },
-    // {
-    //   title: "Image",
-    //   dataIndex: "Images",
-    //   align: "center",
-    //   // onCell: () => ({
-    //   //   onClick: (e) => e.stopPropagation(),
-    //   // }),
-    //   render: (images?: (Image | File)[]) => {
-    //     const validImages = Array.isArray(images)
-    //       ? sortImagesByType(images)
-    //       : [];
-
-    //     if (!validImages.length) return null;
-
-    //     const columns = Math.min(2, validImages.length);
-
-    //     return (
-    //       <div className="flex justify-center">
-    //         <div
-    //           className="grid gap-2 w-fit cursor-pointer"
-    //           style={{ gridTemplateColumns: `repeat(${columns}, 64px)` }}
-    //           onClick={(e) => {
-    //             const previewImages = validImages.filter(
-    //               (img): img is Image | File => img !== null,
-    //             );
-
-    //             onPreview(previewImages);
-    //             e.stopPropagation();
-    //           }}
-    //         >
-    //           {validImages.map((img, index) => {
-    //             const src = resolveImageSrc(img);
-
-    //             return (
-    //               <img
-    //                 key={index}
-    //                 src={src}
-    //                 className="w-16 h-12 object-cover rounded cursor-zoom-in hover:scale-110 hover:shadow-md transition-all duration-200 border border-[#8f8f8f]"
-    //                 onLoad={() => {
-    //                   if (img instanceof File) {
-    //                     URL.revokeObjectURL(src);
-    //                   }
-    //                 }}
-    //                 // onClick={(e) => e.stopPropagation()}
-    //                 // onError={(e) => e.stopPropagation()}
-    //               />
-    //             );
-    //           })}
-    //         </div>
-    //       </div>
-    //     );
-    //   },
-    // },
     {
       title: "Season (M)",
       dataIndex: "Season_M",
@@ -341,55 +272,25 @@ export const getLastLibraryColumns = (
       dataIndex: "Last_M",
     },
     {
-      title: "Test 3D",
-      dataIndex: "Test_3D",
-      render: (value: File | string | undefined): React.ReactNode => {
-        if (!value) return null;
-
-        if (value instanceof File) {
-          return (
-            <a
-              className="text-gray-600 font-medium hover:underline"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onView3D?.(value);
-              }}
-            >
-              {value.name}
-            </a>
-          );
-        }
+      title: "3D Model",
+      dataIndex: "FileName",
+      render: (_, record) => {
+        if (!record.FileName || !record.FilePath) return null;
 
         return (
-          <a
-            href={value}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 font-medium hover:underline"
-            onClick={(e) => e.stopPropagation()}
+          <div
+            className="flex items-center gap-2 text-blue-500 font-medium hover:underline cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onView3D(record.FilePath, record.FileName);
+            }}
           >
-            {value}
-          </a>
+            <FileBox size={20} />
+            {record.FileName}
+          </div>
         );
       },
     },
-    // {
-    //   title: "Attachment",
-    //   dataIndex: "FileName",
-    //   render: (value: string | undefined, record) =>
-    //     value ? (
-    //       <a
-    //         href={record.FilePath}
-    //         target="_blank"
-    //         rel="noopener noreferrer"
-    //         className="text-gray-600 font-medium hover:underline"
-    //         onClick={(e) => e.stopPropagation()}
-    //       >
-    //         {value}
-    //       </a>
-    //     ) : null,
-    // },
   ];
 // return normalizeColumns(columns, ["Images", "FileName"]);
 // };

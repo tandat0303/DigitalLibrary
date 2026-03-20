@@ -774,7 +774,7 @@ body,
   width: 90px;
   height: 90px;
   border-radius: 20px;
-  background: #f5f4f0;
+  background: rgb(235, 234, 234);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -5,9 +5,15 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onImport: (file: File | null) => void;
+  acceptedFormat?: string;
 }
 
-export default function UploadAttachModal({ open, onClose, onImport }: Props) {
+export default function UploadAttachModal({
+  open,
+  onClose,
+  onImport,
+  acceptedFormat,
+}: Props) {
   const [file, setFile] = useState<File | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -125,7 +131,7 @@ export default function UploadAttachModal({ open, onClose, onImport }: Props) {
         <input
           ref={fileInputRef}
           type="file"
-          // accept=".xlsx,.xls,.csv"
+          accept={acceptedFormat ? acceptedFormat : ".xlsx,.xls,.csv"}
           onChange={handleFileChange}
           style={{ display: "none" }}
         />

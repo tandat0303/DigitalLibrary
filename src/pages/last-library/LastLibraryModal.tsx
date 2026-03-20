@@ -54,8 +54,6 @@ export default function LastLibraryModal({
       setLoading(true);
 
       await onSubmit(values);
-
-      form.resetFields();
     } catch (error) {
       console.log(error);
       AppAlert({ icon: "error", title: "Please fill all fields" });
