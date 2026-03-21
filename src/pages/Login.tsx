@@ -19,6 +19,7 @@ import { getApiErrorMessage } from "../lib/getApiErrorMsg";
 import Loading from "../components/ui/Loading";
 import { requiredMessage } from "../lib/helpers";
 import dayjs from "dayjs";
+// import bg from "../assets/homebg-1.jpg";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
@@ -56,6 +57,15 @@ export default function Login() {
 
   return (
     <div className="login-page">
+      {/* <div
+      className="login-page bg-cover bg-center"
+      style={{
+        backgroundImage: `
+            linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)),
+            url(${bg})
+          `,
+      }}
+    > */}
       <div className="login-card">
         {/* ── LEFT: Form ── */}
         <div className="login-form-side">

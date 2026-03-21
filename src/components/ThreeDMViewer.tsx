@@ -275,3 +275,77 @@ export default function ThreeDMViewer({ url }: ThreeDMViewerProps) {
     </Canvas>
   );
 }
+
+// import { useEffect, useRef } from "react";
+// import * as THREE from "three";
+// import { OrbitControls } from "three-stdlib";
+// import { Rhino3dmLoader } from "three-stdlib";
+
+// interface Props {
+//   url: string;
+// }
+
+// export default function ThreeDMViewer({ url }: Props) {
+//   const containerRef = useRef<HTMLDivElement>(null);
+
+//   useEffect(() => {
+//     if (!containerRef.current) return;
+
+//     const container = containerRef.current;
+
+//     // scene
+//     const scene = new THREE.Scene();
+//     scene.background = new THREE.Color(0xf5f5f5);
+
+//     // camera
+//     const camera = new THREE.PerspectiveCamera(
+//       60,
+//       container.clientWidth / container.clientHeight,
+//       0.1,
+//       10000,
+//     );
+//     camera.position.set(10, 10, 10);
+
+//     // renderer
+//     const renderer = new THREE.WebGLRenderer({ antialias: true });
+//     renderer.setSize(container.clientWidth, container.clientHeight);
+//     container.appendChild(renderer.domElement);
+
+//     // controls
+//     const controls = new OrbitControls(camera, renderer.domElement);
+//     controls.enableDamping = true;
+
+//     // light
+//     scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+
+//     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+//     dirLight.position.set(10, 20, 10);
+//     scene.add(dirLight);
+
+//     // loader
+//     const loader = new Rhino3dmLoader();
+
+//     // 👇 VERY IMPORTANT
+//     loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.0.0/");
+
+//     loader.load(url, (object) => {
+//       scene.add(object);
+//     });
+
+//     // render loop
+//     const animate = () => {
+//       requestAnimationFrame(animate);
+//       controls.update();
+//       renderer.render(scene, camera);
+//     };
+//     animate();
+
+//     // cleanup
+//     return () => {
+//       renderer.dispose();
+//       container.innerHTML = "";
+//     };
+//   }, [url]);
+
+//   return <div ref={containerRef} className="w-full h-full" />;
+// }

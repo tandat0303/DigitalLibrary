@@ -14,7 +14,6 @@ import { AppAlert } from "../../../../components/ui/AppAlert";
 import { getApiErrorMessage } from "../../../../lib/getApiErrorMsg";
 import Loading from "../../../../components/ui/Loading";
 export default function MaterialDetail() {
-  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [material, setMaterial] = useState<MaterialsDataType>();
   const [loading, setLoading] = useState(true);
   const { id } = useParams();
@@ -25,14 +24,6 @@ export default function MaterialDetail() {
   const isMobile = !screens.md;
 
   const imageRef = useRef<HTMLDivElement | null>(null);
-
-  // const [zoom, setZoom] = useState({
-  //   visible: false,
-  //   x: 0,
-  //   y: 0,
-  //   bgX: 0,
-  //   bgY: 0,
-  // });
 
   const lensRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -79,6 +70,15 @@ export default function MaterialDetail() {
   useEffect(() => {
     setSelectedIndex(0);
   }, [images]);
+  useEffect(() => {
+    touchZoomActive.current = false;
+    setTouchZoomVisible(false);
+    if (lensRef.current) lensRef.current.style.opacity = "0";
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }, [selectedIndex]);
 
   const thumbnails = useMemo(() => {
     return Array.from({ length: THUMBNAIL_COUNT }, (_, i) => images[i] ?? null);
@@ -87,88 +87,164 @@ export default function MaterialDetail() {
   const LENS_SIZE = 150;
   const ZOOM_SCALE = 1;
 
-  // const handleMouseMove = (e: React.MouseEvent) => {
-  //   if (!imageRef.current) return;
+  const touchZoomActive = useRef(false);
+  const [touchZoomVisible, setTouchZoomVisible] = useState(false);
+  const lastTapTime = useRef(0);
+  const DOUBLE_TAP_DELAY = 300;
 
-  //   const rect = imageRef.current.getBoundingClientRect();
-
-  //   let x = e.clientX - rect.left;
-  //   let y = e.clientY - rect.top;
-
-  //   const half = LENS_SIZE / 2;
-
-  //   x = Math.max(half, Math.min(rect.width - half, x));
-  //   y = Math.max(half, Math.min(rect.height - half, y));
-
-  //   const percentX = x / rect.width;
-  //   const percentY = y / rect.height;
-
-  //   const bgX = percentX * rect.width * ZOOM_SCALE;
-  //   const bgY = percentY * rect.height * ZOOM_SCALE;
-
-  //   setZoom({
-  //     visible: true,
-  //     x,
-  //     y,
-  //     bgX,
-  //     bgY,
-  //   });
-
-  //   setImageSize({
-  //     width: rect.width,
-  //     height: rect.height,
-  //   });
-  // };
-
-  const updateLens = () => {
+  const applyLens = (x: number, y: number, rect: DOMRect) => {
     const lens = lensRef.current;
-    const data = zoomData.current;
+    if (!lens) return;
+    const bgW = rect.width * ZOOM_SCALE;
+    const bgH = rect.height * ZOOM_SCALE;
+    const bgX = (x / rect.width) * bgW;
+    const bgY = (y / rect.height) * bgH;
+    lens.style.left = `${x - LENS_SIZE / 2}px`;
+    lens.style.top = `${y - LENS_SIZE / 2}px`;
+    lens.style.backgroundSize = `${bgW}px ${bgH}px`;
+    lens.style.backgroundPosition = `-${bgX - LENS_SIZE / 2}px -${bgY - LENS_SIZE / 2}px`;
+  };
 
+  const lensReady = useRef(false);
+
+  useEffect(() => {
+    const lens = lensRef.current;
     if (!lens) return;
 
-    lens.style.left = `${data.x - LENS_SIZE / 2}px`;
-    lens.style.top = `${data.y - LENS_SIZE / 2}px`;
+    const img = images[selectedIndex];
+    if (!img) {
+      lens.style.backgroundImage = "";
+      lens.style.opacity = "0";
+      lensReady.current = false;
+      touchZoomActive.current = false;
+      setTouchZoomVisible(false);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      return;
+    }
 
-    lens.style.backgroundPosition = `-${
-      data.bgX - LENS_SIZE / 2
-    }px -${data.bgY - LENS_SIZE / 2}px`;
+    lensReady.current = false;
+    const src = resolveImageSrc(img);
+    const preloader = new window.Image();
+    preloader.onload = () => {
+      if (lensRef.current) {
+        lensRef.current.style.backgroundImage = `url(${src})`;
+      }
+      lensReady.current = true;
+    };
+    preloader.onerror = () => {
+      lensReady.current = false;
+    };
+    preloader.src = src;
+  }, [selectedIndex, images]);
 
+  const computeClampedPos = (
+    clientX: number,
+    clientY: number,
+    rect: DOMRect,
+  ) => {
+    const half = LENS_SIZE / 2;
+    const x = Math.max(half, Math.min(rect.width - half, clientX - rect.left));
+    const y = Math.max(half, Math.min(rect.height - half, clientY - rect.top));
+    return { x, y };
+  };
+
+  const updateLens = () => {
+    const data = zoomData.current;
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    applyLens(data.x, data.y, rect);
     rafRef.current = null;
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!imageRef.current || !lensRef.current) return;
-
-    const rect = imageRef.current.getBoundingClientRect();
-
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top;
-
-    const half = LENS_SIZE / 2;
-
-    x = Math.max(half, Math.min(rect.width - half, x));
-    y = Math.max(half, Math.min(rect.height - half, y));
-
-    const percentX = x / rect.width;
-    const percentY = y / rect.height;
-
-    zoomData.current = {
-      x,
-      y,
-      bgX: percentX * rect.width * ZOOM_SCALE,
-      bgY: percentY * rect.height * ZOOM_SCALE,
-      visible: true,
-    };
-
-    setImageSize({
-      width: rect.width,
-      height: rect.height,
-    });
-
+  const scheduleUpdate = (x: number, y: number) => {
+    zoomData.current = { x, y, bgX: 0, bgY: 0, visible: true };
     if (!rafRef.current) {
       rafRef.current = requestAnimationFrame(updateLens);
     }
   };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const { x, y } = computeClampedPos(e.clientX, e.clientY, rect);
+    scheduleUpdate(x, y);
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!touchZoomActive.current || e.touches.length !== 1) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const { x, y } = computeClampedPos(touch.clientX, touch.clientY, rect);
+    scheduleUpdate(x, y);
+  };
+
+  const handleTouchEnd = () => {
+    // Keep zoom until double-tap
+  };
+
+  useEffect(() => {
+    const el = imageRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (!images[selectedIndex] || e.touches.length !== 1) return;
+
+      const now = Date.now();
+      const isDoubleTap = now - lastTapTime.current < DOUBLE_TAP_DELAY;
+      lastTapTime.current = now;
+
+      if (touchZoomActive.current) {
+        if (isDoubleTap) {
+          touchZoomActive.current = false;
+          setTouchZoomVisible(false);
+          if (lensRef.current) lensRef.current.style.opacity = "0";
+          if (rafRef.current) {
+            cancelAnimationFrame(rafRef.current);
+            rafRef.current = null;
+          }
+        } else {
+          const touch = e.touches[0];
+          if (!imageRef.current) return;
+          const rect = imageRef.current.getBoundingClientRect();
+          const { x, y } = computeClampedPos(
+            touch.clientX,
+            touch.clientY,
+            rect,
+          );
+          applyLens(x, y, rect);
+          scheduleUpdate(x, y);
+        }
+      } else {
+        if (!lensReady.current) return;
+        touchZoomActive.current = true;
+        setTouchZoomVisible(true);
+        if (lensRef.current) lensRef.current.style.opacity = "1";
+
+        const touch = e.touches[0];
+        if (!imageRef.current) return;
+        const rect = imageRef.current.getBoundingClientRect();
+        const { x, y } = computeClampedPos(touch.clientX, touch.clientY, rect);
+        applyLens(x, y, rect);
+        scheduleUpdate(x, y);
+      }
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    el.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", handleTouchMove);
+      el.removeEventListener("touchend", handleTouchEnd);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [images, selectedIndex]);
 
   if (loading) {
     return <Loading overlay fullScreen />;
@@ -217,21 +293,18 @@ export default function MaterialDetail() {
             <div className="flex flex-col h-full gap-4">
               <div
                 ref={imageRef}
-                // onMouseEnter={
-                //   !isMobile
-                //     ? () => setZoom((z) => ({ ...z, visible: true }))
-                //     : undefined
-                // }
-                // onMouseLeave={
-                //   !isMobile
-                //     ? () => setZoom((z) => ({ ...z, visible: false }))
-                //     : undefined
-                // }
                 onMouseEnter={() => {
-                  if (lensRef.current) lensRef.current.style.opacity = "1";
+                  if (
+                    !isMobile &&
+                    images[selectedIndex] &&
+                    lensReady.current &&
+                    lensRef.current
+                  )
+                    lensRef.current.style.opacity = "1";
                 }}
                 onMouseLeave={() => {
-                  if (lensRef.current) lensRef.current.style.opacity = "0";
+                  if (!isMobile && lensRef.current)
+                    lensRef.current.style.opacity = "0";
                 }}
                 onMouseMove={!isMobile ? handleMouseMove : undefined}
                 style={{
@@ -241,6 +314,8 @@ export default function MaterialDetail() {
                   border: "1px solid #ddd",
                   background: "#808080",
                   overflow: "hidden",
+                  cursor:
+                    isMobile && images[selectedIndex] ? "pointer" : undefined,
                 }}
               >
                 {images[selectedIndex] ? (
@@ -286,29 +361,61 @@ export default function MaterialDetail() {
                     }}
                   />
                 )} */}
-                {!isMobile && images[selectedIndex] && (
+
+                {/* Lens: always mounted, opacity controlled via DOM to avoid remount jitter */}
+                <div
+                  ref={lensRef}
+                  style={{
+                    position: "absolute",
+                    width: LENS_SIZE,
+                    height: LENS_SIZE,
+                    border: "2px solid white",
+                    boxShadow: "0 0 8px rgba(0,0,0,0.4)",
+                    pointerEvents: "none",
+                    opacity: 0,
+                    transition: "opacity 0.15s",
+                    backgroundRepeat: "no-repeat",
+                  }}
+                />
+
+                {/* Mobile: tap-to-zoom hint */}
+                {isMobile && images[selectedIndex] && !touchZoomVisible && (
                   <div
-                    ref={lensRef}
                     style={{
                       position: "absolute",
-                      width: LENS_SIZE,
-                      height: LENS_SIZE,
-                      border: "2px solid white",
-                      boxShadow: "0 0 8px rgba(0,0,0,0.4)",
+                      bottom: 8,
+                      right: 8,
+                      background: "rgba(0,0,0,0.45)",
+                      color: "#fff",
+                      fontSize: 11,
+                      padding: "3px 8px",
+                      borderRadius: 12,
                       pointerEvents: "none",
-
-                      opacity: 0,
-                      transition: "opacity 0.15s",
-
-                      backgroundImage: `url(${resolveImageSrc(
-                        images[selectedIndex],
-                      )})`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundSize: `${imageSize.width * ZOOM_SCALE}px ${
-                        imageSize.height * ZOOM_SCALE
-                      }px`,
+                      userSelect: "none",
                     }}
-                  />
+                  >
+                    Tap to zoom
+                  </div>
+                )}
+
+                {/* Mobile: active zoom indicator */}
+                {isMobile && images[selectedIndex] && touchZoomVisible && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 8,
+                      right: 8,
+                      background: "rgba(22,119,255,0.75)",
+                      color: "#fff",
+                      fontSize: 11,
+                      padding: "3px 8px",
+                      borderRadius: 12,
+                      pointerEvents: "none",
+                      userSelect: "none",
+                    }}
+                  >
+                    Double-tap to exit
+                  </div>
                 )}
               </div>
 

@@ -1,5 +1,5 @@
 import { Grid, Modal } from "antd";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Image } from "../types/images";
 import { mapImagesToLabels, resolveImageSrc } from "../lib/helpers";
 
@@ -27,14 +27,12 @@ export default function ImagePreviewModal({
   emptyImage = "/no-image.png",
   labels = [],
   enableHoverPreview = true,
-  previewSize = 320,
+  // previewSize: _previewSize,
   slotImageWidth,
 }: ImagePreviewModalProps) {
   const { useBreakpoint } = Grid;
   const screens = useBreakpoint();
   const isMobile = !screens.md;
-
-  const allowHoverPreview = enableHoverPreview && !isMobile;
 
   const responsiveColumns = isMobile ? 2 : columns;
   const responsiveImageSize = isMobile ? 120 : imageSize;
@@ -43,14 +41,28 @@ export default function ImagePreviewModal({
     : responsiveImageSize;
   const gap = responsiveImageSize * 0.12;
 
-  const [hoverSrc, setHoverSrc] = useState<string | null>(null);
-  const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
+  const LENS_SIZE = 120;
+  const ZOOM_SCALE = 1;
+
+  const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const lensRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const rafRef = useRef<number | null>(null);
+  const zoomData = useRef({ x: 0, y: 0 });
+
+  const activeSlot = useRef<number | null>(null);
+  const lensReady = useRef<boolean[]>([]);
+
+  const touchZoomActive = useRef(false);
+  const [touchZoomVisible, setTouchZoomVisible] = useState(false);
+  const [touchZoomSlot, setTouchZoomSlot] = useState<number | null>(null);
+  const lastTapTime = useRef(0);
+  const lastTapSlot = useRef<number | null>(null);
+  const DOUBLE_TAP_DELAY = 300;
 
   const slots = useMemo(() => {
     if (labels.length) {
       return mapImagesToLabels(images, labels, maxImages);
     }
-
     return Array.from({ length: maxImages }).map(
       (_, index) => images[index] || null,
     );
@@ -60,145 +72,345 @@ export default function ImagePreviewModal({
 
   const modalWidth = isMobile
     ? "95vw"
-    : // : responsiveColumns * responsiveImageSize +
-      responsiveColumns * slotWidth + (responsiveColumns - 1) * gap + 48;
+    : responsiveColumns * slotWidth + (responsiveColumns - 1) * gap + 48;
 
-  const handleMouseEnter = (e: React.MouseEvent, file: File | Image) => {
-    if (!allowHoverPreview || !file) return;
+  useEffect(() => {
+    lensReady.current = slots.map(() => false);
 
-    const url = resolveImageSrc(file);
+    slots.forEach((src, i) => {
+      if (!src) return;
+      const url = resolveImageSrc(src);
+      const img = new window.Image();
+      img.onload = () => {
+        if (lensRefs.current[i]) {
+          lensRefs.current[i]!.style.backgroundImage = `url(${url})`;
+        }
+        lensReady.current[i] = true;
+      };
+      img.src = url;
+    });
+  }, [slots]);
 
-    setHoverSrc(url);
-    setHoverPos({
-      x: e.clientX + 20,
-      y: e.clientY - previewSize / 2,
+  useEffect(() => {
+    if (!open) {
+      touchZoomActive.current = false;
+      setTouchZoomVisible(false);
+      setTouchZoomSlot(null);
+      activeSlot.current = null;
+      lensRefs.current.forEach((lens) => {
+        if (lens) lens.style.opacity = "0";
+      });
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    }
+  }, [open]);
+
+  const applyLens = (index: number, x: number, y: number) => {
+    const slot = slotRefs.current[index];
+    const lens = lensRefs.current[index];
+    if (!slot || !lens) return;
+    const rect = slot.getBoundingClientRect();
+    const bgW = rect.width * ZOOM_SCALE;
+    const bgH = rect.height * ZOOM_SCALE;
+    const bgX = (x / rect.width) * bgW;
+    const bgY = (y / rect.height) * bgH;
+    lens.style.left = `${x - LENS_SIZE / 2}px`;
+    lens.style.top = `${y - LENS_SIZE / 2}px`;
+    lens.style.backgroundSize = `${bgW}px ${bgH}px`;
+    lens.style.backgroundPosition = `-${bgX - LENS_SIZE / 2}px -${bgY - LENS_SIZE / 2}px`;
+  };
+
+  const computeClampedPos = (
+    clientX: number,
+    clientY: number,
+    rect: DOMRect,
+  ) => {
+    const half = LENS_SIZE / 2;
+    const x = Math.max(half, Math.min(rect.width - half, clientX - rect.left));
+    const y = Math.max(half, Math.min(rect.height - half, clientY - rect.top));
+    return { x, y };
+  };
+
+  const scheduleUpdate = (index: number, x: number, y: number) => {
+    zoomData.current = { x, y };
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      applyLens(index, zoomData.current.x, zoomData.current.y);
+      rafRef.current = null;
     });
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!hoverSrc) return;
+  const handleMouseEnter = (
+    e: React.MouseEvent,
+    index: number,
+    src: File | Image | null,
+  ) => {
+    if (isMobile || !enableHoverPreview || !src || !lensReady.current[index])
+      return;
+    const slot = slotRefs.current[index];
+    const lens = lensRefs.current[index];
+    if (!slot || !lens) return;
+    activeSlot.current = index;
+    lens.style.opacity = "1";
+    const rect = slot.getBoundingClientRect();
+    const { x, y } = computeClampedPos(e.clientX, e.clientY, rect);
+    applyLens(index, x, y);
+  };
 
-    setHoverPos({
-      x: e.clientX + 20,
-      y: e.clientY - previewSize / 2,
+  const handleMouseMove = (e: React.MouseEvent, index: number) => {
+    if (isMobile || activeSlot.current !== index) return;
+    const slot = slotRefs.current[index];
+    if (!slot) return;
+    const rect = slot.getBoundingClientRect();
+    const { x, y } = computeClampedPos(e.clientX, e.clientY, rect);
+    scheduleUpdate(index, x, y);
+  };
+
+  const handleMouseLeave = (index: number) => {
+    if (isMobile) return;
+    const lens = lensRefs.current[index];
+    if (lens) lens.style.opacity = "0";
+    activeSlot.current = null;
+  };
+
+  useEffect(() => {
+    if (!isMobile || !enableHoverPreview) return;
+
+    const cleanups: (() => void)[] = [];
+
+    slots.forEach((src, index) => {
+      const el = slotRefs.current[index];
+      if (!el || !src) return;
+
+      const onTouchStart = (e: TouchEvent) => {
+        if (e.touches.length !== 1) return;
+        const now = Date.now();
+        const isSameSlot = lastTapSlot.current === index;
+        const isDoubleTap =
+          isSameSlot && now - lastTapTime.current < DOUBLE_TAP_DELAY;
+        lastTapTime.current = now;
+        lastTapSlot.current = index;
+
+        if (touchZoomActive.current && touchZoomSlot === index) {
+          if (isDoubleTap) {
+            touchZoomActive.current = false;
+            setTouchZoomVisible(false);
+            setTouchZoomSlot(null);
+            const lens = lensRefs.current[index];
+            if (lens) lens.style.opacity = "0";
+            if (rafRef.current) {
+              cancelAnimationFrame(rafRef.current);
+              rafRef.current = null;
+            }
+          } else {
+            const touch = e.touches[0];
+            const rect = el.getBoundingClientRect();
+            const { x, y } = computeClampedPos(
+              touch.clientX,
+              touch.clientY,
+              rect,
+            );
+            applyLens(index, x, y);
+            scheduleUpdate(index, x, y);
+          }
+        } else {
+          if (
+            touchZoomActive.current &&
+            touchZoomSlot !== null &&
+            touchZoomSlot !== index
+          ) {
+            const prevLens = lensRefs.current[touchZoomSlot];
+            if (prevLens) prevLens.style.opacity = "0";
+          }
+          if (!lensReady.current[index]) return;
+          touchZoomActive.current = true;
+          setTouchZoomVisible(true);
+          setTouchZoomSlot(index);
+          const lens = lensRefs.current[index];
+          if (lens) lens.style.opacity = "1";
+          const touch = e.touches[0];
+          const rect = el.getBoundingClientRect();
+          const { x, y } = computeClampedPos(
+            touch.clientX,
+            touch.clientY,
+            rect,
+          );
+          applyLens(index, x, y);
+          scheduleUpdate(index, x, y);
+        }
+      };
+
+      const onTouchMove = (e: TouchEvent) => {
+        if (
+          !touchZoomActive.current ||
+          touchZoomSlot !== index ||
+          e.touches.length !== 1
+        )
+          return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = el.getBoundingClientRect();
+        const { x, y } = computeClampedPos(touch.clientX, touch.clientY, rect);
+        scheduleUpdate(index, x, y);
+      };
+
+      el.addEventListener("touchstart", onTouchStart, { passive: false });
+      el.addEventListener("touchmove", onTouchMove, { passive: false });
+
+      cleanups.push(() => {
+        el.removeEventListener("touchstart", onTouchStart);
+        el.removeEventListener("touchmove", onTouchMove);
+      });
     });
-  };
 
-  const handleMouseLeave = () => {
-    setHoverSrc(null);
-  };
+    return () => cleanups.forEach((fn) => fn());
+  }, [slots, isMobile, enableHoverPreview, touchZoomSlot]);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   return (
-    <>
-      <Modal
-        open={open}
-        onCancel={onClose}
-        footer={null}
-        centered
-        width={modalWidth}
-        title={`Preview Images (${validCount}/${maxImages})`}
-      >
+    <Modal
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      centered
+      width={modalWidth}
+      title={`Preview Images (${validCount}/${maxImages})`}
+    >
+      <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 16 }}>
         <div
           style={{
-            borderTop: "1px solid #f0f0f0",
-            paddingTop: 16,
+            display: "grid",
+            gridTemplateColumns: `repeat(${responsiveColumns}, ${slotWidth}px)`,
+            gap,
+            justifyContent: "center",
           }}
         >
-          <div
-            style={{
-              display: "grid",
-              // gridTemplateColumns: `repeat(${responsiveColumns}, ${responsiveImageSize}px)`,
-              gridTemplateColumns: `repeat(${responsiveColumns}, ${slotWidth}px)`,
-              gap,
-              justifyContent: "center",
-            }}
-          >
-            {slots.map((src, index) => (
-              <div key={index} className="flex flex-col shrink-0">
-                {labels?.[index] && (
-                  <span className="mb-1 text-sm font-bold text-gray-600">
-                    {labels[index]}
-                  </span>
-                )}
-                <div
-                  key={index}
-                  style={{
-                    // width: responsiveImageSize,
-                    width: slotWidth,
-                    height: responsiveImageSize,
-                    // borderRadius: imageSize * 0.06,
-                    border: "1px solid #ddd",
-                    background: "#fafafa",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    overflow: "hidden",
-                    position: "relative",
-                    cursor: src ? "zoom-in" : "default",
-                  }}
-                  onMouseEnter={(e) => handleMouseEnter(e, src)}
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  {src ? (
+          {slots.map((src, index) => (
+            <div key={index} className="flex flex-col shrink-0">
+              {labels?.[index] && (
+                <span className="mb-1 text-sm font-bold text-gray-600">
+                  {labels[index]}
+                </span>
+              )}
+              <div
+                ref={(el) => {
+                  slotRefs.current[index] = el;
+                }}
+                style={{
+                  width: slotWidth,
+                  height: responsiveImageSize,
+                  border: "1px solid #ddd",
+                  background: "#fafafa",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  position: "relative",
+                  cursor:
+                    src && enableHoverPreview
+                      ? isMobile
+                        ? "pointer"
+                        : "zoom-in"
+                      : "default",
+                }}
+                onMouseEnter={(e) => handleMouseEnter(e, index, src)}
+                onMouseMove={(e) => handleMouseMove(e, index)}
+                onMouseLeave={() => handleMouseLeave(index)}
+              >
+                {src ? (
+                  <img
+                    src={resolveImageSrc(src)}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      objectPosition: "center",
+                      display: "block",
+                    }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
                     <img
-                      src={resolveImageSrc(src)}
+                      src={emptyImage}
                       style={{
-                        width: "100%",
-                        height: "100%",
+                        width: responsiveImageSize * 0.45,
+                        height: responsiveImageSize * 0.45,
                         objectFit: "contain",
-                        objectPosition: "center",
-                        display: "block",
                       }}
                     />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center">
-                      <img
-                        src={emptyImage}
-                        style={{
-                          width: responsiveImageSize * 0.45,
-                          height: responsiveImageSize * 0.45,
-                          objectFit: "contain",
-                        }}
-                      />
-                      <span>No Image</span>
+                    <span>No Image</span>
+                  </div>
+                )}
+
+                <div
+                  ref={(el) => {
+                    lensRefs.current[index] = el;
+                  }}
+                  style={{
+                    position: "absolute",
+                    width: LENS_SIZE,
+                    height: LENS_SIZE,
+                    border: "2px solid white",
+                    boxShadow: "0 0 8px rgba(0,0,0,0.4)",
+                    pointerEvents: "none",
+                    opacity: 0,
+                    transition: "opacity 0.15s",
+                    backgroundRepeat: "no-repeat",
+                  }}
+                />
+
+                {isMobile &&
+                  src &&
+                  enableHoverPreview &&
+                  touchZoomSlot !== index && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 4,
+                        right: 4,
+                        background: "rgba(0,0,0,0.45)",
+                        color: "#fff",
+                        fontSize: 10,
+                        padding: "2px 6px",
+                        borderRadius: 10,
+                        pointerEvents: "none",
+                        userSelect: "none",
+                      }}
+                    >
+                      Tap
                     </div>
                   )}
-                </div>
+                {isMobile &&
+                  src &&
+                  enableHoverPreview &&
+                  touchZoomSlot === index &&
+                  touchZoomVisible && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 4,
+                        right: 4,
+                        background: "rgba(22,119,255,0.75)",
+                        color: "#fff",
+                        fontSize: 10,
+                        padding: "2px 6px",
+                        borderRadius: 10,
+                        pointerEvents: "none",
+                        userSelect: "none",
+                      }}
+                    >
+                      ×2 tap exit
+                    </div>
+                  )}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      </Modal>
-
-      {allowHoverPreview && hoverSrc && (
-        <div
-          style={{
-            position: "fixed",
-            top: hoverPos.y,
-            left: hoverPos.x,
-            width: previewSize,
-            height: previewSize,
-            overflow: "hidden",
-            background: "#fff",
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
-            padding: 8,
-            zIndex: 2000,
-            pointerEvents: "none",
-          }}
-        >
-          <img
-            src={hoverSrc}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-            }}
-          />
-        </div>
-      )}
-    </>
+      </div>
+    </Modal>
   );
 }

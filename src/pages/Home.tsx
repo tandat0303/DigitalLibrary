@@ -72,6 +72,7 @@ import { buttons } from "../components/ui/HomeButtons";
 import Loading from "../components/ui/Loading";
 import { ShineText } from "../components/ui/ShineText";
 import { useLoadingNavigate } from "../hooks/useLoadingNavigate";
+// import bg from "../assets/homebg.png";
 
 export default function Home() {
   const { handleNavigate, loading } = useLoadingNavigate();
@@ -81,6 +82,15 @@ export default function Home() {
       {loading && <Loading fullScreen overlay />}
 
       <div className="min-h-screen flex items-center justify-center bg-[#f5f4f0]">
+        {/* <div
+        className="min-h-screen flex items-center justify-center bg-cover bg-center"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)),
+            url(${bg})
+          `,
+        }}
+      > */}
         <div className="w-[75%] lg:-mt-24">
           {/* ── Logo / Shine Text ── */}
           <div className="mb-8">
@@ -121,3 +131,54 @@ export default function Home() {
     </>
   );
 }
+
+// import { buttons } from "../components/ui/HomeButtons";
+// import Loading from "../components/ui/Loading";
+// import { ShineText } from "../components/ui/ShineText";
+// import { useLoadingNavigate } from "../hooks/useLoadingNavigate";
+
+// export default function Home() {
+//   const { handleNavigate, loading } = useLoadingNavigate();
+
+//   return (
+//     <>
+//       {loading && <Loading fullScreen overlay />}
+
+//       <div className="home-root">
+//         {/* ── Logo — top center, fixed ── */}
+//         <header className="home-header">
+//           <h1 className="home-logo-pill text-xl">
+//             <ShineText>LYG - Smart Library</ShineText>
+//           </h1>
+//         </header>
+
+//         {/* ── Cards — true center of screen ── */}
+//         <main className="home-main">
+//           <div className="home-grid">
+//             {buttons.map((btn, idx) => (
+//               <button
+//                 key={idx}
+//                 className="home-card-btn"
+//                 onClick={() => handleNavigate(btn.path)}
+//               >
+//                 <span className="home-card-dot" />
+
+//                 <div className="home-card-icon">
+//                   <img
+//                     src={btn.image}
+//                     alt={btn.label}
+//                     className="w-[46px] h-[46px] object-contain home-card-img"
+//                     loading="lazy"
+//                     draggable={false}
+//                   />
+//                 </div>
+
+//                 <span className="home-card-label">{btn.label}</span>
+//               </button>
+//             ))}
+//           </div>
+//         </main>
+//       </div>
+//     </>
+//   );
+// }

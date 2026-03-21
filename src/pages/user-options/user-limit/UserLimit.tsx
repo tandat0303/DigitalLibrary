@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { Card, Input, Button, Table, Row, Col, Form, Select, Tabs } from "antd";
+import { Card, Input, Button, Table, Row, Col, Form, Tabs } from "antd";
 import {
   columns,
+  getPermissionColumns,
   levelOptions,
   type DataType,
   type PermissionType,
 } from "../../../types/users";
 import { data } from "../../../types/samples";
-import type { ColumnsType } from "antd/es/table";
 import ModuleMgmtModal from "./ModuleMgmtModal";
 import MenuMgmtModal from "./MenuMgmtModal";
 import FilterCollapse from "../../../components/FilterCollapse";
@@ -21,6 +21,8 @@ import {
   User,
   UserRoundKey,
 } from "lucide-react";
+import { AppAlert } from "../../../components/ui/AppAlert";
+import { getApiErrorMessage } from "../../../lib/getApiErrorMsg";
 
 const permissionLevels = [
   { num: 0, label: "Administrator", color: "#ef4444" },
@@ -32,8 +34,10 @@ const permissionLevels = [
 
 export default function UserLimit() {
   const [form] = Form.useForm();
+  // const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [selectedUser, setSelectedUser] = useState<DataType | null>(data[0]);
+  const [selectedUser, setSelectedUser] = useState<DataType | null>(null); //data[0]
   const [permissionData, setPermissionData] = useState<PermissionType[]>(
     data[0]
       ? [
@@ -77,32 +81,13 @@ export default function UserLimit() {
   const [openModuleModal, setOpenModuleModal] = useState(false);
   const [openMenuModal, setOpenMenuModal] = useState(false);
 
-  const rightColumns: ColumnsType<PermissionType> = [
-    { title: "User ID", dataIndex: "userId", width: 110 },
-    { title: "Factory", dataIndex: "factory", width: 90 },
-    { title: "Module", dataIndex: "module", width: 110 },
-    { title: "Menu", dataIndex: "menu" },
-    {
-      title: "Level",
-      dataIndex: "level",
-      width: 130,
-      render: (_, record) => (
-        <Select
-          value={record.level}
-          style={{ width: 110 }}
-          options={levelOptions}
-          onChange={(value) => {
-            setPermissionData((prev) =>
-              prev.map((item) =>
-                item.key === record.key ? { ...item, level: value } : item,
-              ),
-            );
-          }}
-          onMouseDown={(e) => e.stopPropagation()}
-        />
-      ),
-    },
-  ];
+  const handleLevelChange = (key: string, value: number) => {
+    setPermissionData((prev) =>
+      prev.map((item) => (item.key === key ? { ...item, level: value } : item)),
+    );
+  };
+
+  const rightColumns = getPermissionColumns(levelOptions, handleLevelChange);
 
   const handleFilter = (values: any) => console.log("Filter values:", values);
 
@@ -140,7 +125,16 @@ export default function UserLimit() {
     setSelectedPermissionKey(null);
   };
 
-  const handleSave = () => console.log("Saving permission:", permissionData);
+  const handleSave = () => {
+    try {
+      setSaving(true);
+      console.log("Saving permission:", permissionData);
+    } catch (error) {
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const renderPermissionTable = () => (
     <Table
@@ -295,6 +289,7 @@ export default function UserLimit() {
                     className="ul-save-btn"
                     onClick={handleSave}
                     disabled={!selectedPermissionKey}
+                    loading={saving}
                   >
                     <Save size={13} />
                     Save

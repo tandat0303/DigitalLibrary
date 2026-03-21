@@ -1030,7 +1030,7 @@ body,
 .login-card {
   width: 100%;
   max-width: 980px;
-  min-height: 580px;
+  min-height: 500px;
   background: #ffffff;
   border-radius: 28px;
   overflow: hidden;
@@ -1053,7 +1053,7 @@ body,
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 44px;
+  padding: 40px 36px;
 }
 
 @media (max-width: 767px) {
@@ -1120,7 +1120,7 @@ body,
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 32px 36px;
+  padding: 40px 32px 24px;
   position: relative;
   overflow: hidden;
 }

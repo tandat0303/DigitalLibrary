@@ -80,6 +80,10 @@ export default function LastLibraryDetail() {
   const LENS_SIZE = 150;
   const ZOOM_SCALE = 1;
 
+  // Touch zoom state
+  const touchZoomActive = useRef(false);
+  const [touchZoomVisible, setTouchZoomVisible] = useState(false);
+
   const updateLens = () => {
     const lens = lensRef.current;
     const data = zoomData.current;
@@ -96,13 +100,13 @@ export default function LastLibraryDetail() {
     rafRef.current = null;
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const computeAndApplyZoom = (clientX: number, clientY: number) => {
     if (!imageRef.current || !lensRef.current) return;
 
     const rect = imageRef.current.getBoundingClientRect();
 
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top;
+    let x = clientX - rect.left;
+    let y = clientY - rect.top;
 
     const half = LENS_SIZE / 2;
 
@@ -128,6 +132,40 @@ export default function LastLibraryDetail() {
     if (!rafRef.current) {
       rafRef.current = requestAnimationFrame(updateLens);
     }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    computeAndApplyZoom(e.clientX, e.clientY);
+  };
+
+  // Touch handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!images[selectedIndex]) return;
+    // Toggle zoom on tap (single touch)
+    if (e.touches.length === 1) {
+      const newActive = !touchZoomActive.current;
+      touchZoomActive.current = newActive;
+      setTouchZoomVisible(newActive);
+
+      if (newActive && lensRef.current) {
+        lensRef.current.style.opacity = "1";
+        const touch = e.touches[0];
+        computeAndApplyZoom(touch.clientX, touch.clientY);
+      } else if (lensRef.current) {
+        lensRef.current.style.opacity = "0";
+      }
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchZoomActive.current || e.touches.length !== 1) return;
+    e.preventDefault(); // prevent page scroll while panning zoom
+    const touch = e.touches[0];
+    computeAndApplyZoom(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchEnd = () => {
+    // Keep zoom visible until user taps again (toggle off via handleTouchStart)
   };
 
   if (loading) {
@@ -178,12 +216,17 @@ export default function LastLibraryDetail() {
               <div
                 ref={imageRef}
                 onMouseEnter={() => {
-                  if (lensRef.current) lensRef.current.style.opacity = "1";
+                  if (!isMobile && lensRef.current)
+                    lensRef.current.style.opacity = "1";
                 }}
                 onMouseLeave={() => {
-                  if (lensRef.current) lensRef.current.style.opacity = "0";
+                  if (!isMobile && lensRef.current)
+                    lensRef.current.style.opacity = "0";
                 }}
                 onMouseMove={!isMobile ? handleMouseMove : undefined}
+                onTouchStart={isMobile ? handleTouchStart : undefined}
+                onTouchMove={isMobile ? handleTouchMove : undefined}
+                onTouchEnd={isMobile ? handleTouchEnd : undefined}
                 style={{
                   position: "relative",
                   width: "100%",
@@ -191,6 +234,9 @@ export default function LastLibraryDetail() {
                   border: "1px solid #ddd",
                   background: "#808080",
                   overflow: "hidden",
+                  touchAction: touchZoomVisible ? "none" : "auto",
+                  cursor:
+                    isMobile && images[selectedIndex] ? "pointer" : undefined,
                 }}
               >
                 {images[selectedIndex] ? (
@@ -216,7 +262,7 @@ export default function LastLibraryDetail() {
                   </span>
                 )}
 
-                {!isMobile && images[selectedIndex] && (
+                {images[selectedIndex] && (
                   <div
                     ref={lensRef}
                     style={{
@@ -239,6 +285,46 @@ export default function LastLibraryDetail() {
                       }px`,
                     }}
                   />
+                )}
+
+                {/* Mobile: tap-to-zoom hint */}
+                {isMobile && images[selectedIndex] && !touchZoomVisible && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 8,
+                      right: 8,
+                      background: "rgba(0,0,0,0.45)",
+                      color: "#fff",
+                      fontSize: 11,
+                      padding: "3px 8px",
+                      borderRadius: 12,
+                      pointerEvents: "none",
+                      userSelect: "none",
+                    }}
+                  >
+                    🔍 Tap to zoom
+                  </div>
+                )}
+
+                {/* Mobile: active zoom indicator */}
+                {isMobile && images[selectedIndex] && touchZoomVisible && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 8,
+                      right: 8,
+                      background: "rgba(22,119,255,0.75)",
+                      color: "#fff",
+                      fontSize: 11,
+                      padding: "3px 8px",
+                      borderRadius: 12,
+                      pointerEvents: "none",
+                      userSelect: "none",
+                    }}
+                  >
+                    Tap again to exit
+                  </div>
                 )}
               </div>
 
