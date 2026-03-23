@@ -375,17 +375,16 @@ export default function LastLibrary() {
                   </Button>
                 </SafeTooltip>
 
-                {selectedRow && selectedRow.FileName && (
-                  <SafeTooltip title={"Show 3D Modal"}>
-                    <Button
-                      className="extra-actions-btn w-full lg:w-auto"
-                      onClick={handle3DViewer}
-                    >
-                      <TbCube3dSphere className="h-4 w-4" />
-                      3D Viewer
-                    </Button>
-                  </SafeTooltip>
-                )}
+                <SafeTooltip title={"Show 3D Modal"}>
+                  <Button
+                    className="extra-actions-btn w-full lg:w-auto"
+                    onClick={handle3DViewer}
+                    disabled={!(selectedRow && selectedRow.FileName)}
+                  >
+                    <TbCube3dSphere className="h-4 w-4" />
+                    3D Viewer
+                  </Button>
+                </SafeTooltip>
               </Space>
 
               <span className="adidas-font text-left lg:text-right">

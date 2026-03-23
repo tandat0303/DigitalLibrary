@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { AppAlert } from "../../components/ui/AppAlert";
 import type { ColorsModalProps } from "../../types/colors";
 import ImageUploader from "../../components/ImageUploader";
-import { requiredMessage } from "../../lib/helpers";
 import type { Image } from "../../types/images";
 import colorApi from "../../api/colors.api";
 import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
@@ -110,7 +109,7 @@ export default function ColorsModal({
                     <Form.Item
                       label="Color Name"
                       name="ColorName"
-                      rules={[{ required: true, message: requiredMessage }]}
+                      // rules={[{ required: true, message: requiredMessage }]}
                     >
                       <Input placeholder="Enter your color name" />
                     </Form.Item>
@@ -120,7 +119,7 @@ export default function ColorsModal({
                     <Form.Item
                       label="Color Code"
                       name="ColorCode"
-                      rules={[{ required: true }]}
+                      // rules={[{ required: true }]}
                     >
                       <Input
                         disabled={mode === "edit"}
@@ -133,7 +132,7 @@ export default function ColorsModal({
                     <Form.Item
                       label="RGB Value"
                       name="RGBValue"
-                      rules={[{ required: true, message: requiredMessage }]}
+                      // rules={[{ required: true, message: requiredMessage }]}
                     >
                       <Input placeholder="Enter your rgb value" />
                     </Form.Item>
@@ -143,7 +142,7 @@ export default function ColorsModal({
                     <Form.Item
                       label="CMYK Value"
                       name="CMYKValue"
-                      rules={[{ required: true, message: requiredMessage }]}
+                      // rules={[{ required: true, message: requiredMessage }]}
                     >
                       <Input placeholder="Enter your cmyk value" />
                     </Form.Item>
@@ -153,7 +152,7 @@ export default function ColorsModal({
                     <Form.Item
                       label="Color Group"
                       name="ColorGroup"
-                      rules={[{ required: true, message: requiredMessage }]}
+                      // rules={[{ required: true, message: requiredMessage }]}
                     >
                       <Input placeholder="Enter your color group" />
                     </Form.Item>
@@ -163,7 +162,7 @@ export default function ColorsModal({
                     <Form.Item
                       label="Color Status"
                       name="ColorStatus"
-                      // rules={[{ required: true, message: requiredMessage }]}
+                      // // rules={[{ required: true, message: requiredMessage }]}
                     >
                       <Select
                         placeholder="--- Choose option ---"

@@ -46,6 +46,7 @@ import { useAppSelector } from "../../hooks/auth";
 import highAbrasionApi from "../../api/highAbrasion.api";
 import HighAbrasionModal from "./HighAbrasionModal";
 import { SafeTooltip } from "../../components/ui/Tooltip";
+import QrScannerRedirect from "../../components/QrScannerRedirect";
 
 export default function HighAbrasion() {
   const [form] = Form.useForm();
@@ -722,17 +723,16 @@ export default function HighAbrasion() {
                   </Button>
                 </SafeTooltip>
 
-                {selectedRow && selectedRow.FileName && (
-                  <SafeTooltip title={"Download attach file"}>
-                    <Button
-                      className="extra-actions-btn w-full lg:w-auto"
-                      onClick={handleDownloadReport}
-                    >
-                      <Download className="h-4 w-4" />
-                      Download Report
-                    </Button>
-                  </SafeTooltip>
-                )}
+                <SafeTooltip title={"Download attach file"}>
+                  <Button
+                    className="extra-actions-btn w-full lg:w-auto"
+                    onClick={handleDownloadReport}
+                    disabled={!(selectedRow && selectedRow.FileName)}
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Report
+                  </Button>
+                </SafeTooltip>
               </Space>
 
               <span className="adidas-font text-left lg:text-right">
@@ -819,6 +819,8 @@ export default function HighAbrasion() {
         onClose={() => setOpenCapture(false)}
         onCapture={handleCameraSearch}
       />
+
+      <QrScannerRedirect />
     </>
   );
 }

@@ -1,5 +1,5 @@
 import type { MenuType } from "../types/users";
-import axiosConfig from "./axiosClient";
+import axiosConfig from "./axiosConfig";
 
 const menuMgmtApi = {
   getAllMenus: async () => {

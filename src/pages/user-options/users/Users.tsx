@@ -1,18 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Input, Button, Table, Space, Row, Col, Form, Modal } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 import { usersDataColumns, type UsersDataType } from "../../../types/users";
 import CustomPagination from "../../../components/CustomPagination";
 import UsersModal from "./UsersModal";
 import { AppAlert } from "../../../components/ui/AppAlert";
-import { sleep } from "../../../lib/helpers";
 import FilterCollapse from "../../../components/FilterCollapse";
 import { Search } from "lucide-react";
+import userApi from "../../../api/users.api";
+import { buildQueryFilters } from "../../../lib/buildQueryFilters";
+import { getApiErrorMessage } from "../../../lib/getApiErrorMsg";
+import authApi from "../../../api/auth.api";
 
 export default function Users() {
   const [form] = Form.useForm();
 
   const [data, setData] = useState<UsersDataType[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState<UsersDataType | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
@@ -21,19 +25,49 @@ export default function Users() {
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const total = data.length;
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<any>({});
 
-  const paginatedData = data.slice(
-    (current - 1) * pageSize,
-    current * pageSize,
-  );
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+
+      const params = {
+        ...filters,
+        page: current,
+        limit: pageSize,
+      };
+
+      const res = await userApi.getAllUsers(params);
+
+      const rows = res.data.map((item) => ({
+        ...item,
+        key: item.UserID,
+      }));
+
+      setData(rows);
+      setTotal(res.total);
+    } catch (error) {
+      console.log("Failed to fetch users: ", error);
+      AppAlert({ icon: "error", title: "Failed to fetch users" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [current, pageSize, filters]);
 
   const handleFilter = (values: any) => {
-    console.log("Filter values:", values);
+    const newFilters = buildQueryFilters(values);
+
+    setFilters(newFilters);
+    setCurrent(1);
   };
 
   const handleSelectUSer = (record: UsersDataType) => {
-    if (selectedRow?.userAccount === record.userAccount) {
+    if (selectedRow?.UserID === record.UserID) {
       setSelectedRow(null);
       return;
     }
@@ -57,16 +91,21 @@ export default function Users() {
     setOpenModal(true);
   };
 
-  const handleDelete = () => {
-    if (!selectedRow) return;
+  const handleDelete = async () => {
+    try {
+      if (!selectedRow) return;
 
-    setData((prev) =>
-      prev.filter((item) => item.userAccount !== selectedRow.userAccount),
-    );
+      const res = await userApi.deleteUser(selectedRow.UserID);
 
-    setSelectedRow(null);
+      if (res.success) {
+        setSelectedRow(null);
+        AppAlert({ icon: "success", title: res.message });
+      }
 
-    AppAlert({ icon: "success", title: "User removed successfully" });
+      await fetchUsers();
+    } catch (error) {
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
   };
 
   const confirmRemove = () => {
@@ -89,31 +128,35 @@ export default function Users() {
 
   const handleSubmit = async (values: any) => {
     if (mode === "create") {
-      if (!values.userAccount) return;
+      try {
+        const res = await authApi.register(values);
 
-      setData((prev) => [
-        ...prev,
-        {
-          ...values,
-          key: values.userAccount,
-        },
-      ]);
+        if (res)
+          AppAlert({ icon: "success", title: "Added new user successfully" });
 
-      AppAlert({ icon: "success", title: "Added new user successfully" });
+        setOpenModal(false);
+        setSelectedRow(null);
+
+        await fetchUsers();
+      } catch (error) {
+        AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+      }
     } else {
-      setData((prev) =>
-        prev.map((item) =>
-          item.userAccount === selectedRow?.userAccount ? values : item,
-        ),
-      );
+      try {
+        if (!selectedRow) return;
 
-      AppAlert({ icon: "success", title: "User updated successfully" });
+        const res = await userApi.updateUser(selectedRow.UserID, values);
+        if (res)
+          AppAlert({ icon: "success", title: "User updated successfully" });
+
+        setOpenModal(false);
+        setSelectedRow(null);
+
+        await fetchUsers();
+      } catch (error) {
+        AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+      }
     }
-
-    await sleep(500);
-
-    setOpenModal(false);
-    setSelectedRow(null);
   };
 
   return (
@@ -141,13 +184,13 @@ export default function Users() {
             }
           >
             <Col xs={24} md={12} lg={8}>
-              <Form.Item name="userAccount" label="User Account">
+              <Form.Item name="Username" label="User Account">
                 <Input />
               </Form.Item>
             </Col>
 
             <Col xs={24} md={12} lg={8}>
-              <Form.Item name="name" label="Name">
+              <Form.Item name="FullName" label="Name">
                 <Input />
               </Form.Item>
             </Col>
@@ -204,9 +247,10 @@ export default function Users() {
 
             <div className="w-full mt-1">
               <Table
+                loading={loading}
                 columns={usersDataColumns}
-                dataSource={paginatedData}
-                rowKey="userAccount"
+                dataSource={data}
+                rowKey="UserID"
                 pagination={false}
                 scroll={{ x: "max-content" }}
                 onRow={(record) => ({
@@ -215,7 +259,7 @@ export default function Users() {
                   },
                 })}
                 rowClassName={(record) =>
-                  record.userAccount === selectedRow?.userAccount
+                  record.UserID === selectedRow?.UserID
                     ? "custom-selected-row"
                     : ""
                 }

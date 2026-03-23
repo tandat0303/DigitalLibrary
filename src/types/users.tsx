@@ -5,11 +5,6 @@ import { Select } from "antd";
 {
   /* ---------- User Limit Module ---------- */
 }
-export interface DataType {
-  key: string;
-  account: string;
-  name: string;
-}
 
 export interface UserPermissionsDataType {
   userId: string;
@@ -18,17 +13,17 @@ export interface UserPermissionsDataType {
   level: number;
 }
 
-export const columns: ColumnsType<DataType> = [
+export const columns: ColumnsType<UsersDataType> = [
   {
     title: "Account",
-    dataIndex: "account",
-    sorter: (a, b) => a.account.localeCompare(b.account),
+    dataIndex: "Username",
+    sorter: (a, b) => a.Username.localeCompare(b.Username),
     defaultSortOrder: "ascend",
   },
   {
     title: "Name",
-    dataIndex: "name",
-    sorter: (a, b) => a.name.localeCompare(b.name),
+    dataIndex: "FullName",
+    sorter: (a, b) => a.FullName.localeCompare(b.FullName),
     sortDirections: ["ascend", "descend"],
   },
 ];
@@ -246,70 +241,86 @@ export const menuColumns: ColumnsType<MenuType> = [
 {
   /* ---------- Users Module ---------- */
 }
-export interface UsersDataType {
-  key: string;
-  userAccount: string;
-  factory?: string;
-  levelPermission: string;
-  name: string;
-  email?: string;
-  vendorCode?: string;
-  userCreated: string;
+
+export interface UsersDataType extends CrudItem {
+  UserID: string;
+  Username: string;
+  Email: string;
+  Factory: string;
+  FullName: string;
+  PhoneNumber: string;
+  AvatarUrl: string;
+  VendorCode: string;
+  IsActive: boolean;
+  LevelPermission: string;
+  CreatedBy: string;
+}
+
+export interface UsersResponse {
+  data: UsersDataType[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
 
 export const usersDataColumns: ColumnsType<UsersDataType> = [
   {
     title: "User Account",
-    dataIndex: "userAccount",
-    sorter: (a, b) => a.userAccount.localeCompare(b.userAccount),
+    dataIndex: "Username",
+    sorter: (a, b) => a.Username.localeCompare(b.Username),
     defaultSortOrder: "ascend",
   },
   {
     title: "Factory",
-    dataIndex: "factory",
-    sorter: (a, b) => (a.factory ?? "").localeCompare(b.factory ?? ""),
+    dataIndex: "Factory",
+    sorter: (a, b) => (a.Factory ?? "").localeCompare(b.Factory ?? ""),
     sortDirections: ["ascend", "descend"],
   },
   {
     title: "Level Permission",
-    dataIndex: "levelPermission",
-    sorter: (a, b) => a.levelPermission.localeCompare(b.levelPermission),
+    dataIndex: "LevelPermission",
+    sorter: (a, b) => a.LevelPermission.localeCompare(b.LevelPermission),
     sortDirections: ["ascend", "descend"],
   },
   {
     title: "Name",
-    dataIndex: "name",
-    sorter: (a, b) => a.name.localeCompare(b.name),
+    dataIndex: "FullName",
+    sorter: (a, b) => a.FullName.localeCompare(b.FullName),
     sortDirections: ["ascend", "descend"],
   },
   {
     title: "Email",
-    dataIndex: "email",
-    sorter: (a, b) => (a.email ?? "").localeCompare(b.email ?? ""),
+    dataIndex: "Email",
+    sorter: (a, b) => (a.Email ?? "").localeCompare(b.Email ?? ""),
     sortDirections: ["ascend", "descend"],
   },
   {
     title: "Vendor Code",
-    dataIndex: "vendorCode",
-    sorter: (a, b) => (a.vendorCode ?? "").localeCompare(b.vendorCode ?? ""),
+    dataIndex: "VendorCode",
+    sorter: (a, b) => (a.VendorCode ?? "").localeCompare(b.VendorCode ?? ""),
     sortDirections: ["ascend", "descend"],
   },
   {
     title: "User Created",
-    dataIndex: "userCreated",
-    sorter: (a, b) => a.userCreated.localeCompare(b.userCreated),
+    dataIndex: "CreatedBy",
+    sorter: (a, b) => a.CreatedBy.localeCompare(b.CreatedBy),
     sortDirections: ["ascend", "descend"],
   },
 ];
 
 interface UserFormValues {
-  name: string;
-  email: string;
-  factory: string;
-  levelPermission: string;
-  account: string;
-  password?: string;
-  vendorCode?: string;
+  UserID: string;
+  Username: string;
+  Email: string;
+  Factory: string;
+  FullName: string;
+  PhoneNumber: string;
+  AvatarUrl: string;
+  VendorCode: string;
+  IsActive: boolean;
+  LevelPermission: string;
+  CreatedBy: string;
 }
 
 export interface UsersModalProps {

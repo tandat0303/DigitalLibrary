@@ -116,6 +116,26 @@ export const getLastLibraryColumns = (
   // const columns: ColumnsType<LastLibraryDataType> =
   [
     {
+      title: "3D Model",
+      dataIndex: "FileName",
+      render: (_, record) => {
+        if (!record.FileName || !record.FilePath) return null;
+
+        return (
+          <div
+            className="flex items-center gap-2 text-blue-500 font-medium hover:underline cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onView3D(record.FilePath, record.FileName);
+            }}
+          >
+            <FileBox size={20} />
+            {record.FileName}
+          </div>
+        );
+      },
+    },
+    {
       title: "Season (M)",
       dataIndex: "Season_M",
     },
@@ -270,26 +290,6 @@ export const getLastLibraryColumns = (
     {
       title: "Last (M)",
       dataIndex: "Last_M",
-    },
-    {
-      title: "3D Model",
-      dataIndex: "FileName",
-      render: (_, record) => {
-        if (!record.FileName || !record.FilePath) return null;
-
-        return (
-          <div
-            className="flex items-center gap-2 text-blue-500 font-medium hover:underline cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              onView3D(record.FilePath, record.FileName);
-            }}
-          >
-            <FileBox size={20} />
-            {record.FileName}
-          </div>
-        );
-      },
     },
   ];
 // return normalizeColumns(columns, ["Images", "FileName"]);

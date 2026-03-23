@@ -1,13 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Input, Button, Table, Row, Col, Form, Tabs } from "antd";
 import {
   columns,
   getPermissionColumns,
   levelOptions,
-  type DataType,
+  type UsersDataType,
   type PermissionType,
 } from "../../../types/users";
-import { data } from "../../../types/samples";
 import ModuleMgmtModal from "./ModuleMgmtModal";
 import MenuMgmtModal from "./MenuMgmtModal";
 import FilterCollapse from "../../../components/FilterCollapse";
@@ -23,6 +22,8 @@ import {
 } from "lucide-react";
 import { AppAlert } from "../../../components/ui/AppAlert";
 import { getApiErrorMessage } from "../../../lib/getApiErrorMsg";
+import userApi from "../../../api/users.api";
+import { buildQueryFilters } from "../../../lib/buildQueryFilters";
 
 const permissionLevels = [
   { num: 0, label: "Administrator", color: "#ef4444" },
@@ -34,30 +35,32 @@ const permissionLevels = [
 
 export default function UserLimit() {
   const [form] = Form.useForm();
-  // const [loading, setLoading] = useState(false);
+
+  const [userData, setUserData] = useState<UsersDataType[]>([]);
+  const [userLoading, setUserLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [selectedUser, setSelectedUser] = useState<DataType | null>(null); //data[0]
+  const [selectedUser, setSelectedUser] = useState<UsersDataType | null>(null);
   const [permissionData, setPermissionData] = useState<PermissionType[]>(
-    data[0]
+    userData[0]
       ? [
           {
             key: "1",
-            userId: data[0].account,
+            userId: userData[0].Username,
             module: "GENERAL",
             menu: "COLORS",
             level: 0,
           },
           {
             key: "2",
-            userId: data[0].account,
+            userId: userData[0].Username,
             module: "GENERAL",
             menu: "MATERIALS",
             level: 4,
           },
           {
             key: "3",
-            userId: data[0].account,
+            userId: userData[0].Username,
             module: "GENERAL",
             menu: "MATERIAL TEST REPORT",
             level: 2,
@@ -69,17 +72,45 @@ export default function UserLimit() {
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const total = data.length;
-  const paginatedData = data.slice(
-    (current - 1) * pageSize,
-    current * pageSize,
-  );
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<any>({});
 
   const [selectedPermissionKey, setSelectedPermissionKey] = useState<
     string | null
   >(null);
   const [openModuleModal, setOpenModuleModal] = useState(false);
   const [openMenuModal, setOpenMenuModal] = useState(false);
+
+  const fetchUsers = async () => {
+    try {
+      setUserLoading(true);
+
+      const params = {
+        ...filters,
+        page: current,
+        limit: pageSize,
+      };
+
+      const res = await userApi.getAllUsers(params);
+
+      const rows = res.data.map((item) => ({
+        ...item,
+        key: item.UserID,
+      }));
+
+      setUserData(rows);
+      setTotal(res.total);
+    } catch (error) {
+      console.log("Failed to fetch users data: ", error);
+      AppAlert({ icon: "error", title: "Failed to fetch users data" });
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [current, pageSize, filters]);
 
   const handleLevelChange = (key: string, value: number) => {
     setPermissionData((prev) =>
@@ -89,10 +120,15 @@ export default function UserLimit() {
 
   const rightColumns = getPermissionColumns(levelOptions, handleLevelChange);
 
-  const handleFilter = (values: any) => console.log("Filter values:", values);
+  const handleFilter = (values: any) => {
+    const newFilters = buildQueryFilters(values);
 
-  const handleSelectUser = (record: DataType) => {
-    if (selectedUser?.account === record.account) {
+    setFilters(newFilters);
+    setCurrent(1);
+  };
+
+  const handleSelectUser = (record: UsersDataType) => {
+    if (selectedUser?.UserID === record.UserID) {
       setSelectedUser(null);
       setPermissionData([]);
       setSelectedPermissionKey(null);
@@ -102,21 +138,21 @@ export default function UserLimit() {
     setPermissionData([
       {
         key: "1",
-        userId: record.account,
+        userId: record.Username,
         module: "GENERAL",
         menu: "COLORS",
         level: 0,
       },
       {
         key: "2",
-        userId: record.account,
+        userId: record.Username,
         module: "GENERAL",
         menu: "MATERIALS",
         level: 4,
       },
       {
         key: "3",
-        userId: record.account,
+        userId: record.Username,
         module: "GENERAL",
         menu: "MATERIAL TEST REPORT",
         level: 2,
@@ -207,7 +243,7 @@ export default function UserLimit() {
             }
           >
             <Col xs={24} md={12} lg={8}>
-              <Form.Item name="account" label="Account">
+              <Form.Item name="username" label="Account">
                 <Input />
               </Form.Item>
             </Col>
@@ -241,18 +277,19 @@ export default function UserLimit() {
         <Col xs={24} xl={8}>
           <Card className="ul-user-card" style={{ height: "100%" }}>
             <Table
+              loading={userLoading}
               columns={columns}
-              dataSource={paginatedData}
+              dataSource={userData}
               pagination={false}
-              rowKey="account"
-              scroll={{ x: "max-content", y: 500 }}
+              rowKey="UserID"
+              scroll={{ x: "max-content" }}
               onRow={(record) => ({
                 onClick: () => handleSelectUser(record),
               })}
               rowClassName={(record) =>
-                record.account === selectedUser?.account
-                  ? "custom-selected-row cursor-pointer"
-                  : "cursor-pointer"
+                record.UserID === selectedUser?.UserID
+                  ? "custom-selected-row"
+                  : ""
               }
             />
             <CustomPagination
@@ -277,7 +314,7 @@ export default function UserLimit() {
                     </div>
                     <div>
                       <div className="ul-toolbar-name">
-                        {selectedUser.account}
+                        {selectedUser.Username}
                       </div>
                       <div className="ul-toolbar-sub">
                         {permissionData.length} permission

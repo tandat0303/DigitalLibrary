@@ -1,5 +1,5 @@
 import type { UserPermissionsDataType } from "../types/users";
-import axiosConfig from "./axiosClient";
+import axiosConfig from "./axiosConfig";
 
 interface UserLimitParams {
   userId: string;

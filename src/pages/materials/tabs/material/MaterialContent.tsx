@@ -46,6 +46,7 @@ import { SwalNotification } from "../../../../components/ui/SwalNotification";
 import Swal from "sweetalert2";
 import { useAppSelector } from "../../../../hooks/auth";
 import { SafeTooltip } from "../../../../components/ui/Tooltip";
+import QrScannerRedirect from "../../../../components/QrScannerRedirect";
 
 export default function MaterialsContent() {
   const [form] = Form.useForm();
@@ -720,17 +721,16 @@ export default function MaterialsContent() {
                   </Button>
                 </SafeTooltip>
 
-                {selectedRow && selectedRow.FileName && (
-                  <SafeTooltip title={"Download attach file"}>
-                    <Button
-                      className="extra-actions-btn w-full lg:w-auto"
-                      onClick={handleDownloadReport}
-                    >
-                      <Download className="h-4 w-4" />
-                      Download Report
-                    </Button>
-                  </SafeTooltip>
-                )}
+                <SafeTooltip title={"Download attach file"}>
+                  <Button
+                    className="extra-actions-btn w-full lg:w-auto"
+                    onClick={handleDownloadReport}
+                    disabled={!(selectedRow && selectedRow.FileName)}
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Report
+                  </Button>
+                </SafeTooltip>
               </Space>
 
               <span className="adidas-font text-left lg:text-right">
@@ -817,6 +817,8 @@ export default function MaterialsContent() {
         onClose={() => setOpenCapture(false)}
         onCapture={handleCameraSearch}
       />
+
+      <QrScannerRedirect />
     </>
   );
 }

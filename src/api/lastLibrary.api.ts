@@ -1,5 +1,5 @@
 import type { LastLibraryDataType } from "../types/lastLibrary";
-import axiosConfig from "./axiosClient";
+import axiosConfig from "./axiosConfig";
 
 interface GetItemsParams {
   keyword?: string;

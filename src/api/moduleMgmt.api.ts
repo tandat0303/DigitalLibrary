@@ -1,5 +1,5 @@
 import type { ModuleType } from "../types/users";
-import axiosConfig from "./axiosClient";
+import axiosConfig from "./axiosConfig";
 
 const moduleMgmtApi = {
   getAllModules: async () => {

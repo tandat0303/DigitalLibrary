@@ -1,5 +1,5 @@
 import type { ColorsResponse } from "../types/colors";
-import axiosConfig from "./axiosClient";
+import axiosConfig from "./axiosConfig";
 
 export type SortOrder = "ASC" | "DESC";
 

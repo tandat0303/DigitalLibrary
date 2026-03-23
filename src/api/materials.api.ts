@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { MaterialsResponse } from "../types/materials";
-import axiosConfig from "./axiosClient";
+import axiosConfig from "./axiosConfig";
 
 export type SortOrder = "ASC" | "DESC";
 

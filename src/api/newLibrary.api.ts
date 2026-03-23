@@ -1,5 +1,5 @@
 import axios from "axios";
-import axiosConfig from "./axiosClient";
+import axiosConfig from "./axiosConfig";
 import type { NewLibraryResponse } from "../types/newLibrary";
 
 export type SortOrder = "ASC" | "DESC";

@@ -34,6 +34,20 @@ export default function ImagePreviewModal({
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
+  const [isTouch, setIsTouch] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      ("ontouchstart" in window || navigator.maxTouchPoints > 0),
+  );
+  useEffect(() => {
+    const onFirstTouch = () => {
+      setIsTouch(true);
+      window.removeEventListener("touchstart", onFirstTouch);
+    };
+    window.addEventListener("touchstart", onFirstTouch, { passive: true });
+    return () => window.removeEventListener("touchstart", onFirstTouch);
+  }, []);
+
   const responsiveColumns = isMobile ? 2 : columns;
   const responsiveImageSize = isMobile ? 120 : imageSize;
   const slotWidth = slotImageWidth
@@ -144,7 +158,7 @@ export default function ImagePreviewModal({
     index: number,
     src: File | Image | null,
   ) => {
-    if (isMobile || !enableHoverPreview || !src || !lensReady.current[index])
+    if (isTouch || !enableHoverPreview || !src || !lensReady.current[index])
       return;
     const slot = slotRefs.current[index];
     const lens = lensRefs.current[index];
@@ -157,7 +171,7 @@ export default function ImagePreviewModal({
   };
 
   const handleMouseMove = (e: React.MouseEvent, index: number) => {
-    if (isMobile || activeSlot.current !== index) return;
+    if (isTouch || activeSlot.current !== index) return;
     const slot = slotRefs.current[index];
     if (!slot) return;
     const rect = slot.getBoundingClientRect();
@@ -166,14 +180,14 @@ export default function ImagePreviewModal({
   };
 
   const handleMouseLeave = (index: number) => {
-    if (isMobile) return;
+    if (isTouch) return;
     const lens = lensRefs.current[index];
     if (lens) lens.style.opacity = "0";
     activeSlot.current = null;
   };
 
   useEffect(() => {
-    if (!isMobile || !enableHoverPreview) return;
+    if (!isTouch || !enableHoverPreview) return;
 
     const cleanups: (() => void)[] = [];
 
@@ -263,8 +277,9 @@ export default function ImagePreviewModal({
     });
 
     return () => cleanups.forEach((fn) => fn());
-  }, [slots, isMobile, enableHoverPreview, touchZoomSlot]);
+  }, [slots, isTouch, enableHoverPreview, touchZoomSlot]);
 
+  // Cleanup rAF on unmount
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -312,7 +327,7 @@ export default function ImagePreviewModal({
                   position: "relative",
                   cursor:
                     src && enableHoverPreview
-                      ? isMobile
+                      ? isTouch
                         ? "pointer"
                         : "zoom-in"
                       : "default",
@@ -346,6 +361,7 @@ export default function ImagePreviewModal({
                   </div>
                 )}
 
+                {/* Zoom lens — always mounted per slot, shown/hidden via opacity */}
                 <div
                   ref={(el) => {
                     lensRefs.current[index] = el;
@@ -360,10 +376,12 @@ export default function ImagePreviewModal({
                     opacity: 0,
                     transition: "opacity 0.15s",
                     backgroundRepeat: "no-repeat",
+                    // backgroundImage, backgroundSize, backgroundPosition set via DOM
                   }}
                 />
 
-                {isMobile &&
+                {/* Mobile hints */}
+                {isTouch &&
                   src &&
                   enableHoverPreview &&
                   touchZoomSlot !== index && (
@@ -384,7 +402,7 @@ export default function ImagePreviewModal({
                       Tap
                     </div>
                   )}
-                {isMobile &&
+                {isTouch &&
                   src &&
                   enableHoverPreview &&
                   touchZoomSlot === index &&

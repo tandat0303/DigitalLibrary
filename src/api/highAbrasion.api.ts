@@ -1,5 +1,5 @@
 import axios from "axios";
-import axiosConfig from "./axiosClient";
+import axiosConfig from "./axiosConfig";
 import type { HighAbrasionResponse } from "../types/highAbrasion";
 
 export type SortOrder = "ASC" | "DESC";

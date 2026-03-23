@@ -16,7 +16,6 @@ import MaterialDetail from "./pages/materials/tabs/material/MaterialDetail";
 import HighAbrasionDetail from "./pages/high-abrasion/HighAbrasionDetail";
 import NewLibraryDetail from "./pages/new-library/NewLibraryDetail";
 import LastLibrary from "./pages/last-library/LastLibrary";
-import LastLibraryDetail from "./pages/last-library/LastLibraryDetail";
 
 export default function App() {
   return (
@@ -48,10 +47,6 @@ export default function App() {
               element={<NewLibraryDetail />}
             />
             <Route path="/last-library" element={<LastLibrary />} />
-            <Route
-              path="/last-library/show-info/:id"
-              element={<LastLibraryDetail />}
-            />
           </Route>
         </Route>
 
