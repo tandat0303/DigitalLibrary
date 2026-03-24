@@ -11,9 +11,15 @@ import userApi from "../../../api/users.api";
 import { buildQueryFilters } from "../../../lib/buildQueryFilters";
 import { getApiErrorMessage } from "../../../lib/getApiErrorMsg";
 import authApi from "../../../api/auth.api";
+import { useAppDispatch, useAppSelector } from "../../../hooks/auth";
+import { updateUserInfo } from "../../../features/authSlice";
+import storage from "../../../lib/storage";
 
 export default function Users() {
   const [form] = Form.useForm();
+
+  const dispatch = useAppDispatch();
+  const currentUser = useAppSelector((state) => state.auth.user);
 
   const [data, setData] = useState<UsersDataType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -146,8 +152,30 @@ export default function Users() {
         if (!selectedRow) return;
 
         const res = await userApi.updateUser(selectedRow.UserID, values);
-        if (res)
+        if (res) {
           AppAlert({ icon: "success", title: "User updated successfully" });
+
+          if (selectedRow.UserID === currentUser?.userid) {
+            dispatch(
+              updateUserInfo({
+                fullname: values.FullName ?? values.fullname,
+                email: values.Email ?? values.email,
+              }),
+            );
+
+            const currentAuth = storage.get("auth");
+            if (currentAuth) {
+              storage.set("auth", {
+                ...currentAuth,
+                data: {
+                  ...currentAuth.data,
+                  fullname: values.FullName ?? values.fullname,
+                  email: values.Email ?? values.email,
+                },
+              });
+            }
+          }
+        }
 
         setOpenModal(false);
         setSelectedRow(null);

@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, Input, Button, Table, Row, Col, Form, Tabs } from "antd";
 import {
   columns,
   getPermissionColumns,
   levelOptions,
   type UsersDataType,
-  type PermissionType,
+  type UserPermissionsDataType,
 } from "../../../types/users";
 import ModuleMgmtModal from "./ModuleMgmtModal";
 import MenuMgmtModal from "./MenuMgmtModal";
@@ -24,6 +24,8 @@ import { AppAlert } from "../../../components/ui/AppAlert";
 import { getApiErrorMessage } from "../../../lib/getApiErrorMsg";
 import userApi from "../../../api/users.api";
 import { buildQueryFilters } from "../../../lib/buildQueryFilters";
+import moduleMgmtApi from "../../../api/moduleMgmt.api";
+import userLimitApi from "../../../api/userLimit.api";
 
 const permissionLevels = [
   { num: 0, label: "Administrator", color: "#ef4444" },
@@ -41,33 +43,14 @@ export default function UserLimit() {
   const [saving, setSaving] = useState(false);
 
   const [selectedUser, setSelectedUser] = useState<UsersDataType | null>(null);
-  const [permissionData, setPermissionData] = useState<PermissionType[]>(
-    userData[0]
-      ? [
-          {
-            key: "1",
-            userId: userData[0].Username,
-            module: "GENERAL",
-            menu: "COLORS",
-            level: 0,
-          },
-          {
-            key: "2",
-            userId: userData[0].Username,
-            module: "GENERAL",
-            menu: "MATERIALS",
-            level: 4,
-          },
-          {
-            key: "3",
-            userId: userData[0].Username,
-            module: "GENERAL",
-            menu: "MATERIAL TEST REPORT",
-            level: 2,
-          },
-        ]
-      : [],
-  );
+  const [permissionData, setPermissionData] = useState<
+    UserPermissionsDataType[]
+  >([]);
+  const [modules, setModules] = useState<
+    { ModuleID: string; Name_EN: string }[]
+  >([]);
+  const [activeTab, setActiveTab] = useState<string>("");
+  const [permissionLoading, setPermissionLoading] = useState(false);
 
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -114,11 +97,21 @@ export default function UserLimit() {
 
   const handleLevelChange = (key: string, value: number) => {
     setPermissionData((prev) =>
-      prev.map((item) => (item.key === key ? { ...item, level: value } : item)),
+      prev.map((item) =>
+        item.PermissionID === key ? { ...item, Level: value } : item,
+      ),
     );
   };
 
-  const rightColumns = getPermissionColumns(levelOptions, handleLevelChange);
+  const rightColumns = useMemo(
+    () =>
+      getPermissionColumns(
+        levelOptions,
+        handleLevelChange,
+        selectedUser?.Username,
+      ),
+    [selectedUser],
+  );
 
   const handleFilter = (values: any) => {
     const newFilters = buildQueryFilters(values);
@@ -127,44 +120,62 @@ export default function UserLimit() {
     setCurrent(1);
   };
 
-  const handleSelectUser = (record: UsersDataType) => {
+  const handleSelectUser = async (record: UsersDataType) => {
     if (selectedUser?.UserID === record.UserID) {
       setSelectedUser(null);
       setPermissionData([]);
+      setModules([]);
+      setActiveTab("");
       setSelectedPermissionKey(null);
       return;
     }
+
     setSelectedUser(record);
-    setPermissionData([
-      {
-        key: "1",
-        userId: record.Username,
-        module: "GENERAL",
-        menu: "COLORS",
-        level: 0,
-      },
-      {
-        key: "2",
-        userId: record.Username,
-        module: "GENERAL",
-        menu: "MATERIALS",
-        level: 4,
-      },
-      {
-        key: "3",
-        userId: record.Username,
-        module: "GENERAL",
-        menu: "MATERIAL TEST REPORT",
-        level: 2,
-      },
-    ]);
     setSelectedPermissionKey(null);
+    setPermissionData([]);
+
+    try {
+      setPermissionLoading(true);
+
+      const [modulesRes, permissionsRes] = await Promise.all([
+        moduleMgmtApi.getAllModules(),
+        userLimitApi.getUserPermissions({ userId: record.UserID }),
+      ]);
+
+      setModules(modulesRes);
+      setPermissionData(permissionsRes);
+
+      if (modulesRes.length > 0) setActiveTab(modulesRes[0].ModuleID);
+    } catch (error) {
+      console.log("Failed to load permissions: ", error);
+      AppAlert({ icon: "error", title: "Failed to load permissions" });
+    } finally {
+      setPermissionLoading(false);
+    }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!selectedPermissionKey || !selectedUser) return;
+
     try {
       setSaving(true);
-      console.log("Saving permission:", permissionData);
+
+      const permission = permissionData.find(
+        (p) => p.PermissionID === selectedPermissionKey,
+      );
+
+      if (!permission) return;
+
+      await userLimitApi.saveUserPermissions({
+        userId: selectedUser.UserID,
+        menuId: permission.MenuID,
+        moduleId: permission.ModuleID,
+        level: permission.Level,
+      });
+
+      AppAlert({ icon: "success", title: "Permission saved successfully" });
+
+      await userLimitApi.getUserPermissions({ userId: selectedUser.UserID });
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
     } finally {
@@ -172,32 +183,35 @@ export default function UserLimit() {
     }
   };
 
-  const renderPermissionTable = () => (
+  const getPermissionsByModule = (moduleId: string) => {
+    return permissionData.filter((p) => p.ModuleID === moduleId);
+  };
+
+  const renderPermissionTable = (moduleId: string) => (
     <Table
       className="ul-perm-table"
+      loading={permissionLoading}
       columns={rightColumns}
-      dataSource={permissionData}
-      rowKey="key"
+      dataSource={getPermissionsByModule(moduleId)}
+      rowKey="PermissionID"
       pagination={false}
       scroll={{ x: "max-content" }}
       onRow={(record) => ({
         onClick: (e) => {
           const target = e.target as HTMLElement;
-
           if (
             target.closest(".ant-select") ||
             target.closest(".ant-select-dropdown")
           ) {
             return;
           }
-
           setSelectedPermissionKey((prev) =>
-            prev === record.key ? null : record.key,
+            prev === record.PermissionID ? null : record.PermissionID,
           );
         },
       })}
       rowClassName={(record) =>
-        record.key === selectedPermissionKey
+        record.PermissionID === selectedPermissionKey
           ? "custom-selected-row cursor-pointer"
           : "cursor-pointer"
       }
@@ -309,7 +323,6 @@ export default function UserLimit() {
                 <div className="ul-toolbar">
                   <div className="ul-toolbar-user">
                     <div className="ul-toolbar-avatar">
-                      {" "}
                       <User size={16} strokeWidth={2.5} />
                     </div>
                     <div>
@@ -335,16 +348,18 @@ export default function UserLimit() {
 
                 <Tabs
                   className="ul-tabs"
-                  defaultActiveKey="GENERAL"
+                  activeKey={activeTab}
+                  onChange={(key) => {
+                    setActiveTab(key);
+                    setSelectedPermissionKey(null);
+                  }}
                   tabBarGutter={4}
                   size="small"
-                  items={["GENERAL", "CI", "ESG", "IT", "PLANNING", "VR"].map(
-                    (tab) => ({
-                      key: tab,
-                      label: tab,
-                      children: renderPermissionTable(),
-                    }),
-                  )}
+                  items={modules.map((mod) => ({
+                    key: mod.ModuleID,
+                    label: mod.Name_EN,
+                    children: renderPermissionTable(mod.ModuleID),
+                  }))}
                 />
               </>
             ) : (

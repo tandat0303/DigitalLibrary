@@ -46,7 +46,6 @@ import { useAppSelector } from "../../hooks/auth";
 import highAbrasionApi from "../../api/highAbrasion.api";
 import HighAbrasionModal from "./HighAbrasionModal";
 import { SafeTooltip } from "../../components/ui/Tooltip";
-import QrScannerRedirect from "../../components/QrScannerRedirect";
 
 export default function HighAbrasion() {
   const [form] = Form.useForm();
@@ -742,6 +741,7 @@ export default function HighAbrasion() {
 
             <div className="w-full mt-1">
               <Table
+                sticky
                 loading={loading}
                 bordered
                 columns={columns}
@@ -800,6 +800,7 @@ export default function HighAbrasion() {
           handleUploadAttach(file);
           setOpenUploadAttach(false);
         }}
+        acceptedFormat="all"
       />
 
       <ImagePreviewModal
@@ -820,7 +821,7 @@ export default function HighAbrasion() {
         onCapture={handleCameraSearch}
       />
 
-      <QrScannerRedirect />
+      {/* <QrScannerRedirect /> */}
     </>
   );
 }

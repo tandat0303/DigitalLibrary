@@ -4,80 +4,88 @@ interface QrScannerRedirectProps {
   validate?: (value: string) => boolean;
   onScan?: (value: string) => void;
   openInNewTab?: boolean;
+  endTimeout?: number;
+  noRedirect?: boolean;
 }
 
 export default function QrScannerRedirect({
   validate,
   onScan,
   openInNewTab = true,
+  endTimeout = 100,
+  noRedirect = false,
 }: QrScannerRedirectProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  const bufferRef = useRef("");
+  const lastTimeRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const defaultValidate = (value: string) => /^https?:\/\/.+/i.test(value);
 
-  const handleEnter = (rawValue: string) => {
-    const value = rawValue.replace(/[\r\n]/g, "").trim();
-    console.log(rawValue);
-    if (!value) return;
-
-    const isValid = validate ? validate(value) : defaultValidate(value);
-
-    if (!isValid) return;
-
-    onScan?.(value);
-
-    if (openInNewTab) {
-      window.open(value, "_blank", "noopener,noreferrer");
-    } else {
-      window.location.href = value;
-    }
-  };
-
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+    const flush = () => {
+      const value = bufferRef.current.trim();
+      bufferRef.current = "";
 
-      const isTypingElement =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
+      if (!value) return;
 
-      if (!isTypingElement) {
-        inputRef.current?.focus();
+      console.log("QR DETECTED:", value);
+
+      const isValid = validate ? validate(value) : defaultValidate(value);
+      if (!isValid) return;
+
+      onScan?.(value);
+
+      if (!noRedirect) {
+        if (openInNewTab) {
+          window.open(value, "_blank", "noopener,noreferrer");
+        } else {
+          window.location.href = value;
+        }
       }
     };
 
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
-  }, []);
+    const handler = (e: KeyboardEvent) => {
+      // Bỏ qua nếu người dùng đang focus vào input/textarea
+      const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+      if (tag === "input" || tag === "textarea") return;
 
-  return (
-    <input
-      ref={inputRef}
-      type="text"
-      tabIndex={-1}
-      style={{
-        position: "fixed",
-        opacity: 0,
-        width: 1,
-        height: 1,
-        pointerEvents: "none",
-      }}
-      onKeyDown={(e) => {
-        if (document.activeElement !== inputRef.current) {
-          return;
-        }
+      // Bỏ qua modifier keys
+      if (["Shift", "Control", "Alt", "Meta", "CapsLock"].includes(e.key))
+        return;
 
-        if (e.key === "Enter") {
-          const el = e.target as HTMLInputElement;
-          handleEnter(el.value);
-          el.value = "";
-        }
-      }}
-    />
-  );
+      const now = Date.now();
+
+      // Reset buffer nếu gõ quá chậm (không phải scanner)
+      if (now - lastTimeRef.current > 200) {
+        bufferRef.current = "";
+      }
+
+      lastTimeRef.current = now;
+
+      // Nếu scanner gửi Enter → flush ngay
+      if (e.key === "Enter") {
+        if (timerRef.current) clearTimeout(timerRef.current);
+        flush();
+        return;
+      }
+
+      // Chỉ nhận ký tự thường
+      if (e.key.length === 1) {
+        bufferRef.current += e.key;
+      }
+
+      // Đặt lại timer — flush sau endTimeout ms không có ký tự mới
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(flush, endTimeout);
+    };
+
+    document.addEventListener("keydown", handler);
+
+    return () => {
+      document.removeEventListener("keydown", handler);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [validate, onScan, openInNewTab, endTimeout, noRedirect]);
+
+  return null;
 }

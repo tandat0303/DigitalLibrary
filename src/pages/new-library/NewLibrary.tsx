@@ -46,7 +46,6 @@ import {
 import newLibraryApi from "../../api/newLibrary.api";
 import NewLibraryModal from "./NewLibraryModal";
 import { SafeTooltip } from "../../components/ui/Tooltip";
-import QrScannerRedirect from "../../components/QrScannerRedirect";
 
 export default function NewLibrary() {
   const [form] = Form.useForm();
@@ -740,6 +739,7 @@ export default function NewLibrary() {
 
             <div className="w-full mt-1">
               <Table
+                sticky
                 loading={loading}
                 bordered
                 columns={columns}
@@ -798,6 +798,7 @@ export default function NewLibrary() {
           handleUploadAttach(file);
           setOpenUploadAttach(false);
         }}
+        acceptedFormat="all"
       />
 
       <ImagePreviewModal
@@ -818,7 +819,7 @@ export default function NewLibrary() {
         onCapture={handleCameraSearch}
       />
 
-      <QrScannerRedirect />
+      {/* <QrScannerRedirect /> */}
     </>
   );
 }

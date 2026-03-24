@@ -49,6 +49,9 @@ export default function UploadAttachModal({
     setFile(null);
   };
 
+  const acceptValue =
+    acceptedFormat === "all" ? undefined : acceptedFormat || ".xlsx,.xls,.csv";
+
   return (
     <Modal
       title="New File"
@@ -131,7 +134,7 @@ export default function UploadAttachModal({
         <input
           ref={fileInputRef}
           type="file"
-          accept={acceptedFormat ? acceptedFormat : ".xlsx,.xls,.csv"}
+          accept={acceptValue}
           onChange={handleFileChange}
           style={{ display: "none" }}
         />

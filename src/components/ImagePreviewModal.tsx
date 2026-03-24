@@ -68,7 +68,7 @@ export default function ImagePreviewModal({
 
   const touchZoomActive = useRef(false);
   const [touchZoomVisible, setTouchZoomVisible] = useState(false);
-  const [touchZoomSlot, setTouchZoomSlot] = useState<number | null>(null);
+  const touchZoomSlot = useRef<number | null>(null);
   const lastTapTime = useRef(0);
   const lastTapSlot = useRef<number | null>(null);
   const DOUBLE_TAP_DELAY = 300;
@@ -109,7 +109,7 @@ export default function ImagePreviewModal({
     if (!open) {
       touchZoomActive.current = false;
       setTouchZoomVisible(false);
-      setTouchZoomSlot(null);
+      touchZoomSlot.current = null;
       activeSlot.current = null;
       lensRefs.current.forEach((lens) => {
         if (lens) lens.style.opacity = "0";
@@ -118,11 +118,9 @@ export default function ImagePreviewModal({
     }
   }, [open]);
 
-  const applyLens = (index: number, x: number, y: number) => {
-    const slot = slotRefs.current[index];
+  const applyLens = (index: number, x: number, y: number, rect: DOMRect) => {
     const lens = lensRefs.current[index];
-    if (!slot || !lens) return;
-    const rect = slot.getBoundingClientRect();
+    if (!lens) return;
     const bgW = rect.width * ZOOM_SCALE;
     const bgH = rect.height * ZOOM_SCALE;
     const bgX = (x / rect.width) * bgW;
@@ -148,7 +146,15 @@ export default function ImagePreviewModal({
     zoomData.current = { x, y };
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
-      applyLens(index, zoomData.current.x, zoomData.current.y);
+      const slot = slotRefs.current[index];
+      if (slot) {
+        applyLens(
+          index,
+          zoomData.current.x,
+          zoomData.current.y,
+          slot.getBoundingClientRect(),
+        );
+      }
       rafRef.current = null;
     });
   };
@@ -167,7 +173,7 @@ export default function ImagePreviewModal({
     lens.style.opacity = "1";
     const rect = slot.getBoundingClientRect();
     const { x, y } = computeClampedPos(e.clientX, e.clientY, rect);
-    applyLens(index, x, y);
+    applyLens(index, x, y, rect);
   };
 
   const handleMouseMove = (e: React.MouseEvent, index: number) => {
@@ -204,11 +210,11 @@ export default function ImagePreviewModal({
         lastTapTime.current = now;
         lastTapSlot.current = index;
 
-        if (touchZoomActive.current && touchZoomSlot === index) {
+        if (touchZoomActive.current && touchZoomSlot.current === index) {
           if (isDoubleTap) {
             touchZoomActive.current = false;
             setTouchZoomVisible(false);
-            setTouchZoomSlot(null);
+            touchZoomSlot.current = null;
             const lens = lensRefs.current[index];
             if (lens) lens.style.opacity = "0";
             if (rafRef.current) {
@@ -223,22 +229,22 @@ export default function ImagePreviewModal({
               touch.clientY,
               rect,
             );
-            applyLens(index, x, y);
+            applyLens(index, x, y, rect);
             scheduleUpdate(index, x, y);
           }
         } else {
           if (
             touchZoomActive.current &&
-            touchZoomSlot !== null &&
-            touchZoomSlot !== index
+            touchZoomSlot.current !== null &&
+            touchZoomSlot.current !== index
           ) {
-            const prevLens = lensRefs.current[touchZoomSlot];
+            const prevLens = lensRefs.current[touchZoomSlot.current];
             if (prevLens) prevLens.style.opacity = "0";
           }
           if (!lensReady.current[index]) return;
           touchZoomActive.current = true;
           setTouchZoomVisible(true);
-          setTouchZoomSlot(index);
+          touchZoomSlot.current = index;
           const lens = lensRefs.current[index];
           if (lens) lens.style.opacity = "1";
           const touch = e.touches[0];
@@ -248,7 +254,7 @@ export default function ImagePreviewModal({
             touch.clientY,
             rect,
           );
-          applyLens(index, x, y);
+          applyLens(index, x, y, rect);
           scheduleUpdate(index, x, y);
         }
       };
@@ -256,7 +262,7 @@ export default function ImagePreviewModal({
       const onTouchMove = (e: TouchEvent) => {
         if (
           !touchZoomActive.current ||
-          touchZoomSlot !== index ||
+          touchZoomSlot.current !== index ||
           e.touches.length !== 1
         )
           return;
@@ -273,11 +279,12 @@ export default function ImagePreviewModal({
       cleanups.push(() => {
         el.removeEventListener("touchstart", onTouchStart);
         el.removeEventListener("touchmove", onTouchMove);
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
       });
     });
 
     return () => cleanups.forEach((fn) => fn());
-  }, [slots, isTouch, enableHoverPreview, touchZoomSlot]);
+  }, [slots, isTouch, enableHoverPreview]);
 
   // Cleanup rAF on unmount
   useEffect(() => {
@@ -381,31 +388,28 @@ export default function ImagePreviewModal({
                 />
 
                 {/* Mobile hints */}
+                {isTouch && src && enableHoverPreview && !touchZoomVisible && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 4,
+                      right: 4,
+                      background: "rgba(0,0,0,0.45)",
+                      color: "#fff",
+                      fontSize: 10,
+                      padding: "2px 6px",
+                      borderRadius: 10,
+                      pointerEvents: "none",
+                      userSelect: "none",
+                    }}
+                  >
+                    Tap
+                  </div>
+                )}
                 {isTouch &&
                   src &&
                   enableHoverPreview &&
-                  touchZoomSlot !== index && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 4,
-                        right: 4,
-                        background: "rgba(0,0,0,0.45)",
-                        color: "#fff",
-                        fontSize: 10,
-                        padding: "2px 6px",
-                        borderRadius: 10,
-                        pointerEvents: "none",
-                        userSelect: "none",
-                      }}
-                    >
-                      Tap
-                    </div>
-                  )}
-                {isTouch &&
-                  src &&
-                  enableHoverPreview &&
-                  touchZoomSlot === index &&
+                  touchZoomSlot.current === index &&
                   touchZoomVisible && (
                     <div
                       style={{

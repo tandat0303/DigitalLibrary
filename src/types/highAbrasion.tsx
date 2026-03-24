@@ -152,6 +152,7 @@ export const getHighAbrasionColumns = (
       title: "Action",
       key: "action",
       width: 70,
+      fixed: "left",
       align: "center",
       render: (_, record) => (
         <div className="flex items-center justify-center h-full">
@@ -170,6 +171,8 @@ export const getHighAbrasionColumns = (
     {
       title: "Image",
       dataIndex: "Images",
+      width: 70,
+      fixed: "left",
       align: "center",
       // onCell: () => ({
       //   onClick: (e) => e.stopPropagation(),
@@ -223,18 +226,26 @@ export const getHighAbrasionColumns = (
     {
       title: "GE - 63",
       dataIndex: "GE_63",
+      width: 160,
+      fixed: "left",
     },
     {
       title: "Material ID",
       dataIndex: "Material_ID",
+      width: 160,
+      fixed: "left",
     },
     {
       title: "Vendor Code",
       dataIndex: "Vendor_Code",
+      width: 160,
+      fixed: "left",
     },
     {
       title: "Supplier",
       dataIndex: "Supplier",
+      width: 160,
+      fixed: "left",
     },
     {
       title: "Supplier material ID",

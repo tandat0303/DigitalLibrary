@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Card,
   Input,
@@ -47,6 +47,8 @@ import Swal from "sweetalert2";
 import { useAppSelector } from "../../../../hooks/auth";
 import { SafeTooltip } from "../../../../components/ui/Tooltip";
 import QrScannerRedirect from "../../../../components/QrScannerRedirect";
+import { useQrScanner } from "../../../../hooks/useQrScanner";
+import scanQrApi from "../../../../api/scanQR.api";
 
 export default function MaterialsContent() {
   const [form] = Form.useForm();
@@ -82,6 +84,32 @@ export default function MaterialsContent() {
   };
 
   const columns = getMaterialsColumns(handlePreview, handleDetailView);
+
+  // const [uuid, setUuid] = useState<string | null>(null);
+
+  const handleMatch = useCallback(async (uuid: string) => {
+    // setUuid(uuid);
+    console.log("UUID:", uuid);
+    try {
+      const res = await scanQrApi.materialQR({ id: uuid });
+      console.log("API response:", res);
+    } catch (error) {
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
+  }, []);
+
+  const { validate, onScan } = useQrScanner({
+    // pattern: /[?&]unique_price_id=([0-9a-f-]{36})/i,
+    pattern: /[?&]unique_price_id=([^&\s]+)/i,
+    validate: (raw) => {
+      try {
+        return new URL(raw).hostname === "192.168.0.60";
+      } catch {
+        return false;
+      }
+    },
+    onMatch: handleMatch,
+  });
 
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -740,6 +768,7 @@ export default function MaterialsContent() {
 
             <div className="w-full mt-1">
               <Table
+                sticky
                 loading={loading}
                 bordered
                 columns={columns}
@@ -798,6 +827,7 @@ export default function MaterialsContent() {
           handleUploadAttach(file);
           setOpenUploadAttach(false);
         }}
+        acceptedFormat="all"
       />
 
       <ImagePreviewModal
@@ -818,7 +848,7 @@ export default function MaterialsContent() {
         onCapture={handleCameraSearch}
       />
 
-      <QrScannerRedirect />
+      <QrScannerRedirect validate={validate} onScan={onScan} noRedirect />
     </>
   );
 }

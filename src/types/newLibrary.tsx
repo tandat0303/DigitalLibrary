@@ -150,6 +150,7 @@ export const getNewLibraryColumns = (
       title: "Action",
       key: "action",
       width: 70,
+      fixed: "left",
       align: "center",
       render: (_, record) => (
         <div className="flex items-center justify-center h-full">
@@ -168,6 +169,8 @@ export const getNewLibraryColumns = (
     {
       title: "Image",
       dataIndex: "Images",
+      width: 70,
+      fixed: "left",
       align: "center",
       // onCell: () => ({
       //   onClick: (e) => e.stopPropagation(),
@@ -221,14 +224,20 @@ export const getNewLibraryColumns = (
     {
       title: "Material ID",
       dataIndex: "Material_ID",
+      width: 160,
+      fixed: "left",
     },
     {
       title: "Vendor Code",
       dataIndex: "Vendor_Code",
+      width: 160,
+      fixed: "left",
     },
     {
       title: "Supplier",
       dataIndex: "Supplier",
+      width: 160,
+      fixed: "left",
     },
     {
       title: "Supplier material ID",

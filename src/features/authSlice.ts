@@ -45,8 +45,18 @@ const authSlice = createSlice({
 
       state.isHydrated = true;
     },
+
+    updateUserInfo: (
+      state,
+      action: PayloadAction<Partial<typeof state.user>>,
+    ) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
   },
 });
 
-export const { setToken, logout, hydrateAuth } = authSlice.actions;
+export const { setToken, logout, hydrateAuth, updateUserInfo } =
+  authSlice.actions;
 export default authSlice.reducer;
