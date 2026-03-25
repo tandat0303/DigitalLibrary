@@ -8,11 +8,16 @@ import {
 } from "../../../types/users";
 import moduleMgmtApi from "../../../api/moduleMgmt.api";
 
-const ModuleMgmtModal: React.FC<ModalProps> = ({ open, onClose }) => {
+const ModuleMgmtModal: React.FC<ModalProps> = ({
+  open,
+  onClose,
+  onMutated,
+}) => {
   return (
     <CrudModal<ModuleType>
       open={open}
       onClose={onClose}
+      onMutated={onMutated}
       topic="module"
       title="Module MGMT"
       fields={moduleFields}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Input, Button, Table, Row, Col, Form, Tabs } from "antd";
 import {
   columns,
@@ -103,15 +103,7 @@ export default function UserLimit() {
     );
   };
 
-  const rightColumns = useMemo(
-    () =>
-      getPermissionColumns(
-        levelOptions,
-        handleLevelChange,
-        selectedUser?.Username,
-      ),
-    [selectedUser],
-  );
+  const rightColumns = getPermissionColumns(levelOptions, handleLevelChange);
 
   const handleFilter = (values: any) => {
     const newFilters = buildQueryFilters(values);
@@ -130,22 +122,27 @@ export default function UserLimit() {
       return;
     }
 
-    setSelectedUser(record);
+    setSelectedUser(null);
     setSelectedPermissionKey(null);
     setPermissionData([]);
+    setModules([]);
+    setActiveTab("");
 
     try {
       setPermissionLoading(true);
 
       const [modulesRes, permissionsRes] = await Promise.all([
         moduleMgmtApi.getAllModules(),
-        userLimitApi.getUserPermissions({ userId: record.UserID }),
+        userLimitApi.getUserPermissions({
+          userId: record.UserID,
+          moduleID: "85CC1EEC-F650-4AAE-A885-EA8ED02845FA",
+        }),
       ]);
 
       setModules(modulesRes);
       setPermissionData(permissionsRes);
-
-      if (modulesRes.length > 0) setActiveTab(modulesRes[0].ModuleID);
+      setActiveTab(modulesRes[0]?.ModuleID ?? "");
+      setSelectedUser(record);
     } catch (error) {
       console.log("Failed to load permissions: ", error);
       AppAlert({ icon: "error", title: "Failed to load permissions" });
@@ -167,7 +164,7 @@ export default function UserLimit() {
       if (!permission) return;
 
       await userLimitApi.saveUserPermissions({
-        userId: selectedUser.UserID,
+        userId: permission.UserID,
         menuId: permission.MenuID,
         moduleId: permission.ModuleID,
         level: permission.Level,
@@ -175,12 +172,49 @@ export default function UserLimit() {
 
       AppAlert({ icon: "success", title: "Permission saved successfully" });
 
-      await userLimitApi.getUserPermissions({ userId: selectedUser.UserID });
+      setSelectedPermissionKey(null);
+
+      await userLimitApi.getUserPermissions({
+        userId: selectedUser.UserID,
+        moduleID: "85CC1EEC-F650-4AAE-A885-EA8ED02845FA",
+      });
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
     } finally {
       setSaving(false);
     }
+  };
+
+  // const handleRefresh = async () => {
+  //   if (!selectedUser) return;
+
+  //   try {
+  //     setPermissionLoading(true);
+
+  //     const [modulesRes, permissionsRes] = await Promise.all([
+  //       moduleMgmtApi.getAllModules(),
+  //       userLimitApi.getUserPermissions({ userId: selectedUser.UserID }),
+  //     ]);
+
+  //     setModules(modulesRes);
+  //     setPermissionData(permissionsRes);
+  //     setSelectedPermissionKey(null);
+
+  //     if (modulesRes.length > 0) setActiveTab(modulesRes[0].ModuleID);
+  //   } catch (error) {
+  //     AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+  //   } finally {
+  //     setPermissionLoading(false);
+  //   }
+  // };
+
+  const handleMutated = () => {
+    setSelectedUser(null);
+    setPermissionData([]);
+    setModules([]);
+    setActiveTab("");
+    setSelectedPermissionKey(null);
+    setCurrent(1);
   };
 
   const getPermissionsByModule = (moduleId: string) => {
@@ -335,6 +369,11 @@ export default function UserLimit() {
                       </div>
                     </div>
                   </div>
+                  {/* <div className="flex items-center gap-3">
+                    <Button className="add-btn" onClick={handleRefresh}>
+                      <RefreshCcw size={13} />
+                      Refresh
+                    </Button> */}
                   <Button
                     className="ul-save-btn"
                     onClick={handleSave}
@@ -342,8 +381,9 @@ export default function UserLimit() {
                     loading={saving}
                   >
                     <Save size={13} />
-                    Save
+                    {saving ? "Saving" : "Save"}
                   </Button>
+                  {/* </div> */}
                 </div>
 
                 <Tabs
@@ -379,10 +419,12 @@ export default function UserLimit() {
       <ModuleMgmtModal
         open={openModuleModal}
         onClose={() => setOpenModuleModal(false)}
+        onMutated={handleMutated}
       />
       <MenuMgmtModal
         open={openMenuModal}
         onClose={() => setOpenMenuModal(false)}
+        onMutated={handleMutated}
       />
     </div>
   );

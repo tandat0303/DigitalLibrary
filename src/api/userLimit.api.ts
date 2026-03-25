@@ -3,6 +3,7 @@ import axiosConfig from "./axiosConfig";
 
 interface UserLimitParams {
   userId: string;
+  moduleID: string;
 }
 interface SavePermissionPayload {
   userId: string;
@@ -12,11 +13,11 @@ interface SavePermissionPayload {
 }
 
 const userLimitApi = {
-  getUserPermissions: async ({ userId }: UserLimitParams) => {
+  getUserPermissions: async ({ userId, moduleID }: UserLimitParams) => {
     const res = await axiosConfig.get<UserPermissionsDataType[]>(
       "/user-permissions",
       {
-        params: { userId },
+        params: { userId, moduleID },
       },
     );
 

@@ -26,6 +26,7 @@ export interface CrudApiHandlers<T extends CrudItem> {
 
 interface ExtendedCrudModalProps<T extends CrudItem> extends CrudModalProps<T> {
   apiHandlers?: CrudApiHandlers<T>;
+  onMutated?: () => void;
 }
 
 function CrudModal<T extends CrudItem>({
@@ -38,6 +39,7 @@ function CrudModal<T extends CrudItem>({
   idField,
   buttonText,
   apiHandlers,
+  onMutated,
 }: ExtendedCrudModalProps<T>) {
   const [form] = Form.useForm();
 
@@ -96,9 +98,12 @@ function CrudModal<T extends CrudItem>({
       if (res)
         AppAlert({ icon: "success", title: `Added new ${topic} successfully` });
 
-      await fetchData();
+      // await fetchData();
       form.resetFields();
       clearSelection();
+
+      onMutated?.();
+      onClose();
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
     }
@@ -124,6 +129,7 @@ function CrudModal<T extends CrudItem>({
       await fetchData();
       form.resetFields();
       clearSelection();
+      onMutated?.();
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
     }
@@ -141,6 +147,7 @@ function CrudModal<T extends CrudItem>({
       await fetchData();
       form.resetFields();
       clearSelection();
+      onMutated?.();
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
     }

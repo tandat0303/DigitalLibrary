@@ -10,7 +10,7 @@ import {
 import moduleMgmtApi from "../../../api/moduleMgmt.api";
 import menuMgmtApi from "../../../api/menuMgmt.api";
 
-const MenuMgmtModal: React.FC<ModalProps> = ({ open, onClose }) => {
+const MenuMgmtModal: React.FC<ModalProps> = ({ open, onClose, onMutated }) => {
   const [moduleOptions, setModuleOptions] = useState<
     { label: string; value: string }[]
   >([]);
@@ -34,6 +34,7 @@ const MenuMgmtModal: React.FC<ModalProps> = ({ open, onClose }) => {
     <CrudModal<MenuType>
       open={open}
       onClose={onClose}
+      onMutated={onMutated}
       topic="menu"
       title="Menu MGMT"
       fields={getMenuFields(moduleOptions)}

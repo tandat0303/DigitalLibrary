@@ -103,7 +103,7 @@ export default function UserInfo() {
                 <Form.Item
                   label="Factory"
                   name="factory"
-                  rules={[{ required: true, message: requiredMessage }]}
+                  // rules={[{ required: true, message: requiredMessage }]}
                   className="ui-form-item"
                 >
                   <Select

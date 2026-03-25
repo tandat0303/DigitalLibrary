@@ -8,11 +8,13 @@ import { Select } from "antd";
 
 export interface UserPermissionsDataType extends CrudItem {
   PermissionID: string;
-  Level: number;
+  LevelPermission: number;
   MenuID: string;
   ModuleID: string;
-  MenuName: string;
-  ModuleName: string;
+  Menu: string;
+  Module: string;
+  UserID: string;
+  Username: string;
 }
 
 export const columns: ColumnsType<UsersDataType> = [
@@ -47,34 +49,33 @@ export const levelOptions = [0, 1, 2, 3, 4].map((num) => ({
 export const getPermissionColumns = (
   levelOptions: { label: string; value: number }[],
   onLevelChange: (key: string, value: number) => void,
-  username?: string,
 ): ColumnsType<UserPermissionsDataType> => [
   {
     title: "User ID",
+    dataIndex: "Username",
     width: 110,
-    render: () => username ?? "",
   },
   {
     title: "Factory",
-    // dataIndex: "factory",
+    dataIndex: "Factory",
     width: 90,
   },
   {
     title: "Module",
-    dataIndex: "ModuleName",
+    dataIndex: "Module",
     width: 110,
   },
   {
     title: "Menu",
-    dataIndex: "MenuName",
+    dataIndex: "Menu",
   },
   {
     title: "Level",
-    dataIndex: "Level",
+    dataIndex: "LevelPermission",
     width: 130,
     render: (_, record) => (
       <Select
-        value={record.Level}
+        value={record.LevelPermission}
         style={{ width: 110 }}
         options={levelOptions}
         onChange={(value) => onLevelChange(record.PermissionID, Number(value))}
@@ -133,6 +134,7 @@ export interface ModuleType extends CrudItem {
 export interface ModalProps {
   open: boolean;
   onClose: () => void;
+  onMutated?: () => void;
 }
 
 export const moduleFields = [
