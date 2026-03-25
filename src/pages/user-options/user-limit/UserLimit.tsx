@@ -98,7 +98,7 @@ export default function UserLimit() {
   const handleLevelChange = (key: string, value: number) => {
     setPermissionData((prev) =>
       prev.map((item) =>
-        item.PermissionID === key ? { ...item, Level: value } : item,
+        item.PermissionID === key ? { ...item, LevelPermission: value } : item,
       ),
     );
   };
