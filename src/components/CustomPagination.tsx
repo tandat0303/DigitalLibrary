@@ -82,6 +82,7 @@ export default function CustomPagination({
       <div className="flex items-center gap-1 overflow-x-auto pb-1">
         {screens.md && (
           <button
+            disabled={current === 1 ? true : false}
             style={{
               cursor: current === 1 ? "not-allowed" : "pointer",
               opacity: current === 1 ? 0.4 : 1,
@@ -100,6 +101,7 @@ export default function CustomPagination({
         )}
 
         <button
+          disabled={current === 1 ? true : false}
           style={{
             cursor: current === 1 ? "not-allowed" : "pointer",
             opacity: current === 1 ? 0.4 : 1,
@@ -145,6 +147,7 @@ export default function CustomPagination({
         )}
 
         <button
+          disabled={current === totalPages || totalPages === 0 ? true : false}
           style={{
             cursor:
               current === totalPages || totalPages === 0
@@ -166,6 +169,7 @@ export default function CustomPagination({
 
         {screens.md && (
           <button
+            disabled={current === totalPages || totalPages === 0 ? true : false}
             style={{
               cursor:
                 current === totalPages || totalPages === 0

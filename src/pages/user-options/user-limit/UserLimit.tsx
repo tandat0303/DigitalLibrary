@@ -167,7 +167,7 @@ export default function UserLimit() {
         userId: permission.UserID,
         menuId: permission.MenuID,
         moduleId: permission.ModuleID,
-        level: permission.Level,
+        level: permission.LevelPermission,
       });
 
       AppAlert({ icon: "success", title: "Permission saved successfully" });
