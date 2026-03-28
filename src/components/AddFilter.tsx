@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Col, Button, Form } from "antd";
+import { Col, Button, Form, type FormInstance } from "antd";
 
 interface FilterOption {
   label: string;
@@ -10,7 +10,7 @@ interface FilterOption {
 
 interface Props {
   options: FilterOption[];
-  form: any;
+  form: FormInstance;
   onChangeActiveCount?: (count: number) => void;
 }
 

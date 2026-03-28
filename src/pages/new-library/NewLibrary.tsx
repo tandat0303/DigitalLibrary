@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Card,
   Input,
@@ -46,6 +46,9 @@ import {
 import newLibraryApi from "../../api/newLibrary.api";
 import NewLibraryModal from "./NewLibraryModal";
 import { SafeTooltip } from "../../components/ui/Tooltip";
+import { useQrScanner } from "../../hooks/useQrScanner";
+import scanQrApi from "../../api/scanQR.api";
+import QrScannerRedirect from "../../components/QrScannerRedirect";
 
 export default function NewLibrary() {
   const [form] = Form.useForm();
@@ -81,6 +84,30 @@ export default function NewLibrary() {
   };
 
   const columns = getNewLibraryColumns(handlePreview, handleDetailView);
+
+  const handleMatch = useCallback(async (uuid: string) => {
+    // setUuid(uuid);
+    console.log("UUID:", uuid);
+    try {
+      const res = await scanQrApi.materialQR({ id: uuid });
+      console.log("API response:", res);
+    } catch (error) {
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
+  }, []);
+
+  const { validate, onScan } = useQrScanner({
+    // pattern: /[?&]unique_price_id=([0-9a-f-]{36})/i,
+    pattern: /[?&]unique_price_id=([^&\s]+)/i,
+    validate: (raw) => {
+      try {
+        return new URL(raw).hostname === "192.168.0.60";
+      } catch {
+        return false;
+      }
+    },
+    onMatch: handleMatch,
+  });
 
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -819,7 +846,7 @@ export default function NewLibrary() {
         onCapture={handleCameraSearch}
       />
 
-      {/* <QrScannerRedirect /> */}
+      <QrScannerRedirect validate={validate} onScan={onScan} noRedirect />
     </>
   );
 }

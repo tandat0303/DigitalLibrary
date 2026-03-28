@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Card,
   Input,
@@ -46,6 +46,9 @@ import { useAppSelector } from "../../hooks/auth";
 import highAbrasionApi from "../../api/highAbrasion.api";
 import HighAbrasionModal from "./HighAbrasionModal";
 import { SafeTooltip } from "../../components/ui/Tooltip";
+import scanQrApi from "../../api/scanQR.api";
+import { useQrScanner } from "../../hooks/useQrScanner";
+import QrScannerRedirect from "../../components/QrScannerRedirect";
 
 export default function HighAbrasion() {
   const [form] = Form.useForm();
@@ -81,6 +84,30 @@ export default function HighAbrasion() {
   };
 
   const columns = getHighAbrasionColumns(handlePreview, handleDetailView);
+
+  const handleMatch = useCallback(async (uuid: string) => {
+    // setUuid(uuid);
+    console.log("UUID:", uuid);
+    try {
+      const res = await scanQrApi.materialQR({ id: uuid });
+      console.log("API response:", res);
+    } catch (error) {
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
+  }, []);
+
+  const { validate, onScan } = useQrScanner({
+    // pattern: /[?&]unique_price_id=([0-9a-f-]{36})/i,
+    pattern: /[?&]unique_price_id=([^&\s]+)/i,
+    validate: (raw) => {
+      try {
+        return new URL(raw).hostname === "192.168.0.60";
+      } catch {
+        return false;
+      }
+    },
+    onMatch: handleMatch,
+  });
 
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -821,7 +848,7 @@ export default function HighAbrasion() {
         onCapture={handleCameraSearch}
       />
 
-      {/* <QrScannerRedirect /> */}
+      <QrScannerRedirect validate={validate} onScan={onScan} noRedirect />
     </>
   );
 }

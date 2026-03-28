@@ -18,4 +18,8 @@ export const buttons = [
   { image: HighAbrasion, label: "HIGH ABRASION", path: "/high-abrasion" },
   { image: NewLibrary, label: "NEW LIBRARY", path: "/new-library" },
   { image: LastLibrary, label: "LAST LIBRARY", path: "/last-library" },
+  // { image: "Colors", label: "TEST", path: "#" },
+  // { image: "Colors", label: "TEST", path: "#" },
+  // { image: "Colors", label: "TEST", path: "#" },
+  // { image: "Colors", label: "TEST", path: "#" },
 ];

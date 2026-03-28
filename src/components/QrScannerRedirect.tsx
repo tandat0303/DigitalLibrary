@@ -19,7 +19,7 @@ export default function QrScannerRedirect({
   const lastTimeRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const defaultValidate = (value: string) => /^https?:\/\/.+/i.test(value);
+  const defaultValidate = (value: string) => /^http?:\/\/.+/i.test(value);
 
   useEffect(() => {
     const flush = () => {

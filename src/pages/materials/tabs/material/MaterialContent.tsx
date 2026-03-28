@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Card,
   Input,
@@ -87,23 +87,33 @@ export default function MaterialsContent() {
 
   // const [uuid, setUuid] = useState<string | null>(null);
 
+  const scanningRef = useRef(false);
+
   const handleMatch = useCallback(async (uuid: string) => {
-    // setUuid(uuid);
-    console.log("UUID:", uuid);
+    if (scanningRef.current) return;
+    scanningRef.current = true;
+
     try {
       const res = await scanQrApi.materialQR({ id: uuid });
-      console.log("API response:", res);
+      console.log(res);
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    } finally {
+      setTimeout(() => {
+        scanningRef.current = false;
+      }, 1500);
     }
   }, []);
 
   const { validate, onScan } = useQrScanner({
     // pattern: /[?&]unique_price_id=([0-9a-f-]{36})/i,
-    pattern: /[?&]unique_price_id=([^&\s]+)/i,
+    // pattern: /[?&]unique_price_id=([^&\s]+)/i,
+    pattern: /materials\/([0-9A-Za-z-]+)/i,
+
     validate: (raw) => {
       try {
-        return new URL(raw).hostname === "192.168.0.60";
+        new URL(raw, window.location.origin);
+        return true;
       } catch {
         return false;
       }
