@@ -68,75 +68,10 @@
 //   );
 // }
 
-// import { buttons } from "../components/ui/HomeButtons";
-// import Loading from "../components/ui/Loading";
-// import { ShineText } from "../components/ui/ShineText";
-// import { useLoadingNavigate } from "../hooks/useLoadingNavigate";
-// // import bg from "../assets/homebg.png";
-
-// export default function Home() {
-//   const { handleNavigate, loading } = useLoadingNavigate();
-
-//   return (
-//     <>
-//       {loading && <Loading fullScreen overlay />}
-
-//       <div className="min-h-screen flex items-center justify-center bg-[#f5f4f0]">
-//         {/* <div
-//         className="min-h-screen flex items-center justify-center bg-cover bg-center"
-//         style={{
-//           backgroundImage: `
-//             linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)),
-//             url(${bg})
-//           `,
-//         }}
-//       > */}
-//         <div className="w-[75%] lg:-mt-24">
-//           {/* ── Logo / Shine Text ── */}
-//           <div className="mb-8">
-//             <h1 className="home-logo-pill w-fit text-xl">
-//               <ShineText>LYG - Smart Library</ShineText>
-//             </h1>
-//           </div>
-
-//           {/* ── Card Grid ── */}
-//           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-//             {buttons.map((btn, idx) => (
-//               <button
-//                 key={idx}
-//                 className="home-card-btn"
-//                 onClick={() => handleNavigate(btn.path)}
-//               >
-//                 {/* accent dot (shows on hover via CSS) */}
-//                 <span className="home-card-dot" />
-
-//                 {/* icon wrapper */}
-//                 <div className="home-card-icon">
-//                   <img
-//                     src={btn.image}
-//                     alt={btn.label}
-//                     className="w-[60px] h-[60px] object-contain home-card-img"
-//                     loading="lazy"
-//                     draggable={false}
-//                   />
-//                 </div>
-
-//                 {/* label */}
-//                 <span className="home-card-label">{btn.label}</span>
-//               </button>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-//     </>
-//   );
-// }
-
 import { buttons } from "../components/ui/HomeButtons";
 import Loading from "../components/ui/Loading";
 import { ShineText } from "../components/ui/ShineText";
 import { useLoadingNavigate } from "../hooks/useLoadingNavigate";
-import bg from "../assets/homebg-1.jpg";
 
 export default function Home() {
   const { handleNavigate, loading } = useLoadingNavigate();
@@ -145,40 +80,89 @@ export default function Home() {
     <>
       {loading && <Loading fullScreen overlay />}
 
-      <div
-        className="relative min-h-screen flex flex-col items-center justify-center-safe gap-10 bg-cover bg-center"
-        style={{ backgroundImage: `url(${bg})` }}
-      >
-        <div className="absolute inset-0 bg-black/35" />
-        <div className="z-10">
-          <div className="absolute top-2 left-0 right-0 flex justify-center">
-            <h1 className="home-logo-pill text-xl">
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f4f0]">
+        <div className="w-[75%] lg:-mt-24">
+          <div className="mb-8">
+            <h1 className="home-logo-pill w-fit text-xl">
               <ShineText>LYG - Smart Library</ShineText>
             </h1>
           </div>
 
-          <div className="flex justify-center w-full ">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 px-6 w-fit">
-              {buttons.map((btn, idx) => (
-                <button
-                  key={idx}
-                  className="home-circle-btn"
-                  onClick={() => handleNavigate(btn.path)}
-                >
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {buttons.map((btn, idx) => (
+              <button
+                key={idx}
+                className="home-card-btn"
+                onClick={() => handleNavigate(btn.path)}
+              >
+                <span className="home-card-dot" />
+
+                <div className="home-card-icon">
                   <img
                     src={btn.image}
                     alt={btn.label}
-                    className="w-14 h-14 object-contain home-circle-img"
+                    className="w-[60px] h-[60px] object-contain home-card-img"
                     loading="lazy"
                     draggable={false}
                   />
-                  <span className="home-circle-label">{btn.label}</span>
-                </button>
-              ))}
-            </div>
+                </div>
+                <span className="home-card-label">{btn.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
     </>
   );
 }
+
+// import { buttons } from "../components/ui/HomeButtons";
+// import Loading from "../components/ui/Loading";
+// import { ShineText } from "../components/ui/ShineText";
+// import { useLoadingNavigate } from "../hooks/useLoadingNavigate";
+// import bg from "../assets/homebg-1.jpg";
+
+// export default function Home() {
+//   const { handleNavigate, loading } = useLoadingNavigate();
+
+//   return (
+//     <>
+//       {loading && <Loading fullScreen overlay />}
+
+//       <div
+//         className="relative min-h-screen flex flex-col items-center justify-center-safe gap-10 bg-cover bg-center"
+//         style={{ backgroundImage: `url(${bg})` }}
+//       >
+//         <div className="absolute inset-0 bg-black/35" />
+//         <div className="z-10">
+//           <div className="absolute top-2 left-0 right-0 flex justify-center">
+//             <h1 className="home-logo-pill text-xl">
+//               <ShineText>LYG - Smart Library</ShineText>
+//             </h1>
+//           </div>
+
+//           <div className="flex justify-center w-full ">
+//             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 px-6 w-fit">
+//               {buttons.map((btn, idx) => (
+//                 <button
+//                   key={idx}
+//                   className="home-circle-btn"
+//                   onClick={() => handleNavigate(btn.path)}
+//                 >
+//                   <img
+//                     src={btn.image}
+//                     alt={btn.label}
+//                     className="w-14 h-14 object-contain home-circle-img"
+//                     loading="lazy"
+//                     draggable={false}
+//                   />
+//                   <span className="home-circle-label">{btn.label}</span>
+//                 </button>
+//               ))}
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </>
+//   );
+// }

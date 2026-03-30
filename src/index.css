@@ -689,7 +689,7 @@ body,
   }
 }
 
-/* .home-logo-pill {
+.home-logo-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -798,9 +798,9 @@ body,
   color: #555;
   text-align: center;
   line-height: 1.35;
-} */
+}
 
-.home-logo-pill {
+/* .home-logo-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -862,7 +862,7 @@ body,
   line-height: 1.2;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-}
+} */
 
 .menu-item {
   @apply flex items-center gap-3 px-4 py-2 cursor-pointer

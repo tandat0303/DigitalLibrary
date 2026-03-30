@@ -2,15 +2,6 @@ import { Form, Input } from "antd";
 
 export const FILTER_OPTIONS = [
   {
-    label: "GE - 63",
-    value: "ge_63",
-    render: () => (
-      <Form.Item name="GE_63" label="GE - 63">
-        <Input />
-      </Form.Item>
-    ),
-  },
-  {
     label: "Supplier",
     value: "supplier",
     render: () => (
@@ -354,7 +345,7 @@ export const FILTER_OPTIONS = [
   },
   {
     label: "Unit Price (USD)",
-    value: "unit_price_usd",
+    value: "ss26_final_price_usd",
     render: () => (
       <Form.Item name="SS26_Final_Price_USD" label="Unit Price (USD)">
         <Input />

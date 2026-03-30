@@ -16,7 +16,7 @@ import CustomPagination from "../../components/CustomPagination";
 import { AppAlert } from "../../components/ui/AppAlert";
 
 import AddFilter from "../../components/AddFilter";
-import { FILTER_OPTIONS } from "../../components/ui/MaterialsFilterOption";
+import { FILTER_OPTIONS } from "../../components/ui/NewLibraryFilterOption";
 import {
   Download,
   Info,

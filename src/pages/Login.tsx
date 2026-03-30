@@ -19,7 +19,7 @@ import { getApiErrorMessage } from "../lib/getApiErrorMsg";
 import Loading from "../components/ui/Loading";
 import { requiredMessage } from "../lib/helpers";
 import dayjs from "dayjs";
-import bg from "../assets/homebg-1.jpg";
+// import bg from "../assets/homebg-1.jpg";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
@@ -56,8 +56,8 @@ export default function Login() {
   if (navigating) return <Loading fullScreen />;
 
   return (
-    // <div className="login-page">
-    <div
+    <div className="login-page">
+      {/* <div
       className="login-page bg-cover bg-center"
       style={{
         backgroundImage: `
@@ -65,7 +65,7 @@ export default function Login() {
             url(${bg})
           `,
       }}
-    >
+    > */}
       <div className="login-card">
         {/* ── LEFT: Form ── */}
         <div className="login-form-side">

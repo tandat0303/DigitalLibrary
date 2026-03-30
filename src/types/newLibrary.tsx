@@ -384,7 +384,7 @@ export const getNewLibraryColumns = (
       dataIndex: "Quantity_Uom_Price",
     },
     {
-      title: "SS26 Final Price (USD)",
+      title: "Unit Price (USD)",
       dataIndex: "SS26_Final_Price_USD",
     },
     {
