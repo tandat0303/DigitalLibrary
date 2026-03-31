@@ -199,3 +199,11 @@ export function getInitials(name?: string): string {
   if (parts.length === 1) return parts[0][0].toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
+
+export function uid() {
+  return Math.random().toString(36).slice(2, 9);
+}
+
+export function stripExt(filename: string) {
+  return filename.replace(/\.[^/.]+$/, "");
+}

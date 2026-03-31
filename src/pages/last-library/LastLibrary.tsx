@@ -615,11 +615,48 @@ export default function LastLibrary() {
   const [active3DUrl, setActive3DUrl] = useState<string | null>(null);
   const [active3DName, setActive3DName] = useState<string>("");
 
-  const columns = getLastLibraryColumns((filePath, fileName) => {
-    setActive3DUrl(filePath);
-    setActive3DName(fileName);
-    setOpen3D(true);
-  });
+  // Local state for per-size 3DM files (no API — object URLs created in modal)
+  const [sizeLocalMap, setSizeLocalMap] = useState<
+    Record<string, { url: string; name: string }>
+  >({});
+
+  const [openSize3D, setOpenSize3D] = useState(false);
+  const [activeSize3DUrl, setActiveSize3DUrl] = useState<string | null>(null);
+  const [activeSize3DName, setActiveSize3DName] = useState<string>("");
+
+  // Called by modal when a size file is attached/removed
+  const handleSizeFileChange = (
+    sizeKey: string,
+    url: string,
+    fileName: string,
+  ) => {
+    setSizeLocalMap((m) => {
+      const next = { ...m };
+      if (url) {
+        next[sizeKey] = { url, name: fileName };
+      } else {
+        delete next[sizeKey];
+      }
+      return next;
+    });
+  };
+
+  const columns = getLastLibraryColumns(
+    // (filePath, fileName) => {
+    //   setActive3DUrl(filePath);
+    //   setActive3DName(fileName);
+    //   setOpen3D(true);
+    // },
+    sizeLocalMap,
+    (sizeKey, url, fileName) => {
+      handleSizeFileChange(sizeKey, url, fileName);
+    },
+    (url, name) => {
+      setActiveSize3DUrl(url);
+      setActiveSize3DName(name);
+      setOpenSize3D(true);
+    },
+  );
 
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -968,6 +1005,7 @@ export default function LastLibrary() {
         initialValues={mode === "edit" ? selectedRow : undefined}
         onCancel={() => setOpenModal(false)}
         onSubmit={handleSubmit}
+        onSizeFileChange={handleSizeFileChange}
       />
 
       <ImportExcelModal
@@ -1002,6 +1040,17 @@ export default function LastLibrary() {
           setActive3DUrl(null);
           setActive3DName("");
           setSelectedID(null);
+        }}
+      />
+
+      <ThreeDMModal
+        open={openSize3D}
+        fileUrl={activeSize3DUrl}
+        fileName={activeSize3DName}
+        onClose={() => {
+          setOpenSize3D(false);
+          setActiveSize3DUrl(null);
+          setActiveSize3DName("");
         }}
       />
     </>

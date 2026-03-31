@@ -296,9 +296,13 @@
 // // };
 
 import type { ColumnsType } from "antd/es/table";
-import { FileBox } from "lucide-react";
+import {
+  // FileBox,
+  Upload,
+} from "lucide-react";
 import ChipCell from "../lib/chipCell";
 import { Tag } from "antd";
+import GreenTick from "../assets/green-tick.png";
 
 export interface LastLibraryResponse {
   data: LastLibraryDataType[];
@@ -500,28 +504,31 @@ export interface LastLibraryModalProps {
 const MAX_CHIPS = 2;
 
 export const getLastLibraryColumns = (
-  onView3D: (filePath: string, fileName: string) => void,
+  // onView3D: (filePath: string, fileName: string) => void,
+  sizeLocalMap: Record<string, { url: string; name: string }>,
+  onUploadSize: (sizeKey: string, url: string, fileName: string) => void,
+  onViewSize3D: (url: string, name: string) => void,
 ): ColumnsType<FlatLastLibraryRow> => [
-  {
-    title: "3D Model",
-    dataIndex: "FileName",
-    onCell: (record) => ({ rowSpan: record._lastRowSpan }),
-    render: (_, record) => {
-      if (!record.FileName || !record.FilePath) return null;
-      return (
-        <div
-          className="flex items-center gap-2 text-blue-500 font-medium hover:underline cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            onView3D(record.FilePath, record.FileName);
-          }}
-        >
-          <FileBox size={20} />
-          {record.FileName}
-        </div>
-      );
-    },
-  },
+  // {
+  //   title: "3D Model",
+  //   dataIndex: "FileName",
+  //   onCell: (record) => ({ rowSpan: record._lastRowSpan }),
+  //   render: (_, record) => {
+  //     if (!record.FileName || !record.FilePath) return null;
+  //     return (
+  //       <div
+  //         className="flex items-center gap-2 text-blue-500 font-medium hover:underline cursor-pointer"
+  //         onClick={(e) => {
+  //           e.stopPropagation();
+  //           onView3D(record.FilePath, record.FileName);
+  //         }}
+  //       >
+  //         <FileBox size={20} />
+  //         {record.FileName}
+  //       </div>
+  //     );
+  //   },
+  // },
   {
     title: "Season (M)",
     dataIndex: "Season_M",
@@ -536,18 +543,104 @@ export const getLastLibraryColumns = (
     onCell: (record) => ({ rowSpan: record._lastRowSpan }),
     render: (value: string) => value || "",
   },
+  // {
+  //   title: "Size",
+  //   dataIndex: "_size",
+  //   onCell: (record) => ({ rowSpan: record._sizeRowSpan }),
+  //   render: (value: string, record) => {
+  //     if (!value) return <span className="text-gray-300">—</span>;
+
+  //     const sizeKey = `${record.LastLibraryID}__${value}`;
+  //     const local = sizeLocalMap[sizeKey];
+
+  //     if (local?.url) {
+  //       return (
+  //         <div
+  //           className="flex items-center gap-2 text-blue-500 font-medium hover:underline cursor-pointer"
+  //           onClick={(e) => {
+  //             e.stopPropagation();
+  //             onViewSize3D(local.url, local.name);
+  //           }}
+  //         >
+  //           <FileBox size={16} />
+  //           <span className="flex items-center gap-1">
+  //             <img
+  //               src={GreenTick}
+  //               alt="attached"
+  //               style={{ width: 14, height: 14, flexShrink: 0 }}
+  //             />
+  //             {value}
+  //           </span>
+  //         </div>
+  //       );
+  //     }
+
+  //     return (
+  //       <Tag color="default" style={{ margin: 0 }}>
+  //         {value}
+  //       </Tag>
+  //     );
+  //   },
+  // },
   {
     title: "Size",
     dataIndex: "_size",
     onCell: (record) => ({ rowSpan: record._sizeRowSpan }),
-    render: (value: string) =>
-      value ? (
-        <Tag color="default" style={{ margin: 0 }}>
-          {value}
-        </Tag>
-      ) : (
-        <span className="text-gray-300">—</span>
-      ),
+    render: (value: string, record) => {
+      if (!value) return <span className="text-gray-300">—</span>;
+
+      const sizeKey = `${record.LastLibraryID}__${value}`;
+      const local = sizeLocalMap[sizeKey];
+
+      if (local) {
+        return (
+          <div
+            className="flex items-center gap-2 text-blue-500 font-medium hover:underline cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewSize3D(local.url, local.name);
+            }}
+          >
+            <span className="flex items-center gap-1">
+              <img
+                src={GreenTick}
+                alt="attached"
+                className="w-5 h-5 shrink-0 mr-1"
+              />
+              {local.name}
+            </span>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex items-center gap-2">
+          <Tag color="default" style={{ margin: 0 }}>
+            {value}
+          </Tag>
+          <label
+            title="Attach .3DM file for this size"
+            onClick={(e) => e.stopPropagation()}
+            style={{ cursor: "pointer", lineHeight: 0 }}
+          >
+            <input
+              type="file"
+              accept=".3dm"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const url = URL.createObjectURL(file);
+                  onUploadSize(sizeKey, url, file.name);
+                }
+                e.target.value = "";
+              }}
+            />
+            <Upload size={13} className="text-gray-400 hover:text-blue-500" />
+          </label>
+        </div>
+      );
+    },
   },
   {
     title: "Ref Model",

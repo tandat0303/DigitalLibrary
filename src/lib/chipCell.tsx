@@ -1,4 +1,4 @@
-import { List, Modal, Tag } from "antd";
+import { Modal, Tag } from "antd";
 
 export default function ChipCell({
   items,
@@ -26,17 +26,13 @@ export default function ChipCell({
       okText: "Close",
       content: (
         <div style={{ maxHeight: 320, overflowY: "auto", marginTop: 8 }}>
-          <List
-            size="small"
-            dataSource={items}
-            renderItem={(item) => (
-              <List.Item style={{ padding: "4px 0" }}>
-                <Tag color={color} style={{ margin: 0 }}>
-                  {item}
-                </Tag>
-              </List.Item>
-            )}
-          />
+          {items.map((item) => (
+            <div key={item} style={{ padding: "4px 0" }}>
+              <Tag color={color} style={{ margin: 0 }}>
+                {item}
+              </Tag>
+            </div>
+          ))}
         </div>
       ),
     });

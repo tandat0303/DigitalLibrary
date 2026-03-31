@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
@@ -248,7 +248,9 @@ export default function ThreeDMViewer({ url }: ThreeDMViewerProps) {
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
       <directionalLight position={[-10, -5, -5]} intensity={0.3} />
-      <Environment preset="studio" />
+      <Suspense fallback={null}>
+        <Environment files="/hdr/studio.hdr" />
+      </Suspense>
       {/* <OrbitControls
         enableDamping
         dampingFactor={0.05}

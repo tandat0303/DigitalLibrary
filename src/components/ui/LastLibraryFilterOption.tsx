@@ -11,6 +11,15 @@ export const FILTER_OPTIONS = [
     ),
   },
   {
+    label: "Last (M)",
+    value: "last_m",
+    render: () => (
+      <Form.Item name="Last_M" label="Last (M)">
+        <Input />
+      </Form.Item>
+    ),
+  },
+  {
     label: "Creation Workflow (M)",
     value: "creation_workflow_m",
     render: () => (
@@ -369,15 +378,6 @@ export const FILTER_OPTIONS = [
     value: "img_confident_a",
     render: () => (
       <Form.Item name="Image_Confidential_A" label="Image Confidential (A)">
-        <Input />
-      </Form.Item>
-    ),
-  },
-  {
-    label: "Last (M)",
-    value: "last_m",
-    render: () => (
-      <Form.Item name="Last_M" label="Last (M)">
         <Input />
       </Form.Item>
     ),
