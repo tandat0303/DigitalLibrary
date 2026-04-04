@@ -1,15 +1,15 @@
 import { Form, Input } from "antd";
 
 export const FILTER_OPTIONS = [
-  {
-    label: "Season (M)",
-    value: "season_m",
-    render: () => (
-      <Form.Item name="Season_M" label="Season (M)">
-        <Input />
-      </Form.Item>
-    ),
-  },
+  // {
+  //   label: "Season (M)",
+  //   value: "season_m",
+  //   render: () => (
+  //     <Form.Item name="Season_M" label="Season (M)">
+  //       <Input />
+  //     </Form.Item>
+  //   ),
+  // },
   {
     label: "Last (M)",
     value: "last_m",
@@ -28,15 +28,15 @@ export const FILTER_OPTIONS = [
       </Form.Item>
     ),
   },
-  {
-    label: "Modal Number (M)",
-    value: "modal_num_m",
-    render: () => (
-      <Form.Item name="Modal_Number_M" label="Modal Number (M)">
-        <Input />
-      </Form.Item>
-    ),
-  },
+  // {
+  //   label: "Modal Number (M)",
+  //   value: "modal_num_m",
+  //   render: () => (
+  //     <Form.Item name="Modal_Number_M" label="Modal Number (M)">
+  //       <Input />
+  //     </Form.Item>
+  //   ),
+  // },
   {
     label: "Article Number (A)",
     value: "article_num_A",
@@ -73,15 +73,15 @@ export const FILTER_OPTIONS = [
       </Form.Item>
     ),
   },
-  {
-    label: "Group Name (A)",
-    value: "group_name_a",
-    render: () => (
-      <Form.Item name="Group_Name_A" label="Group Name (A)">
-        <Input />
-      </Form.Item>
-    ),
-  },
+  // {
+  //   label: "Group Name (A)",
+  //   value: "group_name_a",
+  //   render: () => (
+  //     <Form.Item name="Group_Name_A" label="Group Name (A)">
+  //       <Input />
+  //     </Form.Item>
+  //   ),
+  // },
   {
     label: "Development Factory (M)",
     value: "dev_fac_m",
