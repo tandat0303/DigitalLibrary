@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, Input, Button, Table, Row, Col, Form, Tabs } from "antd";
 import {
   columns,
@@ -97,13 +97,24 @@ export default function UserLimit() {
 
   const handleLevelChange = (key: string, value: number) => {
     setPermissionData((prev) =>
-      prev.map((item) =>
-        item.PermissionID === key ? { ...item, LevelPermission: value } : item,
+      prev.map(
+        (item) =>
+          item.PermissionID === key ? { ...item, Level: value } : item, //LevelPermission
       ),
     );
   };
 
-  const rightColumns = getPermissionColumns(levelOptions, handleLevelChange);
+  // const rightColumns = getPermissionColumns(levelOptions, handleLevelChange);
+
+  const rightColumns = useMemo(() => {
+    if (!selectedUser) return [];
+
+    return getPermissionColumns(
+      levelOptions,
+      handleLevelChange,
+      selectedUser.Username,
+    );
+  }, [selectedUser]);
 
   const handleFilter = (values: any) => {
     const newFilters = buildQueryFilters(values);
@@ -164,10 +175,12 @@ export default function UserLimit() {
       if (!permission) return;
 
       await userLimitApi.saveUserPermissions({
-        userId: permission.UserID,
+        // userId: permission.UserID,
+        userId: selectedUser.UserID,
         menuId: permission.MenuID,
         moduleId: permission.ModuleID,
-        level: permission.LevelPermission,
+        // level: permission.LevelPermission,
+        level: permission.Level,
       });
 
       AppAlert({ icon: "success", title: "Permission saved successfully" });

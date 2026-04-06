@@ -8,13 +8,16 @@ import { Select } from "antd";
 
 export interface UserPermissionsDataType extends CrudItem {
   PermissionID: string;
-  LevelPermission: number;
   MenuID: string;
   ModuleID: string;
-  Menu: string;
-  Module: string;
-  UserID: string;
-  Username: string;
+  MenuName: string;
+  ModuleName: string;
+  Level: number;
+  // LevelPermission: number;
+  // Menu: string;
+  // Module: string;
+  // UserID: string;
+  // Username: string;
 }
 
 export const columns: ColumnsType<UsersDataType> = [
@@ -49,11 +52,13 @@ export const levelOptions = [0, 1, 2, 3, 4].map((num) => ({
 export const getPermissionColumns = (
   levelOptions: { label: string; value: number }[],
   onLevelChange: (key: string, value: number) => void,
+  userAccount: string,
 ): ColumnsType<UserPermissionsDataType> => [
   {
     title: "User ID",
-    dataIndex: "Username",
+    // dataIndex: "Username",
     width: 110,
+    render: () => userAccount,
   },
   {
     title: "Factory",
@@ -62,20 +67,24 @@ export const getPermissionColumns = (
   },
   {
     title: "Module",
-    dataIndex: "Module",
+    // dataIndex: "Module",
+    dataIndex: "ModuleName",
     width: 110,
   },
   {
     title: "Menu",
-    dataIndex: "Menu",
+    // dataIndex: "Menu",
+    dataIndex: "MenuName",
   },
   {
     title: "Level",
-    dataIndex: "LevelPermission",
+    // dataIndex: "LevelPermission",
+    dataIndex: "Level",
     width: 130,
     render: (_, record) => (
       <Select
-        value={record.LevelPermission}
+        // value={record.LevelPermission}
+        value={record.Level}
         style={{ width: 110 }}
         options={levelOptions}
         onChange={(value) => onLevelChange(record.PermissionID, Number(value))}
