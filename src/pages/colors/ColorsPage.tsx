@@ -8,10 +8,8 @@ import {
   Row,
   Col,
   Form,
-  Modal,
   Checkbox,
 } from "antd";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
 import CustomPagination from "../../components/CustomPagination";
 import { AppAlert } from "../../components/ui/AppAlert";
 
@@ -32,6 +30,7 @@ import Swal from "sweetalert2";
 import { SwalLoading } from "../../components/ui/SwalLoading";
 import { SwalNotification } from "../../components/ui/SwalNotification";
 import { SafeTooltip } from "../../components/ui/Tooltip";
+import ConfirmRemoveModal from "../../components/ui/ConfirmRemoveModal";
 
 export default function ColorsPage() {
   const [form] = Form.useForm();
@@ -155,16 +154,7 @@ export default function ColorsPage() {
       return;
     }
 
-    Modal.confirm({
-      title: "REMOVE COLOR",
-      content: "Are you sure to remove this color?",
-      okText: "Yes",
-      cancelText: "No",
-      okType: "danger",
-      centered: true,
-      icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
-      onOk: () => handleDelete(),
-    });
+    ConfirmRemoveModal({ topic: "color", onOk: handleDelete });
   };
 
   const handleImportExcel = async (file: File) => {

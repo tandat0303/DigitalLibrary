@@ -473,14 +473,13 @@
 // }
 
 import { useEffect, useState } from "react";
-import { Card, Input, Button, Table, Space, Row, Col, Form, Modal } from "antd";
+import { Card, Input, Button, Table, Space, Row, Col, Form } from "antd";
 import CustomPagination from "../../components/CustomPagination";
 import { AppAlert } from "../../components/ui/AppAlert";
 
 import AddFilter from "../../components/AddFilter";
 import { FILTER_OPTIONS } from "../../components/ui/LastLibraryFilterOption";
-import { FileBox, Search, Upload } from "lucide-react";
-import { TbCube3dSphere } from "react-icons/tb";
+import { Search, Upload } from "lucide-react";
 import FilterCollapse from "../../components/FilterCollapse";
 import { SafeTooltip } from "../../components/ui/Tooltip";
 import {
@@ -495,12 +494,12 @@ import LastLibraryModal from "./LastLibraryModal";
 import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
 import { buildQueryFilters } from "../../lib/buildQueryFilters";
 import { lastLibraryApi } from "../../api/lastLibrary.api";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
 import { useAppSelector } from "../../hooks/auth";
 import { SwalLoading } from "../../components/ui/SwalLoading";
 import Swal from "sweetalert2";
 import { SwalNotification } from "../../components/ui/SwalNotification";
 import ImportExcelModal from "../../components/ImportExcelModal";
+import ConfirmRemoveModal from "../../components/ui/ConfirmRemoveModal";
 
 const SAMPLE_SIZES_POOL = [
   [
@@ -615,41 +614,21 @@ export default function LastLibrary() {
   const [active3DUrl, setActive3DUrl] = useState<string | null>(null);
   const [active3DName, setActive3DName] = useState<string>("");
 
-  // Local state for per-size 3DM files (no API — object URLs created in modal)
-  const [sizeLocalMap, setSizeLocalMap] = useState<
-    Record<string, { url: string; name: string }>
-  >({});
-
   const [openSize3D, setOpenSize3D] = useState(false);
   const [activeSize3DUrl, setActiveSize3DUrl] = useState<string | null>(null);
   const [activeSize3DName, setActiveSize3DName] = useState<string>("");
 
-  // Called by modal when a size file is attached/removed
-  const handleSizeFileChange = (
-    sizeKey: string,
-    url: string,
-    fileName: string,
-  ) => {
-    setSizeLocalMap((m) => {
-      const next = { ...m };
-      if (url) {
-        next[sizeKey] = { url, name: fileName };
-      } else {
-        delete next[sizeKey];
-      }
-      return next;
-    });
-  };
+  const [sizeLocalMap, setSizeLocalMap] = useState<
+    Record<string, { url: string; name: string }>
+  >({});
 
   const columns = getLastLibraryColumns(
-    // (filePath, fileName) => {
-    //   setActive3DUrl(filePath);
-    //   setActive3DName(fileName);
-    //   setOpen3D(true);
-    // },
     sizeLocalMap,
     (sizeKey, url, fileName) => {
-      handleSizeFileChange(sizeKey, url, fileName);
+      setSizeLocalMap((prev) => ({
+        ...prev,
+        [sizeKey]: { url, name: fileName },
+      }));
     },
     (url, name) => {
       setActiveSize3DUrl(url);
@@ -763,16 +742,7 @@ export default function LastLibrary() {
       return;
     }
 
-    Modal.confirm({
-      title: "REMOVE MATERIAL",
-      content: "Are you sure to remove this item?",
-      okText: "Yes",
-      cancelText: "No",
-      okType: "danger",
-      centered: true,
-      icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
-      onOk: () => handleDelete(),
-    });
+    ConfirmRemoveModal({ topic: "item", onOk: handleDelete });
   };
 
   const handleImportExcel = async (file: File) => {
@@ -822,18 +792,18 @@ export default function LastLibrary() {
     }
   };
 
-  const handle3DViewer = () => {
-    if (!selectedRow) return;
+  // const handle3DViewer = () => {
+  //   if (!selectedRow) return;
 
-    if (!selectedRow.FilePath) {
-      AppAlert({ icon: "warning", title: "No 3D file attached" });
-      return;
-    }
+  //   if (!selectedRow.FilePath) {
+  //     AppAlert({ icon: "warning", title: "No 3D file attached" });
+  //     return;
+  //   }
 
-    setActive3DUrl(selectedRow.FilePath);
-    setActive3DName(selectedRow.FileName ?? "3D Model");
-    setOpen3D(true);
-  };
+  //   setActive3DUrl(selectedRow.FilePath);
+  //   setActive3DName(selectedRow.FileName ?? "3D Model");
+  //   setOpen3D(true);
+  // };
 
   return (
     <>
@@ -932,7 +902,7 @@ export default function LastLibrary() {
                   </Button>
                 </SafeTooltip>
 
-                <SafeTooltip title={"Upload 3D Modal file"}>
+                {/* <SafeTooltip title={"Upload 3D Modal file"}>
                   <Button
                     className="extra-actions-btn w-full lg:w-auto"
                     onClick={() => {
@@ -949,9 +919,9 @@ export default function LastLibrary() {
                     <FileBox className="w-4 h-4" />
                     Attach 3DM file
                   </Button>
-                </SafeTooltip>
+                </SafeTooltip> */}
 
-                <SafeTooltip title={"Show 3D Modal"}>
+                {/* <SafeTooltip title={"Show 3D Modal"}>
                   <Button
                     className="extra-actions-btn w-full lg:w-auto"
                     onClick={handle3DViewer}
@@ -960,7 +930,7 @@ export default function LastLibrary() {
                     <TbCube3dSphere className="h-4 w-4" />
                     3D Viewer
                   </Button>
-                </SafeTooltip>
+                </SafeTooltip> */}
               </Space>
 
               <span className="adidas-font text-left lg:text-right">
@@ -1005,7 +975,6 @@ export default function LastLibrary() {
         initialValues={mode === "edit" ? selectedRow : undefined}
         onCancel={() => setOpenModal(false)}
         onSubmit={handleSubmit}
-        onSizeFileChange={handleSizeFileChange}
       />
 
       <ImportExcelModal

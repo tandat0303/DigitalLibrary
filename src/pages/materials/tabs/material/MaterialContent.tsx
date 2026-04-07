@@ -8,10 +8,8 @@ import {
   Row,
   Col,
   Form,
-  Modal,
   Checkbox,
 } from "antd";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
 import CustomPagination from "../../../../components/CustomPagination";
 import { AppAlert } from "../../../../components/ui/AppAlert";
 
@@ -49,6 +47,7 @@ import { SafeTooltip } from "../../../../components/ui/Tooltip";
 import QrScannerRedirect from "../../../../components/QrScannerRedirect";
 import { useQrScanner } from "../../../../hooks/useQrScanner";
 import scanQrApi from "../../../../api/scanQR.api";
+import ConfirmRemoveModal from "../../../../components/ui/ConfirmRemoveModal";
 
 export default function MaterialsContent() {
   const [form] = Form.useForm();
@@ -348,16 +347,7 @@ export default function MaterialsContent() {
       return;
     }
 
-    Modal.confirm({
-      title: "REMOVE MATERIAL",
-      content: "Are you sure to remove this material?",
-      okText: "Yes",
-      cancelText: "No",
-      okType: "danger",
-      centered: true,
-      icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
-      onOk: () => handleDelete(),
-    });
+    ConfirmRemoveModal({ topic: "material", onOk: handleDelete });
   };
 
   const handleImportExcel = async (file: File) => {

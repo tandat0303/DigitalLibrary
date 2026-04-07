@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card, Input, Button, Table, Space, Row, Col, Form, Modal } from "antd";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { Card, Input, Button, Table, Space, Row, Col, Form } from "antd";
 import { usersDataColumns, type UsersDataType } from "../../../types/users";
 import CustomPagination from "../../../components/CustomPagination";
 import UsersModal from "./UsersModal";
@@ -14,6 +13,7 @@ import authApi from "../../../api/auth.api";
 import { useAppDispatch, useAppSelector } from "../../../hooks/auth";
 import { updateUserInfo } from "../../../features/authSlice";
 import storage from "../../../lib/storage";
+import ConfirmRemoveModal from "../../../components/ui/ConfirmRemoveModal";
 
 export default function Users() {
   const [form] = Form.useForm();
@@ -120,16 +120,7 @@ export default function Users() {
       return;
     }
 
-    Modal.confirm({
-      title: "REMOVE USER",
-      content: "Are you sure to remove this user?",
-      okText: "Yes",
-      cancelText: "No",
-      okType: "danger",
-      centered: true,
-      icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
-      onOk: () => handleDelete(),
-    });
+    ConfirmRemoveModal({ topic: "user", onOk: handleDelete });
   };
 
   const handleSubmit = async (values: any) => {

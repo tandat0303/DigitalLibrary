@@ -14,6 +14,7 @@ interface MenuProps {
   onClick: () => void;
   icon: React.ReactNode;
   title: string;
+  requiredAdmin: boolean;
   danger?: boolean;
 }
 
@@ -25,6 +26,7 @@ export default function Header() {
 
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+  const isAdmin = user?.username.toLowerCase() === "admin";
   const { handleNavigate, loading } = useLoadingNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -64,24 +66,32 @@ export default function Header() {
       onClick: () => handleNavigate("/user-limit"),
       icon: <FaUserSecret size={14} />,
       title: "User Limit",
+      requiredAdmin: true,
     },
     {
       onClick: () => handleNavigate("/users"),
       icon: <FaUsers size={14} />,
       title: "Users",
+      requiredAdmin: true,
     },
     {
       onClick: () => handleNavigate("/user-info"),
       icon: <FaUserCircle size={14} />,
       title: "User Info",
+      requiredAdmin: false,
     },
     {
       onClick: handleLogout,
       icon: <IoLogOutOutline size={15} />,
       title: "Logout",
+      requiredAdmin: false,
       danger: true,
     },
   ];
+
+  const visibleMenuOptions = menuOptions.filter(
+    (item) => !item.requiredAdmin || isAdmin,
+  );
 
   return (
     <>
@@ -141,7 +151,7 @@ export default function Header() {
             </div>
 
             <ul className="header-dd-list">
-              {menuOptions.map((item, idx) => (
+              {visibleMenuOptions.map((item, idx) => (
                 <li key={idx}>
                   {item.danger && <div className="header-dd-sep" />}
                   <button
