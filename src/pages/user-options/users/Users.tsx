@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Card, Input, Button, Table, Space, Row, Col, Form } from "antd";
+import { Input, Button, Row, Col, Form } from "antd";
 import { usersDataColumns, type UsersDataType } from "../../../types/users";
-import CustomPagination from "../../../components/CustomPagination";
 import UsersModal from "./UsersModal";
 import { AppAlert } from "../../../components/ui/AppAlert";
 import FilterCollapse from "../../../components/FilterCollapse";
@@ -14,6 +13,7 @@ import { useAppDispatch, useAppSelector } from "../../../hooks/auth";
 import { updateUserInfo } from "../../../features/authSlice";
 import storage from "../../../lib/storage";
 import ConfirmRemoveModal from "../../../components/ui/ConfirmRemoveModal";
+import DataTableSection from "../../../components/DataTableSection";
 
 export default function Users() {
   const [form] = Form.useForm();
@@ -23,7 +23,8 @@ export default function Users() {
 
   const [data, setData] = useState<UsersDataType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<UsersDataType | null>(null);
+  const [selectedID, setSelectedID] = useState<string | null>(null);
+  const selectedRow = data.find((r) => r.UserID === selectedID) ?? null;
 
   const [openModal, setOpenModal] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
@@ -66,24 +67,17 @@ export default function Users() {
   }, [current, pageSize, filters]);
 
   const handleFilter = (values: any) => {
-    const newFilters = buildQueryFilters(values);
-
-    setFilters(newFilters);
+    setFilters(buildQueryFilters(values));
     setCurrent(1);
   };
 
   const handleSelectUSer = (record: UsersDataType) => {
-    if (selectedRow?.UserID === record.UserID) {
-      setSelectedRow(null);
-      return;
-    }
-
-    setSelectedRow(record);
+    setSelectedID((prev) => (prev === record.UserID ? null : record.UserID));
   };
 
   const handleCreate = () => {
     setMode("create");
-    setSelectedRow(null);
+    setSelectedID(null);
     setOpenModal(true);
   };
 
@@ -104,7 +98,7 @@ export default function Users() {
       const res = await userApi.deleteUser(selectedRow.UserID);
 
       if (res.success) {
-        setSelectedRow(null);
+        setSelectedID(null);
         AppAlert({ icon: "success", title: res.message });
       }
 
@@ -132,7 +126,7 @@ export default function Users() {
           AppAlert({ icon: "success", title: "Added new user successfully" });
 
         setOpenModal(false);
-        setSelectedRow(null);
+        setSelectedID(null);
 
         await fetchUsers();
       } catch (error) {
@@ -169,7 +163,7 @@ export default function Users() {
         }
 
         setOpenModal(false);
-        setSelectedRow(null);
+        setSelectedID(null);
 
         await fetchUsers();
       } catch (error) {
@@ -217,84 +211,41 @@ export default function Users() {
         </Col>
       </Row>
 
-      {/* TABLE */}
-      <Row gutter={24}>
-        <Col span={24}>
-          <Card
-            style={{
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-            }}
-            styles={{
-              body: {
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-              },
-            }}
-          >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between w-full">
-              <Space
-                wrap
-                className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
-              >
-                <Button
-                  className="add-btn w-full lg:w-auto"
-                  onClick={handleCreate}
-                >
-                  NEW USER
-                </Button>
-
-                <Button
-                  className="edit-btn w-full lg:w-auto"
-                  // disabled={!selectedRow}
-                  onClick={handleEdit}
-                >
-                  EDIT USER
-                </Button>
-
-                <Button
-                  className="delete-btn w-full lg:w-auto"
-                  // disabled={!selectedRow}
-                  onClick={confirmRemove}
-                >
-                  REMOVE USER
-                </Button>
-              </Space>
-            </div>
-
-            <div className="w-full mt-1">
-              <Table
-                loading={loading}
-                columns={usersDataColumns}
-                dataSource={data}
-                rowKey="UserID"
-                pagination={false}
-                scroll={{ x: "max-content" }}
-                onRow={(record) => ({
-                  onClick: () => {
-                    handleSelectUSer(record);
-                  },
-                })}
-                rowClassName={(record) =>
-                  record.UserID === selectedRow?.UserID
-                    ? "custom-selected-row"
-                    : ""
-                }
-              />
-            </div>
-
-            <CustomPagination
-              total={total}
-              current={current}
-              pageSize={pageSize}
-              onChange={setCurrent}
-              onPageSizeChange={setPageSize}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <DataTableSection<UsersDataType>
+        dataSource={data}
+        columns={usersDataColumns}
+        rowKey="UserID"
+        loading={loading}
+        selectedRowKey={selectedID ?? undefined}
+        onRowClick={handleSelectUSer}
+        total={total}
+        current={current}
+        pageSize={pageSize}
+        onPageChange={setCurrent}
+        onPageSizeChange={setPageSize}
+        actionBar={{
+          buttons: [
+            {
+              label: "NEW USER",
+              tooltip: "Create new user",
+              className: "add-btn",
+              onClick: handleCreate,
+            },
+            {
+              label: "EDIT USER",
+              tooltip: "Update user information",
+              className: "edit-btn",
+              onClick: handleEdit,
+            },
+            {
+              label: "REMOVE USER",
+              tooltip: "Delete user",
+              className: "delete-btn",
+              onClick: confirmRemove,
+            },
+          ],
+        }}
+      />
 
       <UsersModal
         open={openModal}

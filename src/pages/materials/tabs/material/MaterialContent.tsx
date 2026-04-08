@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Card,
-  Input,
-  Button,
-  Table,
-  Space,
-  Row,
-  Col,
-  Form,
-  Checkbox,
-} from "antd";
-import CustomPagination from "../../../../components/CustomPagination";
+import { Input, Button, Row, Col, Form, Checkbox } from "antd";
 import { AppAlert } from "../../../../components/ui/AppAlert";
 
 import AddFilter from "../../../../components/AddFilter";
@@ -43,11 +32,11 @@ import { SwalLoading } from "../../../../components/ui/SwalLoading";
 import { SwalNotification } from "../../../../components/ui/SwalNotification";
 import Swal from "sweetalert2";
 import { useAppSelector } from "../../../../hooks/auth";
-import { SafeTooltip } from "../../../../components/ui/Tooltip";
 import QrScannerRedirect from "../../../../components/QrScannerRedirect";
 import { useQrScanner } from "../../../../hooks/useQrScanner";
 import scanQrApi from "../../../../api/scanQR.api";
 import ConfirmRemoveModal from "../../../../components/ui/ConfirmRemoveModal";
+import DataTableSection from "../../../../components/DataTableSection";
 
 export default function MaterialsContent() {
   const [form] = Form.useForm();
@@ -58,9 +47,8 @@ export default function MaterialsContent() {
 
   const [data, setData] = useState<MaterialsDataType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<MaterialsDataType | null>(
-    null,
-  );
+  const [selectedID, setSelectedID] = useState<string | null>(null);
+  const selectedRow = data.find((r) => r.ID === selectedID) ?? null;
 
   const [openModal, setOpenModal] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
@@ -154,19 +142,12 @@ export default function MaterialsContent() {
   }, [current, pageSize, filters]);
 
   const handleFilter = (values: any) => {
-    const newFilters = buildQueryFilters(values);
-
-    setFilters(newFilters);
+    setFilters(buildQueryFilters(values));
     setCurrent(1);
   };
 
   const handleSelectMaterial = (record: MaterialsDataType) => {
-    if (selectedRow?.ID === record.ID) {
-      setSelectedRow(null);
-      return;
-    }
-
-    setSelectedRow(record);
+    setSelectedID((prev) => (prev === record.ID ? null : record.ID));
   };
 
   const handleExportExcel = async () => {
@@ -246,35 +227,62 @@ export default function MaterialsContent() {
     }
   };
 
+  // const handleCameraSearch = (response: any) => {
+  //   try {
+  //     if (!response?.results?.length) {
+  //       AppAlert({ icon: "warning", title: "No search results found" });
+  //       return;
+  //     }
+
+  //     const topResult = response.results.find(
+  //       (item: any) => item.advanced_rank === 1,
+  //     );
+
+  //     if (!topResult) {
+  //       AppAlert({ icon: "warning", title: "No result with rank 1" });
+  //       return;
+  //     }
+
+  //     const formattedCluster = topResult.cluster.replace(/_/g, "//");
+
+  //     // AppAlert({
+  //     //   icon: "success",
+  //     //   title: `Detected: ${formattedCluster}`,
+  //     // });
+
+  //     form.setFieldsValue({
+  //       Classification: formattedCluster,
+  //     });
+
+  //     const newFilters = buildQueryFilters({
+  //       Classification: formattedCluster,
+  //     });
+
+  //     setFilters(newFilters);
+  //     setCurrent(1);
+
+  //     setOpenCapture(false);
+  //   } catch (error) {
+  //     console.error(error);
+  //     AppAlert({ icon: "error", title: "Failed to process search result" });
+  //   }
+  // };
+
   const handleCameraSearch = (response: any) => {
     try {
-      if (!response?.results?.length) {
-        AppAlert({ icon: "warning", title: "No search results found" });
+      if (!response?.material_ids?.length) {
+        AppAlert({ icon: "warning", title: "No material IDs found" });
         return;
       }
 
-      const topResult = response.results.find(
-        (item: any) => item.advanced_rank === 1,
-      );
-
-      if (!topResult) {
-        AppAlert({ icon: "warning", title: "No result with rank 1" });
-        return;
-      }
-
-      const formattedCluster = topResult.cluster.replace(/_/g, "//");
-
-      // AppAlert({
-      //   icon: "success",
-      //   title: `Detected: ${formattedCluster}`,
-      // });
+      const materialIds = response.material_ids.join(",");
 
       form.setFieldsValue({
-        Classification: formattedCluster,
+        Material_ID: materialIds,
       });
 
       const newFilters = buildQueryFilters({
-        Classification: formattedCluster,
+        Material_ID: materialIds,
       });
 
       setFilters(newFilters);
@@ -310,7 +318,7 @@ export default function MaterialsContent() {
 
   const handleCreate = () => {
     setMode("create");
-    setSelectedRow(null);
+    setSelectedID(null);
     setOpenModal(true);
   };
 
@@ -331,7 +339,7 @@ export default function MaterialsContent() {
       const res = await materialApi.deleteMaterial(selectedRow.ID);
 
       if (res.success) {
-        setSelectedRow(null);
+        setSelectedID(null);
         AppAlert({ icon: "success", title: res.message });
       }
 
@@ -456,7 +464,7 @@ export default function MaterialsContent() {
         AppAlert({ icon: "success", title: "Added new material successfully" });
 
         setOpenModal(false);
-        setSelectedRow(null);
+        setSelectedID(null);
 
         await fetchMaterials();
       } catch (error) {
@@ -546,7 +554,7 @@ export default function MaterialsContent() {
         AppAlert({ icon: "success", title: "Material updated successfully" });
 
         setOpenModal(false);
-        setSelectedRow(null);
+        setSelectedID(null);
 
         await fetchMaterials();
       } catch (error) {
@@ -638,7 +646,103 @@ export default function MaterialsContent() {
         </Col>
       </Row>
 
-      <Row gutter={24}>
+      <DataTableSection<MaterialsDataType>
+        dataSource={data}
+        columns={columns}
+        rowKey="ID"
+        loading={loading}
+        selectedRowKey={selectedID ?? undefined}
+        onRowClick={handleSelectMaterial}
+        total={total}
+        current={current}
+        pageSize={pageSize}
+        onPageChange={setCurrent}
+        onPageSizeChange={setPageSize}
+        actionBar={{
+          totalLabel: `${total} materials`,
+          buttons: [
+            {
+              label: "NEW MATERIAL",
+              tooltip: "Create new material",
+              className: "add-btn",
+              onClick: handleCreate,
+            },
+            {
+              label: "EDIT MATERIAL",
+              tooltip: "Update material information",
+              className: "edit-btn",
+              onClick: handleEdit,
+            },
+            {
+              label: "REMOVE MATERIAL",
+              tooltip: "Delete material",
+              className: "delete-btn",
+              onClick: confirmRemove,
+            },
+            {
+              label: <Upload />,
+              tooltip: "Import Excel file",
+              className: "actions-btn",
+              onClick: () => setOpenImport(true),
+            },
+            {
+              label: <Download />,
+              tooltip: "Export Excel file",
+              className: "actions-btn",
+              onClick: handleExportExcel,
+            },
+            {
+              label: <QrCode />,
+              tooltip: "Export QR Excel file",
+              className: "actions-btn",
+              onClick: handleExportExcelQR,
+            },
+            {
+              label: (
+                <>
+                  <Info /> Detail Material
+                </>
+              ),
+              tooltip: "Scan material image",
+              className: "extra-actions-btn",
+              onClick: () => setOpenCapture(true),
+            },
+            {
+              label: (
+                <>
+                  <Paperclip /> Attach File
+                </>
+              ),
+              tooltip: "Upload attach file",
+              className: "extra-actions-btn",
+              onClick: () => {
+                if (!selectedRow) {
+                  AppAlert({
+                    icon: "warning",
+                    title: "Please choose a row data",
+                  });
+                  return;
+                }
+
+                setOpenUploadAttach(true);
+              },
+            },
+            {
+              label: (
+                <>
+                  <Download /> Download Report
+                </>
+              ),
+              tooltip: "Download attach file",
+              className: "extra-actions-btn",
+              onClick: handleDownloadReport,
+              disabled: !(selectedRow && selectedRow.FileName),
+            },
+          ],
+        }}
+      />
+
+      {/* <Row gutter={24}>
         <Col span={24}>
           <Card
             style={{
@@ -798,7 +902,7 @@ export default function MaterialsContent() {
             />
           </Card>
         </Col>
-      </Row>
+      </Row> */}
 
       <MaterialModal
         open={openModal}

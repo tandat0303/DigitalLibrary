@@ -1,16 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Card,
-  Input,
-  Button,
-  Table,
-  Space,
-  Row,
-  Col,
-  Form,
-  Checkbox,
-} from "antd";
-import CustomPagination from "../../components/CustomPagination";
+import { Input, Button, Row, Col, Form, Checkbox } from "antd";
 import { AppAlert } from "../../components/ui/AppAlert";
 
 import AddFilter from "../../components/AddFilter";
@@ -29,8 +18,8 @@ import { buildQueryFilters } from "../../lib/buildQueryFilters";
 import Swal from "sweetalert2";
 import { SwalLoading } from "../../components/ui/SwalLoading";
 import { SwalNotification } from "../../components/ui/SwalNotification";
-import { SafeTooltip } from "../../components/ui/Tooltip";
 import ConfirmRemoveModal from "../../components/ui/ConfirmRemoveModal";
+import DataTableSection from "../../components/DataTableSection";
 
 export default function ColorsPage() {
   const [form] = Form.useForm();
@@ -39,7 +28,8 @@ export default function ColorsPage() {
 
   const [data, setData] = useState<ColorsDataType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<ColorsDataType | null>(null);
+  const [selectedID, setSelectedID] = useState<string | null>(null);
+  const selectedRow = data.find((r) => r.ColorID === selectedID) ?? null;
 
   const [openModal, setOpenModal] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
@@ -101,24 +91,17 @@ export default function ColorsPage() {
   }, [current, pageSize, filters]);
 
   const handleFilter = (values: any) => {
-    const newFilters = buildQueryFilters(values);
-
-    setFilters(newFilters);
+    setFilters(buildQueryFilters(values));
     setCurrent(1);
   };
 
   const handleSelectColor = (record: ColorsDataType) => {
-    if (selectedRow?.ColorID === record.ColorID) {
-      setSelectedRow(null);
-      return;
-    }
-
-    setSelectedRow(record);
+    setSelectedID((prev) => (prev === record.ColorID ? null : record.ColorID));
   };
 
   const handleCreate = () => {
     setMode("create");
-    setSelectedRow(null);
+    setSelectedID(null);
     setOpenModal(true);
   };
 
@@ -138,7 +121,7 @@ export default function ColorsPage() {
       const res = await colorApi.deleteColor(selectedRow.ColorID);
 
       if (res.success) {
-        setSelectedRow(null);
+        setSelectedID(null);
         AppAlert({ icon: "success", title: res.message });
       }
 
@@ -209,7 +192,7 @@ export default function ColorsPage() {
         AppAlert({ icon: "success", title: "Added new color successfully" });
 
         setOpenModal(false);
-        setSelectedRow(null);
+        setSelectedID(null);
 
         await fetchColors();
       } catch (error) {
@@ -252,7 +235,7 @@ export default function ColorsPage() {
         });
 
         setOpenModal(false);
-        setSelectedRow(null);
+        setSelectedID(null);
 
         await fetchColors();
       } catch (error) {
@@ -331,113 +314,48 @@ export default function ColorsPage() {
         </Col>
       </Row>
 
-      <Row gutter={24}>
-        <Col span={24}>
-          <Card
-            style={{
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-            }}
-            styles={{
-              body: {
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-              },
-            }}
-          >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between w-full">
-              <Space
-                wrap
-                className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
-              >
-                <SafeTooltip title={"Create new color"}>
-                  <Button
-                    className="add-btn w-full lg:w-auto"
-                    onClick={handleCreate}
-                  >
-                    NEW COLOR
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Update color information"}>
-                  <Button
-                    className="edit-btn w-full lg:w-auto"
-                    // disabled={!selectedRow}
-                    onClick={handleEdit}
-                  >
-                    EDIT COLOR
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Delete color"}>
-                  <Button
-                    className="delete-btn w-full lg:w-auto"
-                    // disabled={!selectedRow}
-                    onClick={confirmRemove}
-                  >
-                    REMOVE COLOR
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Import Excel file"}>
-                  <Button
-                    className="actions-btn w-full lg:w-auto"
-                    // icon={<Upload className="h-5" />}
-                    onClick={() => setOpenImport(true)}
-                  >
-                    <Upload />
-                  </Button>
-                </SafeTooltip>
-              </Space>
-
-              <span className="adidas-font text-left lg:text-right">
-                {total} colors
-              </span>
-            </div>
-
-            <div className="w-full mt-1">
-              <Table
-                loading={loading}
-                bordered
-                scroll={{ x: "max-content" }}
-                sticky
-                columns={columns}
-                dataSource={data}
-                rowKey="ColorID"
-                pagination={false}
-                onRow={(record) => ({
-                  onClick: () => {
-                    handleSelectColor(record);
-                  },
-                })}
-                rowClassName={(record) =>
-                  record.ColorID && record.ColorID === selectedRow?.ColorID
-                    ? "custom-selected-row"
-                    : ""
-                }
-                // onChange={(sorter: any) => {
-                //   if (sorter?.field) {
-                //     setSorter({
-                //       sort: sorter.field,
-                //       order: sorter.order === "ascend" ? "ASC" : "DESC",
-                //     });
-                //   }
-                // }}
-              />
-            </div>
-
-            <CustomPagination
-              total={total}
-              current={current}
-              pageSize={pageSize}
-              onChange={(page) => setCurrent(page)}
-              onPageSizeChange={(size) => setPageSize(size)}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <DataTableSection<ColorsDataType>
+        dataSource={data}
+        columns={columns}
+        rowKey="ColorID"
+        loading={loading}
+        selectedRowKey={selectedID ?? undefined}
+        onRowClick={handleSelectColor}
+        total={total}
+        current={current}
+        pageSize={pageSize}
+        onPageChange={setCurrent}
+        onPageSizeChange={setPageSize}
+        actionBar={{
+          totalLabel: `${total} colors`,
+          buttons: [
+            {
+              label: "NEW COLOR",
+              tooltip: "Create new color",
+              className: "add-btn",
+              onClick: handleCreate,
+            },
+            {
+              label: "EDIT COLOR",
+              tooltip: "Update color information",
+              className: "edit-btn",
+              onClick: handleEdit,
+            },
+            {
+              label: "REMOVE COLOR",
+              tooltip: "Delete color",
+              className: "delete-btn",
+              onClick: confirmRemove,
+            },
+            {
+              label: <Upload />,
+              tooltip: "Import Excel file",
+              className: "actions-btn",
+              onClick: () => setOpenImport(true),
+            },
+          ],
+        }}
+      />
 
       <ImportExcelModal
         open={openImport}

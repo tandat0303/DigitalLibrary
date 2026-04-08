@@ -13,6 +13,9 @@ import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
 import Loading from "../../components/ui/Loading";
 import type { HighAbrasionDataType } from "../../types/highAbrasion";
 import highAbrasionApi from "../../api/highAbrasion.api";
+
+const ZOOM_SCALE = 3;
+
 export default function HighAbrasionDetail() {
   const [material, setMaterial] = useState<HighAbrasionDataType>();
   const [loading, setLoading] = useState(true);
@@ -20,21 +23,19 @@ export default function HighAbrasionDetail() {
 
   const { useBreakpoint } = Grid;
   const screens = useBreakpoint();
-
   const isMobile = !screens.md;
 
   const imageRef = useRef<HTMLDivElement | null>(null);
-
-  const lensRef = useRef<HTMLDivElement | null>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
   const rafRef = useRef<number | null>(null);
 
-  const zoomData = useRef({
-    x: 0,
-    y: 0,
-    bgX: 0,
-    bgY: 0,
-    visible: false,
-  });
+  const zoomActive = useRef(false);
+  const zoomOrigin = useRef({ ox: 50, oy: 50 });
+
+  const touchZoomActive = useRef(false);
+  const [touchZoomVisible, setTouchZoomVisible] = useState(false);
+  const lastTapTime = useRef(0);
+  const DOUBLE_TAP_DELAY = 300;
 
   useEffect(() => {
     const fetchMaterialDetail = async () => {
@@ -70,10 +71,13 @@ export default function HighAbrasionDetail() {
   useEffect(() => {
     setSelectedIndex(0);
   }, [images]);
+
   useEffect(() => {
+    zoomActive.current = false;
     touchZoomActive.current = false;
     setTouchZoomVisible(false);
-    if (lensRef.current) lensRef.current.style.opacity = "0";
+    zoomOrigin.current = { ox: 50, oy: 50 };
+    applyZoom(false);
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
@@ -84,107 +88,63 @@ export default function HighAbrasionDetail() {
     return Array.from({ length: THUMBNAIL_COUNT }, (_, i) => images[i] ?? null);
   }, [images]);
 
-  const LENS_SIZE = 150;
-  const ZOOM_SCALE = 1;
-
-  const touchZoomActive = useRef(false);
-  const [touchZoomVisible, setTouchZoomVisible] = useState(false);
-  const lastTapTime = useRef(0);
-  const DOUBLE_TAP_DELAY = 300;
-
-  const applyLens = (x: number, y: number, rect: DOMRect) => {
-    const lens = lensRef.current;
-    if (!lens) return;
-    const bgW = rect.width * ZOOM_SCALE;
-    const bgH = rect.height * ZOOM_SCALE;
-    const bgX = (x / rect.width) * bgW;
-    const bgY = (y / rect.height) * bgH;
-    lens.style.left = `${x - LENS_SIZE / 2}px`;
-    lens.style.top = `${y - LENS_SIZE / 2}px`;
-    lens.style.backgroundSize = `${bgW}px ${bgH}px`;
-    lens.style.backgroundPosition = `-${bgX - LENS_SIZE / 2}px -${bgY - LENS_SIZE / 2}px`;
-  };
-
-  const lensReady = useRef(false);
-
-  useEffect(() => {
-    const lens = lensRef.current;
-    if (!lens) return;
-
-    const img = images[selectedIndex];
-    if (!img) {
-      lens.style.backgroundImage = "";
-      lens.style.opacity = "0";
-      lensReady.current = false;
-      touchZoomActive.current = false;
-      setTouchZoomVisible(false);
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-      return;
+  const applyZoom = (active: boolean) => {
+    const img = imgRef.current;
+    if (!img) return;
+    if (active) {
+      img.style.transform = `scale(${ZOOM_SCALE})`;
+      img.style.transformOrigin = `${zoomOrigin.current.ox}% ${zoomOrigin.current.oy}%`;
+    } else {
+      img.style.transform = "scale(1)";
+      img.style.transformOrigin = "center center";
     }
-
-    lensReady.current = false;
-    const src = resolveImageSrc(img);
-    const preloader = new window.Image();
-    preloader.onload = () => {
-      if (lensRef.current) {
-        lensRef.current.style.backgroundImage = `url(${src})`;
-      }
-      lensReady.current = true;
-    };
-    preloader.onerror = () => {
-      lensReady.current = false;
-    };
-    preloader.src = src;
-  }, [selectedIndex, images]);
-
-  const computeClampedPos = (
-    clientX: number,
-    clientY: number,
-    rect: DOMRect,
-  ) => {
-    const half = LENS_SIZE / 2;
-    const x = Math.max(half, Math.min(rect.width - half, clientX - rect.left));
-    const y = Math.max(half, Math.min(rect.height - half, clientY - rect.top));
-    return { x, y };
   };
 
-  const updateLens = () => {
-    const data = zoomData.current;
-    if (!imageRef.current) return;
-    const rect = imageRef.current.getBoundingClientRect();
-    applyLens(data.x, data.y, rect);
-    rafRef.current = null;
+  const computeOrigin = (clientX: number, clientY: number, rect: DOMRect) => {
+    const ox = Math.max(
+      0,
+      Math.min(100, ((clientX - rect.left) / rect.width) * 100),
+    );
+
+    const oy = Math.max(
+      0,
+      Math.min(100, ((clientY - rect.top) / rect.height) * 100),
+    );
+
+    return { ox, oy };
   };
 
-  const scheduleUpdate = (x: number, y: number) => {
-    zoomData.current = { x, y, bgX: 0, bgY: 0, visible: true };
-    if (!rafRef.current) {
-      rafRef.current = requestAnimationFrame(updateLens);
-    }
+  const scheduleApply = (active: boolean) => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      applyZoom(active);
+      rafRef.current = null;
+    });
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    if (isMobile || !images[selectedIndex]) return;
+    const rect = imageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const { ox, oy } = computeOrigin(e.clientX, e.clientY, rect);
+    zoomOrigin.current = { ox, oy };
+    zoomActive.current = true;
+    scheduleApply(true);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!imageRef.current) return;
-    const rect = imageRef.current.getBoundingClientRect();
-    const { x, y } = computeClampedPos(e.clientX, e.clientY, rect);
-    scheduleUpdate(x, y);
+    if (isMobile || !zoomActive.current) return;
+    const rect = imageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const { ox, oy } = computeOrigin(e.clientX, e.clientY, rect);
+    zoomOrigin.current = { ox, oy };
+    scheduleApply(true);
   };
 
-  const handleTouchMove = (e: TouchEvent) => {
-    if (!touchZoomActive.current || e.touches.length !== 1) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    if (!imageRef.current) return;
-    const rect = imageRef.current.getBoundingClientRect();
-    const { x, y } = computeClampedPos(touch.clientX, touch.clientY, rect);
-    scheduleUpdate(x, y);
-  };
-
-  const handleTouchEnd = () => {
-    // Keep zoom until double-tap
+  const handleMouseLeave = () => {
+    if (isMobile) return;
+    zoomActive.current = false;
+    scheduleApply(false);
   };
 
   useEffect(() => {
@@ -198,53 +158,61 @@ export default function HighAbrasionDetail() {
       const isDoubleTap = now - lastTapTime.current < DOUBLE_TAP_DELAY;
       lastTapTime.current = now;
 
+      const touch = e.touches[0];
+      const rect = el.getBoundingClientRect();
+      const { ox, oy } = computeOrigin(touch.clientX, touch.clientY, rect);
+
       if (touchZoomActive.current) {
         if (isDoubleTap) {
           touchZoomActive.current = false;
           setTouchZoomVisible(false);
-          if (lensRef.current) lensRef.current.style.opacity = "0";
+          zoomOrigin.current = { ox: 50, oy: 50 };
+          applyZoom(false);
           if (rafRef.current) {
             cancelAnimationFrame(rafRef.current);
             rafRef.current = null;
           }
         } else {
-          const touch = e.touches[0];
-          if (!imageRef.current) return;
-          const rect = imageRef.current.getBoundingClientRect();
-          const { x, y } = computeClampedPos(
-            touch.clientX,
-            touch.clientY,
-            rect,
-          );
-          applyLens(x, y, rect);
-          scheduleUpdate(x, y);
+          zoomOrigin.current = { ox, oy };
+          applyZoom(true);
         }
       } else {
-        if (!lensReady.current) return;
         touchZoomActive.current = true;
         setTouchZoomVisible(true);
-        if (lensRef.current) lensRef.current.style.opacity = "1";
-
-        const touch = e.touches[0];
-        if (!imageRef.current) return;
-        const rect = imageRef.current.getBoundingClientRect();
-        const { x, y } = computeClampedPos(touch.clientX, touch.clientY, rect);
-        applyLens(x, y, rect);
-        scheduleUpdate(x, y);
+        zoomOrigin.current = { ox, oy };
+        applyZoom(true);
       }
     };
 
+    const onTouchMove = (e: TouchEvent) => {
+      if (!touchZoomActive.current || e.touches.length !== 1) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = el.getBoundingClientRect();
+      const { ox, oy } = computeOrigin(touch.clientX, touch.clientY, rect);
+      zoomOrigin.current = { ox, oy };
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        applyZoom(true);
+        rafRef.current = null;
+      });
+    };
+
     el.addEventListener("touchstart", onTouchStart, { passive: false });
-    el.addEventListener("touchmove", handleTouchMove, { passive: false });
-    el.addEventListener("touchend", handleTouchEnd);
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
 
     return () => {
       el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", handleTouchMove);
-      el.removeEventListener("touchend", handleTouchEnd);
+      el.removeEventListener("touchmove", onTouchMove);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [images, selectedIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   if (loading) {
     return <Loading overlay fullScreen />;
@@ -293,20 +261,9 @@ export default function HighAbrasionDetail() {
             <div className="flex flex-col h-full gap-4">
               <div
                 ref={imageRef}
-                onMouseEnter={() => {
-                  if (
-                    !isMobile &&
-                    images[selectedIndex] &&
-                    lensReady.current &&
-                    lensRef.current
-                  )
-                    lensRef.current.style.opacity = "1";
-                }}
-                onMouseLeave={() => {
-                  if (!isMobile && lensRef.current)
-                    lensRef.current.style.opacity = "0";
-                }}
-                onMouseMove={!isMobile ? handleMouseMove : undefined}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onMouseMove={handleMouseMove}
                 style={{
                   position: "relative",
                   width: "100%",
@@ -314,15 +271,24 @@ export default function HighAbrasionDetail() {
                   border: "1px solid #ddd",
                   background: "#808080",
                   overflow: "hidden",
-                  cursor:
-                    isMobile && images[selectedIndex] ? "pointer" : undefined,
+                  cursor: images[selectedIndex]
+                    ? isMobile
+                      ? "pointer"
+                      : "zoom-in"
+                    : undefined,
                 }}
               >
                 {images[selectedIndex] ? (
                   <img
+                    ref={imgRef}
                     src={resolveImageSrc(images[selectedIndex])}
-                    className="w-full h-full object-cover select-none"
+                    className="w-full h-full object-contain select-none"
                     draggable={false}
+                    style={{
+                      transition: "transform 0.08s ease-out",
+                      transformOrigin: "center center",
+                      imageRendering: "auto",
+                    }}
                   />
                 ) : (
                   <span
@@ -340,22 +306,6 @@ export default function HighAbrasionDetail() {
                     No Image
                   </span>
                 )}
-
-                {/* Lens: always mounted, opacity controlled via DOM to avoid remount jitter */}
-                <div
-                  ref={lensRef}
-                  style={{
-                    position: "absolute",
-                    width: LENS_SIZE,
-                    height: LENS_SIZE,
-                    border: "2px solid white",
-                    boxShadow: "0 0 8px rgba(0,0,0,0.4)",
-                    pointerEvents: "none",
-                    opacity: 0,
-                    transition: "opacity 0.15s",
-                    backgroundRepeat: "no-repeat",
-                  }}
-                />
 
                 {/* Mobile: tap-to-zoom hint */}
                 {isMobile && images[selectedIndex] && !touchZoomVisible && (

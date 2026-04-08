@@ -473,15 +473,13 @@
 // }
 
 import { useEffect, useState } from "react";
-import { Card, Input, Button, Table, Space, Row, Col, Form } from "antd";
-import CustomPagination from "../../components/CustomPagination";
-import { AppAlert } from "../../components/ui/AppAlert";
+import { Input, Button, Row, Col, Form } from "antd";
+import { Search, Upload } from "lucide-react";
 
+import { AppAlert } from "../../components/ui/AppAlert";
 import AddFilter from "../../components/AddFilter";
 import { FILTER_OPTIONS } from "../../components/ui/LastLibraryFilterOption";
-import { Search, Upload } from "lucide-react";
 import FilterCollapse from "../../components/FilterCollapse";
-import { SafeTooltip } from "../../components/ui/Tooltip";
 import {
   getLastLibraryColumns,
   flattenLastLibraryData,
@@ -500,6 +498,8 @@ import Swal from "sweetalert2";
 import { SwalNotification } from "../../components/ui/SwalNotification";
 import ImportExcelModal from "../../components/ImportExcelModal";
 import ConfirmRemoveModal from "../../components/ui/ConfirmRemoveModal";
+
+import DataTableSection from "../../components/DataTableSection";
 
 const SAMPLE_SIZES_POOL = [
   [
@@ -591,11 +591,9 @@ function mergeSampleSizes(item: any, index: number): LastLibraryDataType {
 
 export default function LastLibrary() {
   const [form] = Form.useForm();
-
   const user = useAppSelector((state) => state.auth.user);
 
   const [dynamicCount, setDynamicCount] = useState(0);
-
   const [flatData, setFlatData] = useState<FlatLastLibraryRow[]>([]);
   const [rawData, setRawData] = useState<LastLibraryDataType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -606,7 +604,6 @@ export default function LastLibrary() {
 
   const [openModal, setOpenModal] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-
   const [openImport, setOpenImport] = useState(false);
   const [openUploadAttach, setOpenUploadAttach] = useState(false);
 
@@ -621,6 +618,11 @@ export default function LastLibrary() {
   const [sizeLocalMap, setSizeLocalMap] = useState<
     Record<string, { url: string; name: string }>
   >({});
+
+  const [current, setCurrent] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<any>({});
 
   const columns = getLastLibraryColumns(
     sizeLocalMap,
@@ -637,23 +639,14 @@ export default function LastLibrary() {
     },
   );
 
-  const [current, setCurrent] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const [total, setTotal] = useState(0);
-  const [filters, setFilters] = useState<any>({});
-
   const fetchItems = async () => {
     try {
       setLoading(true);
-
       const params = { ...filters, page: current, limit: pageSize };
       const res = await lastLibraryApi.getAllItems(params);
-
       const merged: LastLibraryDataType[] = res.data.map(
         (item: any, index: number) => mergeSampleSizes(item, index),
       );
-
       setRawData(merged);
       setFlatData(flattenLastLibraryData(merged));
       setTotal(res.total);
@@ -670,38 +663,14 @@ export default function LastLibrary() {
   }, [current, pageSize, filters]);
 
   const handleFilter = (values: any) => {
-    const newFilters = buildQueryFilters(values);
-    setFilters(newFilters);
+    setFilters(buildQueryFilters(values));
     setCurrent(1);
   };
 
   const handleSelectItem = (record: FlatLastLibraryRow) => {
-    if (selectedID === record.LastLibraryID) {
-      setSelectedID(null);
-      return;
-    }
-    setSelectedID(record.LastLibraryID);
-  };
-
-  const handleUploadAttach = async (file: File) => {
-    if (!selectedRow || !user) return;
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await lastLibraryApi.attach3DM(
-        selectedRow.LastLibraryID,
-        formData,
-      );
-
-      if (res.data) AppAlert({ icon: "success", title: res.message });
-
-      await fetchItems();
-    } catch (error) {
-      console.error(error);
-      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
-    }
+    setSelectedID((prev) =>
+      prev === record.LastLibraryID ? null : record.LastLibraryID,
+    );
   };
 
   const handleCreate = () => {
@@ -722,14 +691,11 @@ export default function LastLibrary() {
   const handleDelete = async () => {
     try {
       if (!selectedRow) return;
-
       const res = await lastLibraryApi.deleteItem(selectedRow.LastLibraryID);
-
       if (res.success) {
         setSelectedID(null);
         AppAlert({ icon: "success", title: res.message });
       }
-
       await fetchItems();
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
@@ -741,7 +707,6 @@ export default function LastLibrary() {
       AppAlert({ icon: "warning", title: "Please choose a row data" });
       return;
     }
-
     ConfirmRemoveModal({ topic: "item", onOk: handleDelete });
   };
 
@@ -749,13 +714,9 @@ export default function LastLibrary() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-
       SwalLoading("Uploading Excel file...");
-
       const res = await lastLibraryApi.importExcelFile(formData);
-
       Swal.close();
-
       if (res) {
         SwalNotification("success", res.message);
         await fetchItems();
@@ -765,6 +726,36 @@ export default function LastLibrary() {
       SwalNotification("error", getApiErrorMessage(error));
     }
   };
+
+  const handleUploadAttach = async (file: File) => {
+    if (!selectedRow || !user) return;
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await lastLibraryApi.attach3DM(
+        selectedRow.LastLibraryID,
+        formData,
+      );
+      if (res.data) AppAlert({ icon: "success", title: res.message });
+      await fetchItems();
+    } catch (error) {
+      console.error(error);
+      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+    }
+  };
+
+  // const handle3DViewer = () => {
+  //   if (!selectedRow) return;
+
+  //   if (!selectedRow.FilePath) {
+  //     AppAlert({ icon: "warning", title: "No 3D file attached" });
+  //     return;
+  //   }
+
+  //   setActive3DUrl(selectedRow.FilePath);
+  //   setActive3DName(selectedRow.FileName ?? "3D Model");
+  //   setOpen3D(true);
+  // };
 
   const handleSubmit = async (values: any) => {
     if (mode === "create") {
@@ -792,21 +783,9 @@ export default function LastLibrary() {
     }
   };
 
-  // const handle3DViewer = () => {
-  //   if (!selectedRow) return;
-
-  //   if (!selectedRow.FilePath) {
-  //     AppAlert({ icon: "warning", title: "No 3D file attached" });
-  //     return;
-  //   }
-
-  //   setActive3DUrl(selectedRow.FilePath);
-  //   setActive3DName(selectedRow.FileName ?? "3D Model");
-  //   setOpen3D(true);
-  // };
-
   return (
     <>
+      {/* ── Filters ── */}
       <Row gutter={24}>
         <Col span={24}>
           <FilterCollapse
@@ -822,14 +801,12 @@ export default function LastLibrary() {
             }
             visibleFilterCount={3 + dynamicCount}
             actions={
-              <>
-                <Form.Item>
-                  <Button className="btn-custom" htmlType="submit">
-                    <Search size={13} />
-                    Search
-                  </Button>
-                </Form.Item>
-              </>
+              <Form.Item>
+                <Button className="btn-custom" htmlType="submit">
+                  <Search size={13} />
+                  Search
+                </Button>
+              </Form.Item>
             }
           >
             <Col xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -837,13 +814,11 @@ export default function LastLibrary() {
                 <Input />
               </Form.Item>
             </Col>
-
             <Col xs={24} sm={12} md={8} lg={6} xl={4}>
               <Form.Item name="Model_Number_M" label="Model Number (M)">
                 <Input />
               </Form.Item>
             </Col>
-
             <Col xs={24} sm={12} md={8} lg={6} xl={4}>
               <Form.Item name="Group_Name_A" label="Group Name (A)">
                 <Input />
@@ -853,121 +828,71 @@ export default function LastLibrary() {
         </Col>
       </Row>
 
-      <Row gutter={24}>
-        <Col span={24}>
-          <Card
-            style={{ height: "100%", display: "flex", flexDirection: "column" }}
-            styles={{
-              body: { flex: 1, display: "flex", flexDirection: "column" },
-            }}
-          >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between w-full">
-              <Space
-                wrap
-                className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
-              >
-                <SafeTooltip title={"Create new item"}>
-                  <Button
-                    className="add-btn w-full lg:w-auto"
-                    onClick={handleCreate}
-                  >
-                    NEW ITEM
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Update item information"}>
-                  <Button
-                    className="edit-btn w-full lg:w-auto"
-                    onClick={handleEdit}
-                  >
-                    EDIT ITEM
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Delete item"}>
-                  <Button
-                    className="delete-btn w-full lg:w-auto"
-                    onClick={confirmRemove}
-                  >
-                    REMOVE ITEM
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Import Excel file"}>
-                  <Button
-                    className="actions-btn w-full lg:w-auto"
-                    onClick={() => setOpenImport(true)}
-                  >
-                    <Upload />
-                  </Button>
-                </SafeTooltip>
-
-                {/* <SafeTooltip title={"Upload 3D Modal file"}>
-                  <Button
-                    className="extra-actions-btn w-full lg:w-auto"
-                    onClick={() => {
-                      if (!selectedRow) {
-                        AppAlert({
-                          icon: "warning",
-                          title: "Please choose a row data",
-                        });
-                        return;
-                      }
-                      setOpenUploadAttach(true);
-                    }}
-                  >
-                    <FileBox className="w-4 h-4" />
-                    Attach 3DM file
-                  </Button>
-                </SafeTooltip> */}
-
-                {/* <SafeTooltip title={"Show 3D Modal"}>
-                  <Button
-                    className="extra-actions-btn w-full lg:w-auto"
-                    onClick={handle3DViewer}
-                    disabled={!(selectedRow && selectedRow.FileName)}
-                  >
-                    <TbCube3dSphere className="h-4 w-4" />
-                    3D Viewer
-                  </Button>
-                </SafeTooltip> */}
-              </Space>
-
-              <span className="adidas-font text-left lg:text-right">
-                {total} items
-              </span>
-            </div>
-
-            <div className="w-full mt-1">
-              <Table
-                loading={loading}
-                bordered
-                columns={columns}
-                dataSource={flatData}
-                rowKey="_flatKey"
-                pagination={false}
-                scroll={{ x: "max-content" }}
-                onRow={(record) => ({
-                  onClick: () => handleSelectItem(record),
-                })}
-                rowClassName={(record) =>
-                  record.LastLibraryID === selectedID
-                    ? "custom-selected-row"
-                    : ""
-                }
-              />
-            </div>
-
-            <CustomPagination
-              total={total}
-              current={current}
-              pageSize={pageSize}
-              onChange={(page) => setCurrent(page)}
-              onPageSizeChange={(size) => setPageSize(size)}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* ── Table card ── */}
+      <DataTableSection<FlatLastLibraryRow>
+        dataSource={flatData}
+        columns={columns}
+        rowKey="_flatKey"
+        loading={loading}
+        selectedRowKey={selectedID ?? undefined}
+        rowClassNameFn={(record) =>
+          record.LastLibraryID === selectedID ? "custom-selected-row" : ""
+        }
+        onRowClick={handleSelectItem}
+        total={total}
+        current={current}
+        pageSize={pageSize}
+        onPageChange={setCurrent}
+        onPageSizeChange={setPageSize}
+        actionBar={{
+          totalLabel: `${total} items`,
+          buttons: [
+            {
+              label: "NEW ITEM",
+              tooltip: "Create new item",
+              className: "add-btn",
+              onClick: handleCreate,
+            },
+            {
+              label: "EDIT ITEM",
+              tooltip: "Update item information",
+              className: "edit-btn",
+              onClick: handleEdit,
+            },
+            {
+              label: "REMOVE ITEM",
+              tooltip: "Delete item",
+              className: "delete-btn",
+              onClick: confirmRemove,
+            },
+            {
+              label: <Upload />,
+              tooltip: "Import Excel file",
+              className: "actions-btn",
+              onClick: () => setOpenImport(true),
+            },
+            // {
+            //   label: <><FileBox className="w-4 h-4" /> Attach 3DM file</>,
+            //   tooltip: "Upload 3D Modal file",
+            //   className: "extra-actions-btn",
+            //   onClick: () => {
+            //     if (!selectedRow) {
+            //       AppAlert({ icon: "warning", title: "Please choose a row data" });
+            //       return;
+            //     }
+            //     setOpenUploadAttach(true);
+            //   },
+            // },
+            // {
+            //   label: <><TbCube3dSphere className="h-4 w-4" /> 3D Viewer</>,
+            //   tooltip: "Show 3D Modal",
+            //   className: "extra-actions-btn",
+            //   disabled: !(selectedRow && selectedRow.FileName),
+            //   onClick: handle3DViewer,
+            // },
+          ],
+        }}
+      />
 
       <LastLibraryModal
         open={openModal}

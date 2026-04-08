@@ -17,6 +17,8 @@ interface ImagePreviewModalProps {
   slotImageWidth?: number;
 }
 
+const ZOOM_SCALE = 3;
+
 export default function ImagePreviewModal({
   open,
   onClose,
@@ -27,7 +29,6 @@ export default function ImagePreviewModal({
   emptyImage = "/no-image.png",
   labels = [],
   enableHoverPreview = true,
-  // previewSize: _previewSize,
   slotImageWidth,
 }: ImagePreviewModalProps) {
   const { useBreakpoint } = Grid;
@@ -55,20 +56,14 @@ export default function ImagePreviewModal({
     : responsiveImageSize;
   const gap = responsiveImageSize * 0.12;
 
-  const LENS_SIZE = 120;
-  const ZOOM_SCALE = 1;
-
   const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const lensRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const imgRefs = useRef<(HTMLImageElement | null)[]>([]);
   const rafRef = useRef<number | null>(null);
-  const zoomData = useRef({ x: 0, y: 0 });
 
-  const activeSlot = useRef<number | null>(null);
-  const lensReady = useRef<boolean[]>([]);
+  const zoomState = useRef<{ active: boolean; ox: number; oy: number }[]>([]);
 
-  const touchZoomActive = useRef(false);
-  const [touchZoomVisible, setTouchZoomVisible] = useState(false);
   const touchZoomSlot = useRef<number | null>(null);
+  const [touchZoomVisible, setTouchZoomVisible] = useState(false);
   const lastTapTime = useRef(0);
   const lastTapSlot = useRef<number | null>(null);
   const DOUBLE_TAP_DELAY = 300;
@@ -82,79 +77,46 @@ export default function ImagePreviewModal({
     );
   }, [images, labels, maxImages]);
 
+  useEffect(() => {
+    zoomState.current = slots.map(() => ({ active: false, ox: 50, oy: 50 }));
+  }, [slots]);
+
   const validCount = slots.filter(Boolean).length;
 
   const modalWidth = isMobile
     ? "95vw"
     : responsiveColumns * slotWidth + (responsiveColumns - 1) * gap + 48;
 
-  useEffect(() => {
-    lensReady.current = slots.map(() => false);
-
-    slots.forEach((src, i) => {
-      if (!src) return;
-      const url = resolveImageSrc(src);
-      const img = new window.Image();
-      img.onload = () => {
-        if (lensRefs.current[i]) {
-          lensRefs.current[i]!.style.backgroundImage = `url(${url})`;
-        }
-        lensReady.current[i] = true;
-      };
-      img.src = url;
-    });
-  }, [slots]);
-
-  useEffect(() => {
-    if (!open) {
-      touchZoomActive.current = false;
-      setTouchZoomVisible(false);
-      touchZoomSlot.current = null;
-      activeSlot.current = null;
-      lensRefs.current.forEach((lens) => {
-        if (lens) lens.style.opacity = "0";
-      });
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  const applyZoom = (index: number) => {
+    const img = imgRefs.current[index];
+    const state = zoomState.current[index];
+    if (!img || !state) return;
+    if (state.active) {
+      img.style.transform = `scale(${ZOOM_SCALE})`;
+      img.style.transformOrigin = `${state.ox}% ${state.oy}%`;
+    } else {
+      img.style.transform = "scale(1)";
+      img.style.transformOrigin = "center center";
     }
-  }, [open]);
-
-  const applyLens = (index: number, x: number, y: number, rect: DOMRect) => {
-    const lens = lensRefs.current[index];
-    if (!lens) return;
-    const bgW = rect.width * ZOOM_SCALE;
-    const bgH = rect.height * ZOOM_SCALE;
-    const bgX = (x / rect.width) * bgW;
-    const bgY = (y / rect.height) * bgH;
-    lens.style.left = `${x - LENS_SIZE / 2}px`;
-    lens.style.top = `${y - LENS_SIZE / 2}px`;
-    lens.style.backgroundSize = `${bgW}px ${bgH}px`;
-    lens.style.backgroundPosition = `-${bgX - LENS_SIZE / 2}px -${bgY - LENS_SIZE / 2}px`;
   };
 
-  const computeClampedPos = (
-    clientX: number,
-    clientY: number,
-    rect: DOMRect,
-  ) => {
-    const half = LENS_SIZE / 2;
-    const x = Math.max(half, Math.min(rect.width - half, clientX - rect.left));
-    const y = Math.max(half, Math.min(rect.height - half, clientY - rect.top));
-    return { x, y };
+  // Compute origin % from clientX/Y inside the slot rect
+  const computeOrigin = (clientX: number, clientY: number, rect: DOMRect) => {
+    const ox = Math.max(
+      0,
+      Math.min(100, ((clientX - rect.left) / rect.width) * 100),
+    );
+    const oy = Math.max(
+      0,
+      Math.min(100, ((clientY - rect.top) / rect.height) * 100),
+    );
+    return { ox, oy };
   };
 
-  const scheduleUpdate = (index: number, x: number, y: number) => {
-    zoomData.current = { x, y };
+  const scheduleUpdate = (index: number) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
-      const slot = slotRefs.current[index];
-      if (slot) {
-        applyLens(
-          index,
-          zoomData.current.x,
-          zoomData.current.y,
-          slot.getBoundingClientRect(),
-        );
-      }
+      applyZoom(index);
       rafRef.current = null;
     });
   };
@@ -164,33 +126,43 @@ export default function ImagePreviewModal({
     index: number,
     src: File | Image | null,
   ) => {
-    if (isTouch || !enableHoverPreview || !src || !lensReady.current[index])
-      return;
-    const slot = slotRefs.current[index];
-    const lens = lensRefs.current[index];
-    if (!slot || !lens) return;
-    activeSlot.current = index;
-    lens.style.opacity = "1";
-    const rect = slot.getBoundingClientRect();
-    const { x, y } = computeClampedPos(e.clientX, e.clientY, rect);
-    applyLens(index, x, y, rect);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent, index: number) => {
-    if (isTouch || activeSlot.current !== index) return;
+    if (isTouch || !enableHoverPreview || !src) return;
     const slot = slotRefs.current[index];
     if (!slot) return;
     const rect = slot.getBoundingClientRect();
-    const { x, y } = computeClampedPos(e.clientX, e.clientY, rect);
-    scheduleUpdate(index, x, y);
+    const { ox, oy } = computeOrigin(e.clientX, e.clientY, rect);
+    zoomState.current[index] = { active: true, ox, oy };
+    scheduleUpdate(index);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent, index: number) => {
+    if (isTouch || !zoomState.current[index]?.active) return;
+    const slot = slotRefs.current[index];
+    if (!slot) return;
+    const rect = slot.getBoundingClientRect();
+    const { ox, oy } = computeOrigin(e.clientX, e.clientY, rect);
+    zoomState.current[index].ox = ox;
+    zoomState.current[index].oy = oy;
+    scheduleUpdate(index);
   };
 
   const handleMouseLeave = (index: number) => {
     if (isTouch) return;
-    const lens = lensRefs.current[index];
-    if (lens) lens.style.opacity = "0";
-    activeSlot.current = null;
+    zoomState.current[index] = { active: false, ox: 50, oy: 50 };
+    scheduleUpdate(index);
   };
+
+  useEffect(() => {
+    if (!open) {
+      zoomState.current.forEach((s, i) => {
+        if (s) s.active = false;
+        applyZoom(i);
+      });
+      touchZoomSlot.current = null;
+      setTouchZoomVisible(false);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!isTouch || !enableHoverPreview) return;
@@ -210,58 +182,52 @@ export default function ImagePreviewModal({
         lastTapTime.current = now;
         lastTapSlot.current = index;
 
-        if (touchZoomActive.current && touchZoomSlot.current === index) {
+        const isCurrentlyZoomed =
+          touchZoomSlot.current === index && zoomState.current[index]?.active;
+
+        if (isCurrentlyZoomed) {
           if (isDoubleTap) {
-            touchZoomActive.current = false;
-            setTouchZoomVisible(false);
+            // Double tap to exit zoom
+            zoomState.current[index] = { active: false, ox: 50, oy: 50 };
+            applyZoom(index);
             touchZoomSlot.current = null;
-            const lens = lensRefs.current[index];
-            if (lens) lens.style.opacity = "0";
-            if (rafRef.current) {
-              cancelAnimationFrame(rafRef.current);
-              rafRef.current = null;
-            }
+            setTouchZoomVisible(false);
           } else {
+            // Move zoom origin to new touch position
             const touch = e.touches[0];
             const rect = el.getBoundingClientRect();
-            const { x, y } = computeClampedPos(
+            const { ox, oy } = computeOrigin(
               touch.clientX,
               touch.clientY,
               rect,
             );
-            applyLens(index, x, y, rect);
-            scheduleUpdate(index, x, y);
+            zoomState.current[index] = { active: true, ox, oy };
+            applyZoom(index);
           }
         } else {
+          // Deactivate previous slot's zoom if switching
           if (
-            touchZoomActive.current &&
             touchZoomSlot.current !== null &&
             touchZoomSlot.current !== index
           ) {
-            const prevLens = lensRefs.current[touchZoomSlot.current];
-            if (prevLens) prevLens.style.opacity = "0";
+            const prev = touchZoomSlot.current;
+            zoomState.current[prev] = { active: false, ox: 50, oy: 50 };
+            applyZoom(prev);
           }
-          if (!lensReady.current[index]) return;
-          touchZoomActive.current = true;
-          setTouchZoomVisible(true);
-          touchZoomSlot.current = index;
-          const lens = lensRefs.current[index];
-          if (lens) lens.style.opacity = "1";
+          // Activate zoom on this slot
           const touch = e.touches[0];
           const rect = el.getBoundingClientRect();
-          const { x, y } = computeClampedPos(
-            touch.clientX,
-            touch.clientY,
-            rect,
-          );
-          applyLens(index, x, y, rect);
-          scheduleUpdate(index, x, y);
+          const { ox, oy } = computeOrigin(touch.clientX, touch.clientY, rect);
+          zoomState.current[index] = { active: true, ox, oy };
+          applyZoom(index);
+          touchZoomSlot.current = index;
+          setTouchZoomVisible(true);
         }
       };
 
       const onTouchMove = (e: TouchEvent) => {
         if (
-          !touchZoomActive.current ||
+          !zoomState.current[index]?.active ||
           touchZoomSlot.current !== index ||
           e.touches.length !== 1
         )
@@ -269,8 +235,14 @@ export default function ImagePreviewModal({
         e.preventDefault();
         const touch = e.touches[0];
         const rect = el.getBoundingClientRect();
-        const { x, y } = computeClampedPos(touch.clientX, touch.clientY, rect);
-        scheduleUpdate(index, x, y);
+        const { ox, oy } = computeOrigin(touch.clientX, touch.clientY, rect);
+        zoomState.current[index].ox = ox;
+        zoomState.current[index].oy = oy;
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(() => {
+          applyZoom(index);
+          rafRef.current = null;
+        });
       };
 
       el.addEventListener("touchstart", onTouchStart, { passive: false });
@@ -279,14 +251,15 @@ export default function ImagePreviewModal({
       cleanups.push(() => {
         el.removeEventListener("touchstart", onTouchStart);
         el.removeEventListener("touchmove", onTouchMove);
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
       });
     });
 
-    return () => cleanups.forEach((fn) => fn());
+    return () => {
+      cleanups.forEach((fn) => fn());
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [slots, isTouch, enableHoverPreview]);
 
-  // Cleanup rAF on unmount
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -345,6 +318,9 @@ export default function ImagePreviewModal({
               >
                 {src ? (
                   <img
+                    ref={(el) => {
+                      imgRefs.current[index] = el;
+                    }}
                     src={resolveImageSrc(src)}
                     style={{
                       width: "100%",
@@ -352,6 +328,9 @@ export default function ImagePreviewModal({
                       objectFit: "contain",
                       objectPosition: "center",
                       display: "block",
+                      transition: "transform 0.08s ease-out",
+                      transformOrigin: "center center",
+                      imageRendering: "auto",
                     }}
                   />
                 ) : (
@@ -368,26 +347,7 @@ export default function ImagePreviewModal({
                   </div>
                 )}
 
-                {/* Zoom lens — always mounted per slot, shown/hidden via opacity */}
-                <div
-                  ref={(el) => {
-                    lensRefs.current[index] = el;
-                  }}
-                  style={{
-                    position: "absolute",
-                    width: LENS_SIZE,
-                    height: LENS_SIZE,
-                    border: "2px solid white",
-                    boxShadow: "0 0 8px rgba(0,0,0,0.4)",
-                    pointerEvents: "none",
-                    opacity: 0,
-                    transition: "opacity 0.15s",
-                    backgroundRepeat: "no-repeat",
-                    // backgroundImage, backgroundSize, backgroundPosition set via DOM
-                  }}
-                />
-
-                {/* Mobile hints */}
+                {/* Mobile hint: tap to zoom */}
                 {isTouch && src && enableHoverPreview && !touchZoomVisible && (
                   <div
                     style={{

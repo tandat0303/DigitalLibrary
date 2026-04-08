@@ -1,6 +1,7 @@
 import type { ColumnsType, ColumnType } from "antd/es/table";
 import type { UploadImage } from "../components/ImageUploader";
 import type { Image } from "../types/images";
+import type Table from "antd/es/table";
 
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -207,3 +208,8 @@ export function uid() {
 export function stripExt(filename: string) {
   return filename.replace(/\.[^/.]+$/, "");
 }
+
+export type TablePropsTyped<T extends object> = Omit<
+  React.ComponentProps<typeof Table<T>>,
+  "columns" | "dataSource" | "rowKey" | "loading" | "pagination"
+>;

@@ -195,7 +195,7 @@ export default function CameraModal({
       const fileName = generateUUID() + ".jpg";
       const formData = new FormData();
       formData.append("file", imageBlob, fileName);
-      formData.append("use_clip_rerank", "true");
+      // formData.append("use_clip_rerank", "true");
 
       const res = await materialApi.searchMaterial(formData);
       setPercent(100);

@@ -60,11 +60,16 @@ const materialApi = {
   },
 
   searchMaterial: async (formData: FormData) => {
-    const res = await axios.post("http://192.168.0.32:8000/search", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
+    // const res = await axios.post("http://192.168.0.32:8000/search", formData, {
+    const res = await axios.post(
+      "http://192.168.0.32:8001/search?top_k=5",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       },
-    });
+    );
     return res.data;
   },
 
