@@ -543,9 +543,9 @@ body,
 } */
 
 .cancel-modal-btn.ant-btn {
-  background: linear-gradient(135deg, #f7f7f7 0%, #ebebeb 100%) !important;
+  background: linear-gradient(135deg, #9b9b9b 0%, #9b9b9b 100%) !important;
   border: 1px solid #d0d0d0 !important;
-  color: #444 !important;
+  color: #fff !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
   transition:
     box-shadow 0.18s,
@@ -553,15 +553,16 @@ body,
 }
 
 .cancel-modal-btn.ant-btn:hover {
-  background: linear-gradient(135deg, #ececec 0%, #dcdcdc 100%) !important;
-  border-color: #8c8c8c !important;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14) !important;
+  background: linear-gradient(135deg, #b9b9b9 0%, #b9b9b9 100%) !important;
+  border-color: #b9b9b9 !important;
+  color: #000 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
   transform: translateY(-1px);
 }
 
 .cancel-modal-btn.ant-btn:active {
   transform: translateY(0) scale(0.98);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
 }
 
 .save-modal-btn.ant-btn {
@@ -897,11 +898,12 @@ body,
 .header-user-btn {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 2px;
+  /* gap: 9px; */
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  padding: 5px 10px 5px 6px;
+  padding: 5px 5px 5px 6px;
   cursor: pointer;
   transition:
     background 0.15s,
@@ -911,7 +913,7 @@ body,
 .header-user-btn:hover,
 .header-user-btn--open {
   background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(65, 46, 46, 0.18);
 }
 
 .header-avatar {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Input, Button, Table, Row, Col, Form, Tabs } from "antd";
 import {
   columns,
@@ -97,27 +97,28 @@ export default function UserLimit() {
 
   const handleLevelChange = (key: string, value: number) => {
     setPermissionData((prev) =>
-      prev.map(
-        (item) =>
-          item.PermissionID === key ? { ...item, Level: value } : item, //LevelPermission
+      prev.map((item) =>
+        item.PermissionID === key ? { ...item, LevelPermission: value } : item,
       ),
     );
   };
 
-  // const rightColumns = getPermissionColumns(levelOptions, handleLevelChange);
+  const rightColumns = getPermissionColumns(levelOptions, handleLevelChange);
 
-  const rightColumns = useMemo(() => {
-    if (!selectedUser) return [];
+  // const rightColumns = useMemo(() => {
+  //   if (!selectedUser) return [];
 
-    return getPermissionColumns(
-      levelOptions,
-      handleLevelChange,
-      selectedUser.Username,
-    );
-  }, [selectedUser]);
+  //   return getPermissionColumns(levelOptions, handleLevelChange);
+  // }, [selectedUser]);
 
   const handleFilter = (values: any) => {
     const newFilters = buildQueryFilters(values);
+
+    setSelectedUser(null);
+    setPermissionData([]);
+    setModules([]);
+    setActiveTab("");
+    setSelectedPermissionKey(null);
 
     setFilters(newFilters);
     setCurrent(1);
@@ -175,12 +176,10 @@ export default function UserLimit() {
       if (!permission) return;
 
       await userLimitApi.saveUserPermissions({
-        // userId: permission.UserID,
-        userId: selectedUser.UserID,
+        userId: permission.UserID,
         menuId: permission.MenuID,
         moduleId: permission.ModuleID,
-        // level: permission.LevelPermission,
-        level: permission.Level,
+        level: permission.LevelPermission,
       });
 
       AppAlert({ icon: "success", title: "Permission saved successfully" });
@@ -349,8 +348,8 @@ export default function UserLimit() {
               })}
               rowClassName={(record) =>
                 record.UserID === selectedUser?.UserID
-                  ? "custom-selected-row"
-                  : ""
+                  ? "custom-selected-row cursor-pointer"
+                  : "cursor-pointer"
               }
             />
             <CustomPagination

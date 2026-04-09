@@ -10,14 +10,14 @@ export interface UserPermissionsDataType extends CrudItem {
   PermissionID: string;
   MenuID: string;
   ModuleID: string;
-  MenuName: string;
-  ModuleName: string;
-  Level: number;
-  // LevelPermission: number;
-  // Menu: string;
-  // Module: string;
-  // UserID: string;
-  // Username: string;
+  // MenuName: string;
+  // ModuleName: string;
+  // Level: number;
+  LevelPermission: number;
+  Menu: string;
+  Module: string;
+  UserID: string;
+  Username: string;
 }
 
 export const columns: ColumnsType<UsersDataType> = [
@@ -52,13 +52,11 @@ export const levelOptions = [0, 1, 2, 3, 4].map((num) => ({
 export const getPermissionColumns = (
   levelOptions: { label: string; value: number }[],
   onLevelChange: (key: string, value: number) => void,
-  userAccount: string,
 ): ColumnsType<UserPermissionsDataType> => [
   {
     title: "User ID",
-    // dataIndex: "Username",
+    dataIndex: "Username",
     width: 110,
-    render: () => userAccount,
   },
   {
     title: "Factory",
@@ -67,24 +65,20 @@ export const getPermissionColumns = (
   },
   {
     title: "Module",
-    // dataIndex: "Module",
-    dataIndex: "ModuleName",
+    dataIndex: "Module",
     width: 110,
   },
   {
     title: "Menu",
-    // dataIndex: "Menu",
-    dataIndex: "MenuName",
+    dataIndex: "Menu",
   },
   {
     title: "Level",
-    // dataIndex: "LevelPermission",
-    dataIndex: "Level",
+    dataIndex: "LevelPermission",
     width: 130,
     render: (_, record) => (
       <Select
-        // value={record.LevelPermission}
-        value={record.Level}
+        value={record.LevelPermission}
         style={{ width: 110 }}
         options={levelOptions}
         onChange={(value) => onLevelChange(record.PermissionID, Number(value))}

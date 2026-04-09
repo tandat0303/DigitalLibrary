@@ -120,7 +120,7 @@ export default function Header() {
               <span className="header-online-dot" />
             </span>
 
-            <span className="header-username">{user?.fullname}</span>
+            {/* <span className="header-username">{user?.fullname}</span> */}
 
             <svg
               className={`header-chevron ${isShow ? "header-chevron--up" : ""}`}

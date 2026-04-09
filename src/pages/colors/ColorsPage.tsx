@@ -91,6 +91,8 @@ export default function ColorsPage() {
   }, [current, pageSize, filters]);
 
   const handleFilter = (values: any) => {
+    setSelectedID(null);
+
     setFilters(buildQueryFilters(values));
     setCurrent(1);
   };

@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  Card,
-  Input,
-  Button,
-  Table,
-  Space,
-  Row,
-  Col,
-  Form,
-  Checkbox,
-} from "antd";
-import CustomPagination from "../../components/CustomPagination";
+import { Input, Button, Row, Col, Form, Checkbox } from "antd";
 import { AppAlert } from "../../components/ui/AppAlert";
 
 import AddFilter from "../../components/AddFilter";
@@ -43,11 +32,11 @@ import Swal from "sweetalert2";
 import { useAppSelector } from "../../hooks/auth";
 import highAbrasionApi from "../../api/highAbrasion.api";
 import HighAbrasionModal from "./HighAbrasionModal";
-import { SafeTooltip } from "../../components/ui/Tooltip";
 import scanQrApi from "../../api/scanQR.api";
 import { useQrScanner } from "../../hooks/useQrScanner";
 import QrScannerRedirect from "../../components/QrScannerRedirect";
 import ConfirmRemoveModal from "../../components/ui/ConfirmRemoveModal";
+import DataTableSection from "../../components/DataTableSection";
 
 export default function HighAbrasion() {
   const [form] = Form.useForm();
@@ -58,9 +47,8 @@ export default function HighAbrasion() {
 
   const [data, setData] = useState<HighAbrasionDataType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRow, setSelectedRow] = useState<HighAbrasionDataType | null>(
-    null,
-  );
+  const [selectedID, setSelectedID] = useState<string | null>(null);
+  const selectedRow = data.find((r) => r.ID === selectedID) ?? null;
 
   const [openModal, setOpenModal] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
@@ -142,19 +130,14 @@ export default function HighAbrasion() {
   }, [current, pageSize, filters]);
 
   const handleFilter = (values: any) => {
-    const newFilters = buildQueryFilters(values);
+    setSelectedID(null);
 
-    setFilters(newFilters);
+    setFilters(buildQueryFilters(values));
     setCurrent(1);
   };
 
   const handleSelectMaterial = (record: HighAbrasionDataType) => {
-    if (selectedRow?.ID === record.ID) {
-      setSelectedRow(null);
-      return;
-    }
-
-    setSelectedRow(record);
+    setSelectedID((prev) => (prev === record.ID ? null : record.ID));
   };
 
   const handleExportExcel = async () => {
@@ -234,35 +217,62 @@ export default function HighAbrasion() {
     }
   };
 
+  // const handleCameraSearch = (response: any) => {
+  //   try {
+  //     if (!response?.results?.length) {
+  //       AppAlert({ icon: "warning", title: "No search results found" });
+  //       return;
+  //     }
+
+  //     const topResult = response.results.find(
+  //       (item: any) => item.advanced_rank === 1,
+  //     );
+
+  //     if (!topResult) {
+  //       AppAlert({ icon: "warning", title: "No result with rank 1" });
+  //       return;
+  //     }
+
+  //     const formattedCluster = topResult.cluster.replace(/_/g, "//");
+
+  //     // AppAlert({
+  //     //   icon: "success",
+  //     //   title: `Detected: ${formattedCluster}`,
+  //     // });
+
+  //     form.setFieldsValue({
+  //       Classification: formattedCluster,
+  //     });
+
+  //     const newFilters = buildQueryFilters({
+  //       Classification: formattedCluster,
+  //     });
+
+  //     setFilters(newFilters);
+  //     setCurrent(1);
+
+  //     setOpenCapture(false);
+  //   } catch (error) {
+  //     console.error(error);
+  //     AppAlert({ icon: "error", title: "Failed to process search result" });
+  //   }
+  // };
+
   const handleCameraSearch = (response: any) => {
     try {
-      if (!response?.results?.length) {
-        AppAlert({ icon: "warning", title: "No search results found" });
+      if (!response?.material_ids?.length) {
+        AppAlert({ icon: "warning", title: "No material IDs found" });
         return;
       }
 
-      const topResult = response.results.find(
-        (item: any) => item.advanced_rank === 1,
-      );
-
-      if (!topResult) {
-        AppAlert({ icon: "warning", title: "No result with rank 1" });
-        return;
-      }
-
-      const formattedCluster = topResult.cluster.replace(/_/g, "//");
-
-      // AppAlert({
-      //   icon: "success",
-      //   title: `Detected: ${formattedCluster}`,
-      // });
+      const materialIds = response.material_ids.join(",");
 
       form.setFieldsValue({
-        Classification: formattedCluster,
+        Material_ID: materialIds,
       });
 
       const newFilters = buildQueryFilters({
-        Classification: formattedCluster,
+        Material_ID: materialIds,
       });
 
       setFilters(newFilters);
@@ -298,7 +308,7 @@ export default function HighAbrasion() {
 
   const handleCreate = () => {
     setMode("create");
-    setSelectedRow(null);
+    setSelectedID(null);
     setOpenModal(true);
   };
 
@@ -319,7 +329,7 @@ export default function HighAbrasion() {
       const res = await highAbrasionApi.deleteMaterial(selectedRow.ID);
 
       if (res.success) {
-        setSelectedRow(null);
+        setSelectedID(null);
         AppAlert({ icon: "success", title: res.message });
       }
 
@@ -445,7 +455,7 @@ export default function HighAbrasion() {
         AppAlert({ icon: "success", title: "Added new material successfully" });
 
         setOpenModal(false);
-        setSelectedRow(null);
+        setSelectedID(null);
 
         await fetchMaterials();
       } catch (error) {
@@ -536,7 +546,7 @@ export default function HighAbrasion() {
         AppAlert({ icon: "success", title: "Material updated successfully" });
 
         setOpenModal(false);
-        setSelectedRow(null);
+        setSelectedID(null);
 
         await fetchMaterials();
       } catch (error) {
@@ -628,167 +638,101 @@ export default function HighAbrasion() {
         </Col>
       </Row>
 
-      <Row gutter={24}>
-        <Col span={24}>
-          <Card
-            style={{
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-            }}
-            styles={{
-              body: {
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-              },
-            }}
-          >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between w-full">
-              <Space
-                wrap
-                className="w-full [&>*]:w-full lg:w-auto lg:[&>*]:w-auto"
-              >
-                <SafeTooltip title={"Create new material"}>
-                  <Button
-                    className="add-btn w-full lg:w-auto"
-                    onClick={handleCreate}
-                  >
-                    NEW MATERIAL
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Update material information"}>
-                  <Button
-                    className="edit-btn w-full lg:w-auto"
-                    // disabled={!selectedRow}
-                    onClick={handleEdit}
-                  >
-                    EDIT MATERIAL
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Delete material"}>
-                  <Button
-                    className="delete-btn w-full lg:w-auto"
-                    // disabled={!selectedRow}
-                    onClick={confirmRemove}
-                  >
-                    REMOVE MATERIAL
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Import Excel file"}>
-                  <Button
-                    className="actions-btn w-full lg:w-auto"
-                    // icon={<Upload className="h-5" />}
-                    onClick={() => setOpenImport(true)}
-                  >
-                    <Upload />
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Export Excel file"}>
-                  <Button
-                    className="actions-btn w-full lg:w-auto"
-                    // icon={<Download className="h-5" />}
-                    onClick={handleExportExcel}
-                  >
-                    <Download />
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Export QR Excel file"}>
-                  <Button
-                    className="actions-btn w-full lg:w-auto"
-                    onClick={handleExportExcelQR}
-                    // icon={<QrCode className="h-5" />}
-                  >
-                    <QrCode />
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Scan material image"}>
-                  <Button
-                    className="extra-actions-btn w-full lg:w-auto"
-                    onClick={() => setOpenCapture(true)}
-                  >
-                    <Info className="w-4 h-4" />
-                    Detail Material
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Upload attach file"}>
-                  <Button
-                    className="extra-actions-btn w-full lg:w-auto"
-                    // disabled={!selectedRow}
-                    onClick={() => {
-                      if (!selectedRow) {
-                        AppAlert({
-                          icon: "warning",
-                          title: "Please choose a row data",
-                        });
-                        return;
-                      }
-
-                      setOpenUploadAttach(true);
-                    }}
-                  >
-                    <Paperclip className="w-4 h-4" />
-                    Attach File
-                  </Button>
-                </SafeTooltip>
-
-                <SafeTooltip title={"Download attach file"}>
-                  <Button
-                    className="extra-actions-btn w-full lg:w-auto"
-                    onClick={handleDownloadReport}
-                    disabled={!(selectedRow && selectedRow.FileName)}
-                  >
-                    <Download className="h-4 w-4" />
-                    Download Report
-                  </Button>
-                </SafeTooltip>
-              </Space>
-
-              <span className="adidas-font text-left lg:text-right">
-                {total} materials
-              </span>
-            </div>
-
-            <div className="w-full mt-1">
-              <Table
-                sticky
-                loading={loading}
-                bordered
-                columns={columns}
-                dataSource={data}
-                rowKey="ID"
-                pagination={false}
-                scroll={{ x: "max-content" }}
-                onRow={(record) => ({
-                  onClick: () => {
-                    handleSelectMaterial(record);
-                  },
-                })}
-                rowClassName={(record) =>
-                  record.ID && record.ID === selectedRow?.ID
-                    ? "custom-selected-row"
-                    : ""
+      <DataTableSection<HighAbrasionDataType>
+        dataSource={data}
+        columns={columns}
+        rowKey="ID"
+        loading={loading}
+        selectedRowKey={selectedID ?? undefined}
+        onRowClick={handleSelectMaterial}
+        total={total}
+        current={current}
+        pageSize={pageSize}
+        onPageChange={setCurrent}
+        onPageSizeChange={setPageSize}
+        actionBar={{
+          totalLabel: `${total} materials`,
+          buttons: [
+            {
+              label: "NEW MATERIAL",
+              tooltip: "Create new material",
+              className: "add-btn",
+              onClick: handleCreate,
+            },
+            {
+              label: "EDIT MATERIAL",
+              tooltip: "Update material information",
+              className: "edit-btn",
+              onClick: handleEdit,
+            },
+            {
+              label: "REMOVE MATERIAL",
+              tooltip: "Delete material",
+              className: "delete-btn",
+              onClick: confirmRemove,
+            },
+            {
+              label: <Upload />,
+              tooltip: "Import Excel file",
+              className: "actions-btn",
+              onClick: () => setOpenImport(true),
+            },
+            {
+              label: <Download />,
+              tooltip: "Export Excel file",
+              className: "actions-btn",
+              onClick: handleExportExcel,
+            },
+            {
+              label: <QrCode />,
+              tooltip: "Export QR Excel file",
+              className: "actions-btn",
+              onClick: handleExportExcelQR,
+            },
+            {
+              label: (
+                <>
+                  <Info /> Detail Material
+                </>
+              ),
+              tooltip: "Scan material image",
+              className: "extra-actions-btn",
+              onClick: () => setOpenCapture(true),
+            },
+            {
+              label: (
+                <>
+                  <Paperclip /> Attach File
+                </>
+              ),
+              tooltip: "Upload attach file",
+              className: "extra-actions-btn",
+              onClick: () => {
+                if (!selectedRow) {
+                  AppAlert({
+                    icon: "warning",
+                    title: "Please choose a row data",
+                  });
+                  return;
                 }
-              />
-            </div>
 
-            <CustomPagination
-              total={total}
-              current={current}
-              pageSize={pageSize}
-              onChange={(page) => setCurrent(page)}
-              onPageSizeChange={(size) => setPageSize(size)}
-            />
-          </Card>
-        </Col>
-      </Row>
+                setOpenUploadAttach(true);
+              },
+            },
+            {
+              label: (
+                <>
+                  <Download /> Download Report
+                </>
+              ),
+              tooltip: "Download attach file",
+              className: "extra-actions-btn",
+              onClick: handleDownloadReport,
+              disabled: !(selectedRow && selectedRow.FileName),
+            },
+          ],
+        }}
+      />
 
       <HighAbrasionModal
         open={openModal}
