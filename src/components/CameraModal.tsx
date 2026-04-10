@@ -47,6 +47,9 @@ const VIDEO_CONSTRAINTS: ExtendedMediaTrackConstraints = {
       whiteBalanceMode: "continuous", // auto white balance
       sharpness: 100, // max sharpness (supported on some devices)
     },
+    {
+      focusMode: "single-shot",
+    },
   ],
 };
 
@@ -76,9 +79,9 @@ function getStream(webcam: Webcam | null): MediaStream | null {
 }
 
 // Threshold for motion detection: 0–255, lower = more sensitive
-const MOTION_THRESHOLD = 20;
+const MOTION_THRESHOLD = 10;
 // Minimum % of pixels that changed to trigger a refocus
-const MOTION_PIXEL_RATIO = 0.02;
+const MOTION_PIXEL_RATIO = 0.005;
 
 export default function CameraModal({
   open,
@@ -113,9 +116,26 @@ export default function CameraModal({
     if (!open || !cameraReady) return;
     const id = setInterval(() => {
       applyFocus(getStream(webcamRef.current));
-    }, 1500);
+    }, 800);
     return () => clearInterval(id);
   }, [open, cameraReady]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const video = webcamRef.current?.video as HTMLVideoElement | null;
+    if (!video) return;
+
+    const handleLoaded = () => {
+      applyFocus(getStream(webcamRef.current));
+    };
+
+    video.addEventListener("loadeddata", handleLoaded);
+
+    return () => {
+      video.removeEventListener("loadeddata", handleLoaded);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open || !cameraReady) return;
@@ -156,8 +176,7 @@ export default function CameraModal({
 
         if (changedPixels / totalPixels > MOTION_PIXEL_RATIO) {
           const now = Date.now();
-          // Debounce: refocus at most once per 800 ms
-          if (now - lastRefocusRef.current > 800) {
+          if (now - lastRefocusRef.current > 300) {
             lastRefocusRef.current = now;
             applyFocus(getStream(webcamRef.current));
           }
@@ -216,6 +235,7 @@ export default function CameraModal({
     setCameraReady(true);
     setCameraError(null);
     applyFocus(stream);
+    setTimeout(() => applyFocus(stream), 100);
   };
 
   const handleCameraError = (err: string | DOMException) => {
@@ -238,7 +258,10 @@ export default function CameraModal({
       <div style={{ borderTop: "1px solid #d2d2d2", paddingTop: 16 }}>
         <canvas ref={motionCanvasRef} style={{ display: "none" }} />
 
-        <div className="border border-[#d2d2d2] rounded-lg h-100 relative overflow-hidden">
+        <div
+          className="border border-[#d2d2d2] rounded-lg h-100 relative overflow-hidden"
+          onClick={() => applyFocus(getStream(webcamRef.current))}
+        >
           {cameraError && (
             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
               Cannot access camera
@@ -297,207 +320,3 @@ export default function CameraModal({
     </Modal>
   );
 }
-
-// import { Modal, Button, Progress } from "antd";
-// import { useRef, useState, useEffect, useCallback } from "react";
-// import { AppAlert } from "./ui/AppAlert";
-// import { Camera } from "lucide-react";
-// import Webcam from "react-webcam";
-// import { dataURItoBlob, generateUUID } from "../lib/helpers";
-// import materialApi from "../api/materials.api";
-
-// interface CameraModalProps {
-//   open: boolean;
-//   onClose: () => void;
-//   onCapture?: (image: any) => void;
-// }
-
-// const VIDEO_CONSTRAINTS: MediaTrackConstraints = {
-//   facingMode: "environment",
-//   width: { ideal: 740 },
-//   height: { ideal: 340 },
-//   advanced: [
-//     {
-//       zoom: 0,
-//       focusMode: "continuous",
-//       autoFocus: true,
-//       focusDistance: 0,
-//       exposureMode: "continuous",
-//       whiteBalanceMode: "continuous",
-//     } as MediaTrackConstraintSet,
-//   ],
-// };
-
-// export default function CameraModal({
-//   open,
-//   onClose,
-//   onCapture,
-// }: CameraModalProps) {
-//   const webcamRef = useRef<Webcam>(null);
-
-//   const [cameraReady, setCameraReady] = useState(false);
-//   const [cameraError, setCameraError] = useState<string | null>(null);
-
-//   const [loading, setLoading] = useState(false);
-//   const [percent, setPercent] = useState(0);
-
-//   useEffect(() => {
-//     if (!loading) return;
-
-//     const timer = setInterval(() => {
-//       setPercent((prev) => {
-//         if (prev >= 90) return prev;
-//         return prev + Math.random() * 10;
-//       });
-//     }, 100);
-
-//     return () => clearInterval(timer);
-//   }, [loading]);
-
-//   const refocusCamera = useCallback(() => {
-//     try {
-//       const stream = (webcamRef.current?.video as HTMLVideoElement | null)
-//         ?.srcObject as MediaStream | null;
-//       const videoTrack = stream?.getVideoTracks()[0];
-//       if (videoTrack && typeof videoTrack.applyConstraints === "function") {
-//         videoTrack.applyConstraints({
-//           advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet],
-//         });
-//       }
-//     } catch (e) {
-//       console.log("Cannot re-focus camera: ", e);
-//     }
-//   }, []);
-
-//   const captureImage = async () => {
-//     try {
-//       // Use JPEG at full quality to match jpeg_quality: 100
-//       const imageSrc = webcamRef.current?.getScreenshot({
-//         width: 740,
-//         height: 480,
-//       });
-//       if (!imageSrc) return;
-
-//       setLoading(true);
-//       setPercent(0);
-
-//       const imageBlob = dataURItoBlob(imageSrc);
-//       if (!imageBlob) {
-//         AppAlert({ icon: "error", title: "Cannot convert image" });
-//         return;
-//       }
-
-//       const fileName = generateUUID() + ".jpg";
-
-//       const formData = new FormData();
-//       formData.append("file", imageBlob, fileName);
-//       formData.append("use_clip_rerank", "true");
-
-//       const res = await materialApi.searchMaterial(formData);
-
-//       setPercent(100);
-
-//       setTimeout(() => {
-//         onCapture?.(res);
-//         setLoading(false);
-//         setPercent(0);
-//         refocusCamera();
-//       }, 300);
-//     } catch (err) {
-//       setLoading(false);
-//       AppAlert({ icon: "error", title: `Search material failed: ${err}` });
-//     }
-//   };
-
-//   const handleCameraSuccess = () => {
-//     setCameraReady(true);
-//     setCameraError(null);
-//   };
-
-//   const handleCameraError = (err: string | DOMException) => {
-//     const message =
-//       typeof err === "string" ? err : err?.message || "Cannot access camera";
-
-//     setCameraError(message);
-//     AppAlert({ icon: "error", title: `Cannot access camera: ${message}` });
-//   };
-
-//   return (
-//     <Modal
-//       title="Material Detail"
-//       open={open}
-//       onCancel={onClose}
-//       footer={null}
-//       width={800}
-//       destroyOnHidden
-//       centered
-//     >
-//       <div style={{ borderTop: "1px solid #d2d2d2", paddingTop: 16 }}>
-//         <div
-//           className="border border-[#d2d2d2] rounded-lg h-100 relative overflow-hidden"
-//           onClick={refocusCamera}
-//         >
-//           {cameraError && (
-//             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-//               Cannot access camera
-//             </div>
-//           )}
-
-//           {open && !cameraError && (
-//             <Webcam
-//               ref={webcamRef}
-//               // Matches image_format: "jpeg" + jpeg_quality: 100
-//               screenshotFormat="image/jpeg"
-//               screenshotQuality={1}
-//               // Matches flip_horiz: false
-//               mirrored={false}
-//               // Matches dest_width/dest_height
-//               width={740}
-//               height={340}
-//               className="w-full h-full object-cover"
-//               videoConstraints={VIDEO_CONSTRAINTS}
-//               onUserMedia={handleCameraSuccess}
-//               onUserMediaError={handleCameraError}
-//             />
-//           )}
-
-//           {!cameraReady && !cameraError && (
-//             <div className="absolute inset-0 flex items-center justify-center text-white">
-//               Opening camera...
-//             </div>
-//           )}
-
-//           {loading && (
-//             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
-//               <Progress
-//                 type="circle"
-//                 percent={Math.round(percent)}
-//                 size={80}
-//                 strokeColor={"#fff"}
-//                 railColor={"#8d8d8dff"}
-//                 format={(p) => `${p}%`}
-//                 status="active"
-//               />
-//               <div className="text-white mt-3">Processing...</div>
-//             </div>
-//           )}
-
-//           <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
-//             <Button
-//               type="primary"
-//               danger
-//               shape="round"
-//               onClick={(e) => {
-//                 e.stopPropagation();
-//                 captureImage();
-//               }}
-//               disabled={!cameraReady || loading}
-//             >
-//               <Camera />
-//             </Button>
-//           </div>
-//         </div>
-//       </div>
-//     </Modal>
-//   );
-// }

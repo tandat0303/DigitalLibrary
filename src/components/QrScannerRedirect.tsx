@@ -35,13 +35,13 @@ export default function QrScannerRedirect({
 
       onScan?.(value);
 
-      if (!noRedirect) {
-        if (openInNewTab) {
-          window.open(value, "_blank", "noopener,noreferrer");
-        } else {
-          window.location.href = value;
-        }
-      }
+      // if (!noRedirect) {
+      //   if (openInNewTab) {
+      //     window.open(value, "_blank", "noopener,noreferrer");
+      //   } else {
+      //     window.location.href = value;
+      //   }
+      // }
     };
 
     const handler = (e: KeyboardEvent) => {

@@ -81,8 +81,23 @@ export default function MaterialsContent() {
     scanningRef.current = true;
 
     try {
+      const newTab = window.open("", "_blank");
+
       const res = await scanQrApi.materialQR({ id: uuid });
-      console.log(res);
+      console.log("API RES:", res);
+      const url = res;
+
+      if (!url) {
+        AppAlert({ icon: "warning", title: "No URL returned from API" });
+        newTab?.close();
+        return;
+      }
+
+      if (newTab) {
+        newTab.location.href = url;
+      } else {
+        window.open(url, "_blank");
+      }
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
     } finally {
@@ -94,13 +109,22 @@ export default function MaterialsContent() {
 
   const { validate, onScan } = useQrScanner({
     // pattern: /[?&]unique_price_id=([0-9a-f-]{36})/i,
-    // pattern: /[?&]unique_price_id=([^&\s]+)/i,
-    pattern: /materials\/([0-9A-Za-z-]+)/i,
+    pattern: /[?&]unique_price_id=([^&\s]+)/i,
+    // pattern: /materials\/([0-9A-Za-z-]+)/i,
 
+    // validate: (raw) => {
+    //   try {
+    //     new URL(raw, window.location.origin);
+    //     return true;
+    //   } catch {
+    //     return false;
+    //   }
+    // },
     validate: (raw) => {
       try {
-        new URL(raw, window.location.origin);
-        return true;
+        //     const host = new URL(raw).hostname;
+        // return ["192.168.0.60", "192.168.0.189"].includes(host);
+        return new URL(raw).hostname === "192.168.0.60";
       } catch {
         return false;
       }
@@ -144,7 +168,12 @@ export default function MaterialsContent() {
   const handleFilter = (values: any) => {
     setSelectedID(null);
 
-    setFilters(buildQueryFilters(values));
+    setFilters(
+      buildQueryFilters({
+        ...values,
+        Material_ID: values.Material_ID.replace(/\s+/g, ""),
+      }),
+    );
     setCurrent(1);
   };
 
@@ -277,14 +306,14 @@ export default function MaterialsContent() {
         return;
       }
 
-      const materialIds = response.material_ids.join(",");
+      const materialIds = response.material_ids.toString();
 
       form.setFieldsValue({
         Material_ID: materialIds,
       });
 
       const newFilters = buildQueryFilters({
-        Material_ID: materialIds,
+        Material_ID: materialIds.replace(/\s+/g, ""),
       });
 
       setFilters(newFilters);
@@ -783,7 +812,7 @@ export default function MaterialsContent() {
         imageSize={400}
         emptyImage={EmptyImg}
         labels={["Top side", "Bottom side"]}
-        previewSize={500}
+        // previewSize={500}
       />
 
       <CameraModal

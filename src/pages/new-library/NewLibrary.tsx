@@ -771,7 +771,7 @@ export default function NewLibrary() {
         imageSize={400}
         emptyImage={EmptyImg}
         labels={["Top side", "Bottom side"]}
-        previewSize={500}
+        // previewSize={500}
       />
 
       <CameraModal

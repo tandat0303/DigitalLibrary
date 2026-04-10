@@ -13,8 +13,7 @@ import { getApiErrorMessage } from "../../lib/getApiErrorMsg";
 import Loading from "../../components/ui/Loading";
 import type { HighAbrasionDataType } from "../../types/highAbrasion";
 import highAbrasionApi from "../../api/highAbrasion.api";
-
-const ZOOM_SCALE = 3;
+import ZoomableImage from "../../components/ZoomableImage";
 
 export default function HighAbrasionDetail() {
   const [material, setMaterial] = useState<HighAbrasionDataType>();
@@ -25,17 +24,7 @@ export default function HighAbrasionDetail() {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
-  const imageRef = useRef<HTMLDivElement | null>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
-  const rafRef = useRef<number | null>(null);
-
-  const zoomActive = useRef(false);
-  const zoomOrigin = useRef({ ox: 50, oy: 50 });
-
-  const touchZoomActive = useRef(false);
-  const [touchZoomVisible, setTouchZoomVisible] = useState(false);
-  const lastTapTime = useRef(0);
-  const DOUBLE_TAP_DELAY = 300;
+  const resetZoomRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const fetchMaterialDetail = async () => {
@@ -73,146 +62,12 @@ export default function HighAbrasionDetail() {
   }, [images]);
 
   useEffect(() => {
-    zoomActive.current = false;
-    touchZoomActive.current = false;
-    setTouchZoomVisible(false);
-    zoomOrigin.current = { ox: 50, oy: 50 };
-    applyZoom(false);
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
+    resetZoomRef.current?.();
   }, [selectedIndex]);
 
   const thumbnails = useMemo(() => {
     return Array.from({ length: THUMBNAIL_COUNT }, (_, i) => images[i] ?? null);
   }, [images]);
-
-  const applyZoom = (active: boolean) => {
-    const img = imgRef.current;
-    if (!img) return;
-    if (active) {
-      img.style.transform = `scale(${ZOOM_SCALE})`;
-      img.style.transformOrigin = `${zoomOrigin.current.ox}% ${zoomOrigin.current.oy}%`;
-    } else {
-      img.style.transform = "scale(1)";
-      img.style.transformOrigin = "center center";
-    }
-  };
-
-  const computeOrigin = (clientX: number, clientY: number, rect: DOMRect) => {
-    const ox = Math.max(
-      0,
-      Math.min(100, ((clientX - rect.left) / rect.width) * 100),
-    );
-
-    const oy = Math.max(
-      0,
-      Math.min(100, ((clientY - rect.top) / rect.height) * 100),
-    );
-
-    return { ox, oy };
-  };
-
-  const scheduleApply = (active: boolean) => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      applyZoom(active);
-      rafRef.current = null;
-    });
-  };
-
-  const handleMouseEnter = (e: React.MouseEvent) => {
-    if (isMobile || !images[selectedIndex]) return;
-    const rect = imageRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const { ox, oy } = computeOrigin(e.clientX, e.clientY, rect);
-    zoomOrigin.current = { ox, oy };
-    zoomActive.current = true;
-    scheduleApply(true);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isMobile || !zoomActive.current) return;
-    const rect = imageRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const { ox, oy } = computeOrigin(e.clientX, e.clientY, rect);
-    zoomOrigin.current = { ox, oy };
-    scheduleApply(true);
-  };
-
-  const handleMouseLeave = () => {
-    if (isMobile) return;
-    zoomActive.current = false;
-    scheduleApply(false);
-  };
-
-  useEffect(() => {
-    const el = imageRef.current;
-    if (!el) return;
-
-    const onTouchStart = (e: TouchEvent) => {
-      if (!images[selectedIndex] || e.touches.length !== 1) return;
-
-      const now = Date.now();
-      const isDoubleTap = now - lastTapTime.current < DOUBLE_TAP_DELAY;
-      lastTapTime.current = now;
-
-      const touch = e.touches[0];
-      const rect = el.getBoundingClientRect();
-      const { ox, oy } = computeOrigin(touch.clientX, touch.clientY, rect);
-
-      if (touchZoomActive.current) {
-        if (isDoubleTap) {
-          touchZoomActive.current = false;
-          setTouchZoomVisible(false);
-          zoomOrigin.current = { ox: 50, oy: 50 };
-          applyZoom(false);
-          if (rafRef.current) {
-            cancelAnimationFrame(rafRef.current);
-            rafRef.current = null;
-          }
-        } else {
-          zoomOrigin.current = { ox, oy };
-          applyZoom(true);
-        }
-      } else {
-        touchZoomActive.current = true;
-        setTouchZoomVisible(true);
-        zoomOrigin.current = { ox, oy };
-        applyZoom(true);
-      }
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (!touchZoomActive.current || e.touches.length !== 1) return;
-      e.preventDefault();
-      const touch = e.touches[0];
-      const rect = el.getBoundingClientRect();
-      const { ox, oy } = computeOrigin(touch.clientX, touch.clientY, rect);
-      zoomOrigin.current = { ox, oy };
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(() => {
-        applyZoom(true);
-        rafRef.current = null;
-      });
-    };
-
-    el.addEventListener("touchstart", onTouchStart, { passive: false });
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-
-    return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [images, selectedIndex]);
-
-  useEffect(() => {
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
 
   if (loading) {
     return <Loading overlay fullScreen />;
@@ -259,38 +114,22 @@ export default function HighAbrasionDetail() {
             }}
           >
             <div className="flex flex-col h-full gap-4">
-              <div
-                ref={imageRef}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                onMouseMove={handleMouseMove}
-                style={{
-                  position: "relative",
+              <ZoomableImage
+                src={
+                  images[selectedIndex]
+                    ? resolveImageSrc(images[selectedIndex])
+                    : null
+                }
+                zoomEnabled={!!images[selectedIndex]}
+                isMobile={isMobile}
+                scale={3}
+                containerStyle={{
                   width: "100%",
                   height: isMobile ? 260 : 400,
                   border: "1px solid #ddd",
                   background: "#808080",
-                  overflow: "hidden",
-                  cursor: images[selectedIndex]
-                    ? isMobile
-                      ? "pointer"
-                      : "zoom-in"
-                    : undefined,
                 }}
-              >
-                {images[selectedIndex] ? (
-                  <img
-                    ref={imgRef}
-                    src={resolveImageSrc(images[selectedIndex])}
-                    className="w-full h-full object-contain select-none"
-                    draggable={false}
-                    style={{
-                      transition: "transform 0.08s ease-out",
-                      transformOrigin: "center center",
-                      imageRendering: "auto",
-                    }}
-                  />
-                ) : (
+                fallback={
                   <span
                     style={{
                       fontSize: 24,
@@ -305,48 +144,11 @@ export default function HighAbrasionDetail() {
                   >
                     No Image
                   </span>
-                )}
-
-                {/* Mobile: tap-to-zoom hint */}
-                {isMobile && images[selectedIndex] && !touchZoomVisible && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: 8,
-                      right: 8,
-                      background: "rgba(0,0,0,0.45)",
-                      color: "#fff",
-                      fontSize: 11,
-                      padding: "3px 8px",
-                      borderRadius: 12,
-                      pointerEvents: "none",
-                      userSelect: "none",
-                    }}
-                  >
-                    Tap to zoom
-                  </div>
-                )}
-
-                {/* Mobile: active zoom indicator */}
-                {isMobile && images[selectedIndex] && touchZoomVisible && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: 8,
-                      right: 8,
-                      background: "rgba(22,119,255,0.75)",
-                      color: "#fff",
-                      fontSize: 11,
-                      padding: "3px 8px",
-                      borderRadius: 12,
-                      pointerEvents: "none",
-                      userSelect: "none",
-                    }}
-                  >
-                    Double-tap to exit
-                  </div>
-                )}
-              </div>
+                }
+                onZoomRef={(reset) => {
+                  resetZoomRef.current = reset;
+                }}
+              />
 
               <div
                 className="flex gap-2"
