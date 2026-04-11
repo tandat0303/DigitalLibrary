@@ -53,7 +53,7 @@ export default function ZoomableImage({
   children,
   alt = "",
   onZoomRef,
-  // isOpen,
+  isOpen,
 }: ZoomableImageProps) {
   const { containerRef, imgRef, touchZoomVisible, mouseHandlers, resetZoom } =
     useImageZoom({ scale, disabled: !zoomEnabled });
@@ -62,11 +62,9 @@ export default function ZoomableImage({
     resetZoom();
   }, [src]);
 
-  // useEffect(() => {
-  //   if (isOpen) {
-  //     resetZoom();
-  //   }
-  // }, [isOpen]);
+  useEffect(() => {
+    resetZoom();
+  }, [isOpen]);
 
   useEffect(() => {
     if (onZoomRef) {

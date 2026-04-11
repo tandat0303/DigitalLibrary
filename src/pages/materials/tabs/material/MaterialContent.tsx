@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input, Button, Row, Col, Form, Checkbox } from "antd";
 import { AppAlert } from "../../../../components/ui/AppAlert";
 
@@ -76,37 +76,6 @@ export default function MaterialsContent() {
 
   const scanningRef = useRef(false);
 
-  const handleMatch = useCallback(async (uuid: string) => {
-    if (scanningRef.current) return;
-    scanningRef.current = true;
-
-    try {
-      const newTab = window.open("", "_blank");
-
-      const res = await scanQrApi.materialQR({ id: uuid });
-      console.log("API RES:", res);
-      const url = res;
-
-      if (!url) {
-        AppAlert({ icon: "warning", title: "No URL returned from API" });
-        newTab?.close();
-        return;
-      }
-
-      if (newTab) {
-        newTab.location.href = url;
-      } else {
-        window.open(url, "_blank");
-      }
-    } catch (error) {
-      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
-    } finally {
-      setTimeout(() => {
-        scanningRef.current = false;
-      }, 1500);
-    }
-  }, []);
-
   const { validate, onScan } = useQrScanner({
     // pattern: /[?&]unique_price_id=([0-9a-f-]{36})/i,
     pattern: /[?&]unique_price_id=([^&\s]+)/i,
@@ -120,16 +89,56 @@ export default function MaterialsContent() {
     //     return false;
     //   }
     // },
+
     validate: (raw) => {
       try {
-        //     const host = new URL(raw).hostname;
-        // return ["192.168.0.60", "192.168.0.189"].includes(host);
-        return new URL(raw).hostname === "192.168.0.60";
+        const host = new URL(raw).hostname;
+        return ["192.168.0.60", "192.168.0.189"].includes(host);
       } catch {
         return false;
       }
     },
-    onMatch: handleMatch,
+
+    onScanResult: async ({ raw, match }) => {
+      if (scanningRef.current) return;
+      scanningRef.current = true;
+      const newTab = window.open("", "_blank");
+
+      try {
+        const host = new URL(raw).hostname;
+
+        if (host === "192.168.0.189") {
+          if (newTab) {
+            newTab.location.href = raw;
+          }
+          return;
+        }
+
+        if (!match) {
+          AppAlert({ icon: "warning", title: "Invalid QR format" });
+          newTab?.close();
+          return;
+        }
+
+        const url = await scanQrApi.materialQR({ id: match });
+        if (!url) {
+          AppAlert({ icon: "warning", title: "No URL returned from API" });
+          newTab?.close();
+          return;
+        }
+
+        if (newTab) {
+          newTab.location.href = url;
+        }
+      } catch (error) {
+        newTab?.close();
+        AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+      } finally {
+        setTimeout(() => {
+          scanningRef.current = false;
+        }, 1500);
+      }
+    },
   });
 
   const [current, setCurrent] = useState(1);

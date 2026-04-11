@@ -500,6 +500,7 @@ export default function ImagePreviewModal({
                 zoomEnabled={!!src && enableHoverPreview}
                 isMobile={isTouch}
                 scale={3}
+                isOpen={open}
                 containerStyle={{
                   width: slotWidth,
                   height: responsiveImageSize,

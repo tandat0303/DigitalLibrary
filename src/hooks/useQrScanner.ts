@@ -8,35 +8,45 @@
 
 import { useEffect, useRef } from "react";
 
+interface ScanResult {
+  raw: string;
+  match?: string;
+}
+
 interface UseQrScannerOptions {
-  pattern: RegExp;
+  pattern?: RegExp;
   validate?: (raw: string) => boolean;
-  onMatch: (value: string) => void;
+  onScanResult: (result: ScanResult) => void;
 }
 
 export function useQrScanner({
   pattern,
   validate,
-  onMatch,
+  onScanResult,
 }: UseQrScannerOptions) {
-  const onMatchRef = useRef(onMatch);
+  const onScanRef = useRef(onScanResult);
 
   useEffect(() => {
-    onMatchRef.current = onMatch;
-  }, [onMatch]);
+    onScanRef.current = onScanResult;
+  }, [onScanResult]);
 
   const handleValidate = (raw: string): boolean => {
     if (validate && !validate(raw)) return false;
-    return pattern.test(raw);
+    return true;
   };
 
   const onScan = (raw: string): void => {
-    const match = raw.match(pattern);
-    if (match?.[1]) {
-      onMatchRef.current(match[1]);
-    } else {
-      console.error("useQrScanner: không tìm thấy match trong:", raw);
+    let matchValue: string | undefined;
+
+    if (pattern) {
+      const match = raw.match(pattern);
+      matchValue = match?.[1];
     }
+
+    onScanRef.current({
+      raw,
+      match: matchValue,
+    });
   };
 
   return { validate: handleValidate, onScan };

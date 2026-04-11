@@ -67,7 +67,16 @@ export function useImageZoom({
     zoomActive.current = false;
     touchZoomActive.current = false;
     origin.current = { ox: 50, oy: 50 };
+    lastTapTime.current = 0;
     applyZoom(false);
+
+    const img = imgEl.current;
+    if (img) {
+      img.style.transform = "scale(1)";
+      img.style.transformOrigin = "center center";
+      img.style.transition = "transform 0.08s ease-out";
+    }
+
     setTouchZoomVisible(false);
     onTouchZoomChange?.(false);
     if (rafRef.current) {
@@ -115,7 +124,8 @@ export function useImageZoom({
       if (e.touches.length !== 1) return;
 
       const now = Date.now();
-      const isDoubleTap = now - lastTapTime.current < DOUBLE_TAP_DELAY;
+      const delta = now - lastTapTime.current;
+      const isDoubleTap = delta > 0 && delta < DOUBLE_TAP_DELAY;
       lastTapTime.current = now;
 
       const touch = e.touches[0];
@@ -167,7 +177,7 @@ export function useImageZoom({
       el.removeEventListener("touchmove", onTouchMove);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [disabled]);
+  }, [disabled, scale]);
 
   useEffect(
     () => () => {
@@ -175,6 +185,12 @@ export function useImageZoom({
     },
     [],
   );
+
+  useEffect(() => {
+    if (disabled) {
+      resetZoom();
+    }
+  }, [disabled]);
 
   return { containerRef, imgRef, touchZoomVisible, mouseHandlers, resetZoom };
 }
