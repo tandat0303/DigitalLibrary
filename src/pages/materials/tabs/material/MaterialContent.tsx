@@ -177,12 +177,12 @@ export default function MaterialsContent() {
   const handleFilter = (values: any) => {
     setSelectedID(null);
 
-    setFilters(
-      buildQueryFilters({
-        ...values,
-        Material_ID: values.Material_ID.replace(/\s+/g, ""),
-      }),
-    );
+    const cleanedValues = {
+      ...values,
+      Material_ID: values.Material_ID?.replace(/\s+/g, ""),
+    };
+
+    setFilters(buildQueryFilters(cleanedValues));
     setCurrent(1);
   };
 

@@ -103,6 +103,16 @@ const materialApi = {
     const res = await axiosConfig.get(`/materials/show-info/${id}`);
     return res.data?.[0] ?? null;
   },
+
+  getWareHouseData: async (supp_mtl_id: string, params: GetMaterialsParams) => {
+    const res = await axiosConfig.get(
+      `/materials/get-ware-house/${supp_mtl_id}`,
+      {
+        params,
+      },
+    );
+    return res.data;
+  },
 };
 
 export default materialApi;

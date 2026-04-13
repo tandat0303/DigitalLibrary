@@ -419,3 +419,86 @@ export const getMaterialsColumns = (
   ];
 // return normalizeColumns(columns, ["Images", "FileName"]);
 // };
+
+/* ---- Material Stock Type ---- */
+export interface MaterialStockRow {
+  key: string;
+  SupplierMaterialID: string;
+  MateriaID: string;
+  MaterialName: string;
+  Unit: string;
+  Qty: number;
+  Warehouse: string;
+}
+
+export interface MaterialStockResponse {
+  data: MaterialStockRow[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  totalQty: number;
+}
+
+export interface MaterialStockModalProps {
+  open: boolean;
+  onClose: () => void;
+  suppMtlID?: string;
+  dataSource?: MaterialStockResponse;
+  loading?: boolean;
+  current: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+}
+
+export const mtlStockColumns: ColumnsType<MaterialStockRow> = [
+  {
+    title: "SUPPLIER MATERIAL ID",
+    dataIndex: "SupplierMaterialID",
+    key: "SupplierMaterialID",
+    width: 110,
+    ellipsis: true,
+  },
+  {
+    title: "MATERIAL ID",
+    dataIndex: "MaterialID",
+    key: "MaterialID",
+    width: 80,
+    ellipsis: true,
+  },
+  {
+    title: "MATERIAL NAME",
+    dataIndex: "MaterialName",
+    key: "MaterialName",
+    width: 400,
+    ellipsis: true,
+  },
+  {
+    title: "UNIT",
+    dataIndex: "Unit",
+    key: "Unit",
+    width: 55,
+    align: "center",
+  },
+  {
+    title: "QTY",
+    dataIndex: "Qty",
+    key: "Qty",
+    width: 50,
+    align: "right",
+    render: (value: number) =>
+      value?.toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }),
+  },
+  {
+    title: "WAREHOUSE",
+    dataIndex: "Warehouse",
+    key: "Warehouse",
+    width: 60,
+    align: "right",
+    ellipsis: true,
+  },
+];

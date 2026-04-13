@@ -639,7 +639,7 @@
 //   );
 // }
 
-import { Row, Col, Divider, Card, Grid } from "antd";
+import { Row, Col, Divider, Card, Grid, Button } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -649,12 +649,14 @@ import {
   THUMBNAIL_COUNT,
 } from "../../../../lib/helpers";
 import NotFound from "../../../NotFound";
-import type { MaterialsDataType } from "../../../../types/materials";
+import { type MaterialsDataType } from "../../../../types/materials";
 import materialApi from "../../../../api/materials.api";
 import { AppAlert } from "../../../../components/ui/AppAlert";
 import { getApiErrorMessage } from "../../../../lib/getApiErrorMsg";
 import Loading from "../../../../components/ui/Loading";
 import ZoomableImage from "../../../../components/ZoomableImage";
+import MaterialStockModal from "./MaterialStockModal";
+import type { MaterialStockResponse } from "../../../../types/materials";
 
 export default function MaterialDetail() {
   const [material, setMaterial] = useState<MaterialsDataType>();
@@ -666,8 +668,25 @@ export default function MaterialDetail() {
   const isMobile = !screens.md;
 
   const [selectedIndex, setSelectedIndex] = useState(0);
-
   const resetZoomRef = useRef<(() => void) | null>(null);
+
+  const [stockModalOpen, setStockModalOpen] = useState(false);
+  const [stockData, setStockData] = useState<MaterialStockResponse>();
+  const [stockLoading, setStockLoading] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const handleOpenStock = async () => {
+    if (!material?.Supplier_Material_ID) {
+      AppAlert({
+        icon: "warning",
+        title: "Supplier Material ID is not available",
+      });
+      return;
+    }
+    setStockModalOpen(true);
+  };
 
   useEffect(() => {
     const fetchMaterialDetail = async () => {
@@ -684,6 +703,28 @@ export default function MaterialDetail() {
     };
     fetchMaterialDetail();
   }, [id]);
+
+  useEffect(() => {
+    const fetchStock = async () => {
+      if (!stockModalOpen || !material?.Supplier_Material_ID) return;
+
+      try {
+        setStockLoading(true);
+        const params = { page: page, limit: limit };
+        const res = await materialApi.getWareHouseData(
+          material.Supplier_Material_ID,
+          params,
+        );
+        setStockData(res);
+      } catch (error) {
+        AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+      } finally {
+        setStockLoading(false);
+      }
+    };
+
+    fetchStock();
+  }, [stockModalOpen, material?.Supplier_Material_ID, page, limit]);
 
   const images = useMemo(() => {
     if (!material?.Images) return [];
@@ -715,6 +756,16 @@ export default function MaterialDetail() {
     >
       <Card
         title="GENERAL"
+        extra={
+          <Button
+            className="btn-custom"
+            size={isMobile ? "small" : "middle"}
+            onClick={handleOpenStock}
+            style={{ fontWeight: 600, letterSpacing: "0.03em" }}
+          >
+            Stock Info
+          </Button>
+        }
         styles={{
           body: {
             flex: isMobile ? undefined : 1,
@@ -1023,6 +1074,21 @@ export default function MaterialDetail() {
           </Col>
         </Row>
       </Card>
+
+      <MaterialStockModal
+        open={stockModalOpen}
+        onClose={() => setStockModalOpen(false)}
+        suppMtlID={material.Supplier_Material_ID}
+        dataSource={stockData}
+        loading={stockLoading}
+        current={page}
+        pageSize={limit}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setLimit(size);
+          setPage(1);
+        }}
+      />
     </div>
   );
 }

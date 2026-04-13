@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input, Button, Row, Col, Form, Checkbox } from "antd";
 import { AppAlert } from "../../components/ui/AppAlert";
 
@@ -72,28 +72,60 @@ export default function NewLibrary() {
 
   const columns = getNewLibraryColumns(handlePreview, handleDetailView);
 
-  const handleMatch = useCallback(async (uuid: string) => {
-    // setUuid(uuid);
-    console.log("UUID:", uuid);
-    try {
-      const res = await scanQrApi.materialQR({ id: uuid });
-      console.log("API response:", res);
-    } catch (error) {
-      AppAlert({ icon: "error", title: getApiErrorMessage(error) });
-    }
-  }, []);
+  const scanningRef = useRef(false);
 
   const { validate, onScan } = useQrScanner({
     // pattern: /[?&]unique_price_id=([0-9a-f-]{36})/i,
     pattern: /[?&]unique_price_id=([^&\s]+)/i,
     validate: (raw) => {
       try {
-        return new URL(raw).hostname === "192.168.0.60";
+        const host = new URL(raw).hostname;
+        return ["192.168.0.60", "192.168.0.189"].includes(host);
       } catch {
         return false;
       }
     },
-    onMatch: handleMatch,
+
+    onScanResult: async ({ raw, match }) => {
+      if (scanningRef.current) return;
+      scanningRef.current = true;
+      const newTab = window.open("", "_blank");
+
+      try {
+        const host = new URL(raw).hostname;
+
+        if (host === "192.168.0.189") {
+          if (newTab) {
+            newTab.location.href = raw;
+          }
+          return;
+        }
+
+        if (!match) {
+          AppAlert({ icon: "warning", title: "Invalid QR format" });
+          newTab?.close();
+          return;
+        }
+
+        const url = await scanQrApi.materialQR({ id: match });
+        if (!url) {
+          AppAlert({ icon: "warning", title: "No URL returned from API" });
+          newTab?.close();
+          return;
+        }
+
+        if (newTab) {
+          newTab.location.href = url;
+        }
+      } catch (error) {
+        newTab?.close();
+        AppAlert({ icon: "error", title: getApiErrorMessage(error) });
+      } finally {
+        setTimeout(() => {
+          scanningRef.current = false;
+        }, 1500);
+      }
+    },
   });
 
   const [current, setCurrent] = useState(1);
