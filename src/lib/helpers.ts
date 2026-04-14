@@ -205,9 +205,30 @@ export function uid() {
   return Math.random().toString(36).slice(2, 9);
 }
 
-export function stripExt(filename: string) {
-  return filename.replace(/\.[^/.]+$/, "");
-}
+export const normalizeArticles = (input: string) => {
+  const raw = input.split(",");
+
+  const cleaned = raw.map((s) => s.trim().toUpperCase()).filter(Boolean);
+
+  return cleaned;
+};
+
+export const getDuplicates = (input: string) => {
+  const arr = input
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+
+  const seen = new Set();
+  const duplicates = new Set();
+
+  arr.forEach((a) => {
+    if (seen.has(a)) duplicates.add(a);
+    else seen.add(a);
+  });
+
+  return duplicates;
+};
 
 export type TablePropsTyped<T extends object> = Omit<
   React.ComponentProps<typeof Table<T>>,

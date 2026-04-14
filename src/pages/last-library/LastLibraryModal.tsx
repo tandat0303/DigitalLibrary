@@ -1,33 +1,34 @@
-import { Button, Col, Form, Grid, Input, Modal, Row, Tag, Tooltip } from "antd";
-import { FileBox, Plus, Trash2, Upload, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Button, Col, Form, Grid, Input, Modal, Row, Tooltip } from "antd";
+import { Plus, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { AppAlert } from "../../components/ui/AppAlert";
-import type {
-  LastLibraryModalProps,
-  RefModelEntry,
-  SizeEntry,
-} from "../../types/lastLibrary";
-import { stripExt, uid } from "../../lib/helpers";
+import type { LastLibraryModalProps } from "../../types/lastLibrary";
+import { getDuplicates, normalizeArticles, uid } from "../../lib/helpers";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 
 interface SizeRow {
   id: string;
-  file: File | null;
+  sizeId?: string;
   sizeName: string;
   refModels: RefModelRowItem[];
 }
 
+interface ArticleItem {
+  articleId?: string;
+  article: string;
+}
+
 interface RefModelRowItem {
   id: string;
+  modelId?: string;
   model: string;
-  articles: string[]; // list of article strings
-  articleInput: string; // current text in the article input
+  articles: ArticleItem[];
+  articleInput: string;
 }
 
 function makeDefaultSizeRow(): SizeRow {
   return {
     id: uid(),
-    file: null,
     sizeName: "",
     refModels: [makeDefaultRefModelRow()],
   };
@@ -48,17 +49,31 @@ function RefModelRow({
   onRemove: () => void;
   canRemove: boolean;
 }) {
-  const handleArticleInputChange = (val: string) => {
+  const handleArticleChange = (val: string) => {
     onChange({ ...item, articleInput: val });
   };
 
-  const handleArticleInputBlur = () => {
-    const parsed = item.articleInput
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    onChange({ ...item, articles: parsed, articleInput: parsed.join(", ") });
+  const applyArticles = () => {
+    const parsed = normalizeArticles(item.articleInput);
+
+    const uniqueMap = new Map<string, ArticleItem>();
+
+    parsed.forEach((a) => {
+      if (!uniqueMap.has(a)) {
+        uniqueMap.set(a, { article: a });
+      }
+    });
+
+    const result = Array.from(uniqueMap.values());
+
+    onChange({
+      ...item,
+      articles: result,
+      articleInput: result.map((a) => a.article).join(", "),
+    });
   };
+
+  const duplicates = getDuplicates(item.articleInput);
 
   return (
     <div
@@ -82,12 +97,22 @@ function RefModelRow({
       {/* Ref Articles — plain comma-separated input */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <Input
+          status={duplicates.size ? "error" : ""}
           size="small"
           placeholder="Ref Articles, separated by comma"
           value={item.articleInput}
-          onChange={(e) => handleArticleInputChange(e.target.value)}
-          onBlur={handleArticleInputBlur}
+          onChange={(e) => handleArticleChange(e.target.value)}
+          onPressEnter={(e) => {
+            e.preventDefault();
+            applyArticles();
+          }}
         />
+
+        {duplicates.size > 0 && (
+          <div style={{ color: "red", fontSize: 11 }}>
+            Duplicate: {Array.from(duplicates).join(", ")}
+          </div>
+        )}
       </div>
 
       {/* Remove row */}
@@ -111,8 +136,6 @@ function SizeCard({
   sizeRow,
   index,
   onChange,
-  onRemove,
-  canRemove,
 }: {
   sizeRow: SizeRow;
   index: number;
@@ -120,23 +143,6 @@ function SizeCard({
   onRemove: () => void;
   canRemove: boolean;
 }) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    onChange({
-      ...sizeRow,
-      file,
-      sizeName: file ? stripExt(file.name) : "",
-    });
-    // reset so same file can be re-selected if needed
-    e.target.value = "";
-  };
-
-  const handleRemoveFile = () => {
-    onChange({ ...sizeRow, file: null, sizeName: "" });
-  };
-
   const updateRefModel = (refId: string, updated: RefModelRowItem) => {
     onChange({
       ...sizeRow,
@@ -190,82 +196,11 @@ function SizeCard({
           Size {index + 1}
         </span>
 
-        {/* File upload zone */}
-        {sizeRow.file ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              background: "#eff6ff",
-              border: "1px solid #bfdbfe",
-              borderRadius: 6,
-              padding: "3px 10px",
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
-            <FileBox size={14} color="#3b82f6" style={{ flexShrink: 0 }} />
-            <span
-              style={{
-                fontSize: 13,
-                color: "#1d4ed8",
-                fontWeight: 500,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {sizeRow.file.name}
-            </span>
-            <Tag
-              color="blue"
-              style={{ margin: "0 0 0 auto", flexShrink: 0, fontWeight: 600 }}
-            >
-              {sizeRow.sizeName}
-            </Tag>
-            <Tooltip title="Remove file">
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<X size={12} />}
-                onClick={handleRemoveFile}
-                style={{ flexShrink: 0 }}
-              />
-            </Tooltip>
-          </div>
-        ) : (
-          <Button
-            size="small"
-            className="btn-custom"
-            icon={<Upload size={13} />}
-            onClick={() => fileInputRef.current?.click()}
-            style={{ fontSize: 12 }}
-          >
-            Upload .3DM file
-          </Button>
-        )}
-
-        {/* Remove size card */}
-        {canRemove && (
-          <Tooltip title="Remove size">
-            <Button
-              size="small"
-              className="delete-btn"
-              icon={<Trash2 size={13} />}
-              onClick={onRemove}
-              style={{ marginLeft: "auto", flexShrink: 0 }}
-            />
-          </Tooltip>
-        )}
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".3dm"
-          style={{ display: "none" }}
-          onChange={handleFileChange}
+        <Input
+          size="small"
+          placeholder="Size (e.g. EU40)"
+          value={sizeRow.sizeName}
+          onChange={(e) => onChange({ ...sizeRow, sizeName: e.target.value })}
         />
       </div>
 
@@ -352,7 +287,7 @@ export default function LastLibraryModal({
       Object.values(formValues).every(
         (v) => v === undefined || v === null || v === "",
       )) &&
-    sizeRows.every((s) => !s.file && s.refModels.every((r) => !r.model));
+    sizeRows.every((s) => !s.sizeName && s.refModels.every((r) => !r.model));
 
   // ---- seed from initialValues on edit ----
   useEffect(() => {
@@ -361,17 +296,21 @@ export default function LastLibraryModal({
     if (mode === "edit" && initialValues) {
       form.setFieldsValue({ ...initialValues });
 
-      if (initialValues.Sizes?.length) {
+      if (initialValues.sizes?.length) {
         setSizeRows(
-          initialValues.Sizes.map((s: SizeEntry) => ({
+          initialValues.sizes.map((s: any) => ({
             id: uid(),
-            file: null,
+            sizeId: s.sizeId,
             sizeName: s.size,
-            refModels: s.refModels.map((r: RefModelEntry) => ({
+            refModels: s.models.map((m: any) => ({
               id: uid(),
-              model: r.model,
-              articles: r.articles,
-              articleInput: r.articles.join(", "),
+              modelId: m.modelId,
+              model: m.model,
+              articles: m.articles.map((a: any) => ({
+                articleId: a.articleId,
+                article: a.article,
+              })),
+              articleInput: m.articles.map((a: any) => a.article).join(", "),
             })),
           })),
         );
@@ -418,20 +357,18 @@ export default function LastLibraryModal({
     try {
       const values = await form.validateFields();
 
-      // Build Sizes from state
-      const Sizes: SizeEntry[] = sizeRows.map((s) => ({
-        size: s.sizeName || s.file?.name || "",
-        file: s.file ?? undefined,
-        refModels: s.refModels.map((r) => ({
+      const sizes = sizeRows.map((s) => ({
+        size: s.sizeName,
+        models: s.refModels.map((r) => ({
           model: r.model,
-          articles: r.articles,
+          articles: r.articles.map((a) => ({
+            article: a,
+          })),
         })),
       }));
 
       setLoading(true);
-      // await onSubmit({ ...values, Sizes });
-      await onSubmit({ ...values });
-      console.log({ ...values, Sizes });
+      await onSubmit({ ...values, sizes });
     } catch (error) {
       console.log(error);
       AppAlert({ icon: "error", title: "Please fill all fields" });
@@ -547,6 +484,12 @@ export default function LastLibraryModal({
                     <Col xs={24} sm={12} lg={6}>
                       <Form.Item label="Season (M)" name="Season_M">
                         <Input placeholder="Season (M)" />
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={24} sm={12} lg={6}>
+                      <Form.Item label="Last (M)" name="Last_M">
+                        <Input placeholder="Last (M)" />
                       </Form.Item>
                     </Col>
 
@@ -859,12 +802,6 @@ export default function LastLibraryModal({
                         name="Image_Confidential_A"
                       >
                         <Input placeholder="Image Confidential (A)" />
-                      </Form.Item>
-                    </Col>
-
-                    <Col xs={24} sm={12} lg={6}>
-                      <Form.Item label="Last (M)" name="Last_M">
-                        <Input placeholder="Last (M)" />
                       </Form.Item>
                     </Col>
                   </Row>
