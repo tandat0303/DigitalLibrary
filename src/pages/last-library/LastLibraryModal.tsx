@@ -1,6 +1,6 @@
 import { Button, Col, Form, Grid, Input, Modal, Row, Tooltip } from "antd";
 import { Plus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AppAlert } from "../../components/ui/AppAlert";
 import type { LastLibraryModalProps } from "../../types/lastLibrary";
 import { getDuplicates, normalizeArticles, uid } from "../../lib/helpers";
@@ -49,27 +49,13 @@ function RefModelRow({
   onRemove: () => void;
   canRemove: boolean;
 }) {
-  const handleArticleChange = (val: string) => {
-    onChange({ ...item, articleInput: val });
-  };
+  const handleArticleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
 
-  const applyArticles = () => {
-    const parsed = normalizeArticles(item.articleInput);
-
-    const uniqueMap = new Map<string, ArticleItem>();
-
-    parsed.forEach((a) => {
-      if (!uniqueMap.has(a)) {
-        uniqueMap.set(a, { article: a });
-      }
-    });
-
-    const result = Array.from(uniqueMap.values());
-
+    // update nhẹ, không parse ở đây
     onChange({
       ...item,
-      articles: result,
-      articleInput: result.map((a) => a.article).join(", "),
+      articleInput: val,
     });
   };
 
@@ -84,7 +70,6 @@ function RefModelRow({
         padding: "6px 0",
       }}
     >
-      {/* Ref Model input */}
       <div style={{ width: 160, flexShrink: 0 }}>
         <Input
           size="small"
@@ -94,18 +79,13 @@ function RefModelRow({
         />
       </div>
 
-      {/* Ref Articles — plain comma-separated input */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1 }}>
         <Input
           status={duplicates.size ? "error" : ""}
           size="small"
           placeholder="Ref Articles, separated by comma"
           value={item.articleInput}
-          onChange={(e) => handleArticleChange(e.target.value)}
-          onPressEnter={(e) => {
-            e.preventDefault();
-            applyArticles();
-          }}
+          onChange={handleArticleChange}
         />
 
         {duplicates.size > 0 && (
@@ -115,7 +95,6 @@ function RefModelRow({
         )}
       </div>
 
-      {/* Remove row */}
       {canRemove && (
         <Tooltip title="Remove ref model">
           <Button
@@ -124,7 +103,6 @@ function RefModelRow({
             type="text"
             icon={<X size={14} />}
             onClick={onRemove}
-            style={{ flexShrink: 0 }}
           />
         </Tooltip>
       )}
@@ -132,10 +110,16 @@ function RefModelRow({
   );
 }
 
+const RefModelRowMemo = React.memo(RefModelRow, (prev, next) => {
+  return prev.item === next.item && prev.canRemove === next.canRemove;
+});
+
 function SizeCard({
   sizeRow,
   index,
   onChange,
+  onRemove,
+  canRemove,
 }: {
   sizeRow: SizeRow;
   index: number;
@@ -143,19 +127,25 @@ function SizeCard({
   onRemove: () => void;
   canRemove: boolean;
 }) {
-  const updateRefModel = (refId: string, updated: RefModelRowItem) => {
-    onChange({
-      ...sizeRow,
-      refModels: sizeRow.refModels.map((r) => (r.id === refId ? updated : r)),
-    });
-  };
+  const updateRefModel = React.useCallback(
+    (refId: string, updated: RefModelRowItem) => {
+      onChange({
+        ...sizeRow,
+        refModels: sizeRow.refModels.map((r) => (r.id === refId ? updated : r)),
+      });
+    },
+    [sizeRow, onChange],
+  );
 
-  const removeRefModel = (refId: string) => {
-    onChange({
-      ...sizeRow,
-      refModels: sizeRow.refModels.filter((r) => r.id !== refId),
-    });
-  };
+  const removeRefModel = React.useCallback(
+    (refId: string) => {
+      onChange({
+        ...sizeRow,
+        refModels: sizeRow.refModels.filter((r) => r.id !== refId),
+      });
+    },
+    [sizeRow, onChange],
+  );
 
   const addRefModel = () => {
     onChange({
@@ -202,6 +192,17 @@ function SizeCard({
           value={sizeRow.sizeName}
           onChange={(e) => onChange({ ...sizeRow, sizeName: e.target.value })}
         />
+
+        <Tooltip title={canRemove ? "Remove size" : "Clear size"}>
+          <Button
+            size="small"
+            danger
+            type="text"
+            icon={<X size={14} />}
+            onClick={onRemove}
+            style={{ flexShrink: 0 }}
+          />
+        </Tooltip>
       </div>
 
       {/* Column headers for ref model section */}
@@ -241,7 +242,7 @@ function SizeCard({
 
       {/* Ref model rows */}
       {sizeRow.refModels.map((ref) => (
-        <RefModelRow
+        <RefModelRowMemo
           key={ref.id}
           item={ref}
           onChange={(updated) => updateRefModel(ref.id, updated)}
@@ -300,17 +301,17 @@ export default function LastLibraryModal({
         setSizeRows(
           initialValues.sizes.map((s: any) => ({
             id: uid(),
-            sizeId: s.sizeId,
-            sizeName: s.size,
+            sizeId: s.SizeID,
+            sizeName: s.Size,
             refModels: s.models.map((m: any) => ({
               id: uid(),
-              modelId: m.modelId,
-              model: m.model,
+              modelId: m.ModelID,
+              model: m.Model,
               articles: m.articles.map((a: any) => ({
-                articleId: a.articleId,
-                article: a.article,
+                articleId: a.ArticleID,
+                article: a.Article,
               })),
-              articleInput: m.articles.map((a: any) => a.article).join(", "),
+              articleInput: m.articles.map((a: any) => a.Article).join(", "),
             })),
           })),
         );
@@ -330,26 +331,48 @@ export default function LastLibraryModal({
     setSizeRows((prev) => prev.map((s) => (s.id === id ? updated : s)));
   };
 
+  const clearSizeRow = (id: string) => {
+    setSizeRows((prev) =>
+      prev.map((s) =>
+        s.id === id
+          ? {
+              ...s,
+              sizeId: undefined,
+              sizeName: "",
+              refModels: [makeDefaultRefModelRow()],
+            }
+          : s,
+      ),
+    );
+  };
+
   const removeSizeRow = (id: string) => {
     setSizeRows((prev) => prev.filter((s) => s.id !== id));
   };
 
   const confirmRemoveSizeRow = (sr: SizeRow) => {
     if (!sr.id) return;
+    const isOnly = sizeRows.length === 1;
 
     if (mode === "edit") {
       Modal.confirm({
-        title: "REMOVE SIZE",
-        content: "Are you sure to remove this size?",
+        title: isOnly ? "CLEAR SIZE" : "REMOVE SIZE",
+        content: isOnly
+          ? "This is the only size. Clear its fields?"
+          : "Are you sure to remove this size?",
         okText: "Yes",
         cancelText: "No",
         okType: "danger",
         centered: true,
         icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
-        onOk: () => removeSizeRow(sr.id),
+        onOk: () => (isOnly ? clearSizeRow(sr.id) : removeSizeRow(sr.id)),
       });
     } else {
-      removeSizeRow(sr.id);
+      if (isOnly) {
+        clearSizeRow(sr.id);
+      } else {
+        removeSizeRow(sr.id);
+      }
     }
   };
 
@@ -358,13 +381,22 @@ export default function LastLibraryModal({
       const values = await form.validateFields();
 
       const sizes = sizeRows.map((s) => ({
+        ...(s.sizeId ? { sizeId: s.sizeId } : {}),
         size: s.sizeName,
-        models: s.refModels.map((r) => ({
-          model: r.model,
-          articles: r.articles.map((a) => ({
+        models: s.refModels.map((r) => {
+          const parsed = normalizeArticles(r.articleInput);
+
+          const articles: ArticleItem[] = parsed.map((a, idx) => ({
+            articleId: r.articles[idx]?.articleId,
             article: a,
-          })),
-        })),
+          }));
+
+          return {
+            ...(r.modelId ? { modelId: r.modelId } : {}),
+            model: r.model,
+            articles,
+          };
+        }),
       }));
 
       setLoading(true);

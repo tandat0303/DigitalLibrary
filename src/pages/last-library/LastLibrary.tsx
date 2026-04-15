@@ -27,94 +27,6 @@ import ConfirmRemoveModal from "../../components/ui/ConfirmRemoveModal";
 
 import DataTableSection from "../../components/DataTableSection";
 
-const SAMPLE_SIZES_POOL = [
-  [
-    {
-      size: "EU40",
-      refModels: [
-        {
-          model: "MDL-A001",
-          articles: ["ART-10001", "ART-10002", "ART-10003"],
-        },
-        { model: "MDL-A002", articles: ["ART-10004", "ART-10005"] },
-      ],
-    },
-    {
-      size: "EU41",
-      refModels: [{ model: "MDL-A003", articles: ["ART-10006"] }],
-    },
-    {
-      size: "EU42",
-      refModels: [
-        { model: "MDL-A004", articles: ["ART-10007", "ART-10008"] },
-        {
-          model: "MDL-A005",
-          articles: ["ART-10009", "ART-10010", "ART-10011"],
-        },
-      ],
-    },
-  ],
-  [
-    {
-      size: "EU38",
-      refModels: [{ model: "MDL-B001", articles: ["ART-20001", "ART-20002"] }],
-    },
-    {
-      size: "EU39",
-      refModels: [
-        { model: "MDL-B002", articles: ["ART-20003", "ART-20004"] },
-        { model: "MDL-B003", articles: ["ART-20005"] },
-      ],
-    },
-  ],
-  [
-    {
-      size: "EU43",
-      refModels: [
-        { model: "MDL-C001", articles: ["ART-30001"] },
-        { model: "MDL-C002", articles: ["ART-30002", "ART-30003"] },
-        {
-          model: "MDL-C003",
-          articles: ["ART-30004", "ART-30005", "ART-30006"],
-        },
-      ],
-    },
-    {
-      size: "EU44",
-      refModels: [{ model: "MDL-C004", articles: ["ART-30007", "ART-30008"] }],
-    },
-    {
-      size: "EU45",
-      refModels: [
-        { model: "MDL-C005", articles: ["ART-30009"] },
-        { model: "MDL-C006", articles: ["ART-30010", "ART-30011"] },
-      ],
-    },
-  ],
-  [
-    {
-      size: "EU41",
-      refModels: [{ model: "MDL-D001", articles: ["ART-40001", "ART-40002"] }],
-    },
-    {
-      size: "EU42",
-      refModels: [
-        { model: "MDL-D002", articles: ["ART-40003"] },
-        { model: "MDL-D003", articles: ["ART-40004", "ART-40005"] },
-      ],
-    },
-  ],
-];
-
-function mergeSampleSizes(item: any, index: number): LastLibraryDataType {
-  return {
-    ...item,
-    Sizes: item.Sizes?.length
-      ? item.Sizes
-      : SAMPLE_SIZES_POOL[index % SAMPLE_SIZES_POOL.length],
-  };
-}
-
 export default function LastLibrary() {
   const [form] = Form.useForm();
   const user = useAppSelector((state) => state.auth.user);
@@ -141,40 +53,37 @@ export default function LastLibrary() {
   const [activeSize3DUrl, setActiveSize3DUrl] = useState<string | null>(null);
   const [activeSize3DName, setActiveSize3DName] = useState<string>("");
 
-  const [sizeLocalMap, setSizeLocalMap] = useState<
-    Record<string, { url: string; name: string }>
-  >({});
+  // const [sizeLocalMap, setSizeLocalMap] = useState<
+  //   Record<string, { url: string; name: string }>
+  // >({});
 
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState<any>({});
 
-  const columns = getLastLibraryColumns(
-    sizeLocalMap,
-    (sizeKey, url, fileName) => {
-      setSizeLocalMap((prev) => ({
-        ...prev,
-        [sizeKey]: { url, name: fileName },
-      }));
-    },
-    (url, name) => {
-      setActiveSize3DUrl(url);
-      setActiveSize3DName(name);
-      setOpenSize3D(true);
-    },
-  );
+  const columns = getLastLibraryColumns();
+  // sizeLocalMap,
+  // (sizeKey, url, fileName) => {
+  //   setSizeLocalMap((prev) => ({
+  //     ...prev,
+  //     [sizeKey]: { url, name: fileName },
+  //   }));
+  // },
+  // (url, name) => {
+  //   setActiveSize3DUrl(url);
+  //   setActiveSize3DName(name);
+  //   setOpenSize3D(true);
+  // },
 
   const fetchItems = async () => {
     try {
       setLoading(true);
       const params = { ...filters, page: current, limit: pageSize };
       const res = await lastLibraryApi.getAllItems(params);
-      const merged: LastLibraryDataType[] = res.data.map(
-        (item: any, index: number) => mergeSampleSizes(item, index),
-      );
-      setRawData(merged);
-      setFlatData(flattenLastLibraryData(merged));
+      const data: LastLibraryDataType[] = res.data;
+      setRawData(data);
+      setFlatData(flattenLastLibraryData(data));
       setTotal(res.total);
     } catch (error) {
       console.log("Failed to fetch item: ", error);
@@ -220,10 +129,10 @@ export default function LastLibrary() {
     try {
       if (!selectedRow) return;
       const res = await lastLibraryApi.deleteItem(selectedRow.LastLibraryID);
-      if (res.success) {
-        setSelectedID(null);
-        AppAlert({ icon: "success", title: res.message });
-      }
+
+      setSelectedID(null);
+      AppAlert({ icon: "success", title: res.message });
+
       await fetchItems();
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
