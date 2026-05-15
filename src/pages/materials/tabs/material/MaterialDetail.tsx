@@ -677,6 +677,18 @@ export default function MaterialDetail() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
+  const getSeasonTitle = (season: string) => {
+    if (
+      !season ||
+      season === undefined ||
+      season === null ||
+      season.toLowerCase() === "null"
+    )
+      return "";
+
+    return season.length > 4 ? (season.split("-")[1] ?? "") : season;
+  };
+
   const handleOpenStock = async () => {
     if (!material?.Supplier_Material_ID) {
       AppAlert({
@@ -1057,7 +1069,9 @@ export default function MaterialDetail() {
                 <div>{displayValue(material.Uom_String_Price)}</div>
               </Col>
               <Col xs={24} sm={12} lg={8}>
-                <strong>SS26 Final Price USD</strong>
+                <strong>
+                  {getSeasonTitle(material.Season)} Final Price USD
+                </strong>
                 <div>{displayValue(material.SS26_Final_Price_USD)}</div>
               </Col>
               <Col xs={24} sm={12} lg={8}>

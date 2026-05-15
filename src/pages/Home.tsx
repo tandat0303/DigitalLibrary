@@ -71,10 +71,18 @@
 import { buttons } from "../components/ui/HomeButtons";
 import Loading from "../components/ui/Loading";
 import { ShineText } from "../components/ui/ShineText";
+import { useAppSelector } from "../hooks/auth";
 import { useLoadingNavigate } from "../hooks/useLoadingNavigate";
 
 export default function Home() {
+  const user = useAppSelector((s) => s.auth.user);
+  const hasVendor = Boolean(user?.vendorCode);
+
   const { handleNavigate, loading } = useLoadingNavigate();
+
+  const visibleButtons = hasVendor
+    ? buttons.filter((btn) => !btn.hiddenForVendor)
+    : buttons;
 
   return (
     <>
@@ -88,8 +96,8 @@ export default function Home() {
             </h1>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {buttons.map((btn, idx) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 h-full">
+            {visibleButtons.map((btn, idx) => (
               <button
                 key={idx}
                 className="home-card-btn"

@@ -13,13 +13,33 @@ import NewLibrary from "../../assets/new-library.png";
 import LastLibrary from "../../assets/last-library.png";
 
 export const buttons = [
-  { image: Colors, label: "COLORS", path: "/colors" },
-  { image: Materials, label: "MATERIALS", path: "/materials" },
-  { image: HighAbrasion, label: "HIGH ABRASION", path: "/high-abrasion" },
-  { image: NewLibrary, label: "NEW LIBRARY", path: "/new-library" },
-  { image: LastLibrary, label: "LAST LIBRARY", path: "/last-library" },
-  // { image: "Colors", label: "TEST", path: "#" },
-  // { image: "Colors", label: "TEST", path: "#" },
-  // { image: "Colors", label: "TEST", path: "#" },
-  // { image: "Colors", label: "TEST", path: "#" },
+  { image: Colors, label: "COLORS", path: "/colors", hiddenForVendor: true },
+  {
+    image: Materials,
+    label: "MATERIALS",
+    path: "/materials",
+    hiddenForVendor: false,
+  },
+  {
+    image: HighAbrasion,
+    label: "HIGH ABRASION",
+    path: "/high-abrasion",
+    hiddenForVendor: true,
+  },
+  {
+    image: NewLibrary,
+    label: "NEW LIBRARY",
+    path: "/new-library",
+    hiddenForVendor: true,
+  },
+  {
+    image: LastLibrary,
+    label: "LAST LIBRARY",
+    path: "/last-library",
+    hiddenForVendor: true,
+  },
 ];
+
+export const vendorHiddenPaths = buttons
+  .filter((b) => b.hiddenForVendor)
+  .map((b) => b.path);

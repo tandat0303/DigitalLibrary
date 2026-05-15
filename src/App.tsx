@@ -9,7 +9,10 @@ import ColorsPage from "./pages/colors/ColorsPage";
 import MaterialsPage from "./pages/materials/MaterialsPage";
 import HighAbrasion from "./pages/high-abrasion/HighAbrasion";
 import NewLibrary from "./pages/new-library/NewLibrary";
-import ProtectedRoute, { AdminRoute } from "./routes/ProtectedRoute";
+import ProtectedRoute, {
+  AdminRoute,
+  VendorGuard,
+} from "./routes/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import AuthBootstrap from "./routes/AuthBootstrap";
 import MaterialDetail from "./pages/materials/tabs/material/MaterialDetail";
@@ -28,23 +31,26 @@ export default function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} handle={{ hideTitle: true }} />
             <Route path="/user-info" element={<UserInfo />} />
-            <Route path="/colors" element={<ColorsPage />} />
             <Route path="/materials" element={<MaterialsPage />} />
             <Route
               path="/materials/show-info/:id"
               element={<MaterialDetail />}
             />
-            <Route path="/high-abrasion" element={<HighAbrasion />} />
-            <Route
-              path="/high-abrasion/show-info/:id"
-              element={<HighAbrasionDetail />}
-            />
-            <Route path="/new-library" element={<NewLibrary />} />
-            <Route
-              path="/new-library/show-info/:id"
-              element={<NewLibraryDetail />}
-            />
-            <Route path="/last-library" element={<LastLibrary />} />
+
+            <Route element={<VendorGuard />}>
+              <Route path="/colors" element={<ColorsPage />} />
+              <Route path="/high-abrasion" element={<HighAbrasion />} />
+              <Route
+                path="/high-abrasion/show-info/:id"
+                element={<HighAbrasionDetail />}
+              />
+              <Route path="/new-library" element={<NewLibrary />} />
+              <Route
+                path="/new-library/show-info/:id"
+                element={<NewLibraryDetail />}
+              />
+              <Route path="/last-library" element={<LastLibrary />} />
+            </Route>
 
             <Route element={<AdminRoute />}>
               <Route path="/user-limit" element={<UserLimit />} />

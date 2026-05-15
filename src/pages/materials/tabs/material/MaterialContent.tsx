@@ -42,6 +42,7 @@ export default function MaterialsContent() {
   const [form] = Form.useForm();
 
   const user = useAppSelector((state) => state.auth.user);
+  const hasVendor = Boolean(user?.vendorCode);
 
   const [dynamicCount, setDynamicCount] = useState(0);
 
@@ -706,6 +707,7 @@ export default function MaterialsContent() {
               tooltip: "Create new material",
               className: "add-btn",
               onClick: handleCreate,
+              hidden: hasVendor,
             },
             {
               label: "EDIT MATERIAL",
@@ -718,24 +720,28 @@ export default function MaterialsContent() {
               tooltip: "Delete material",
               className: "delete-btn",
               onClick: confirmRemove,
+              hidden: hasVendor,
             },
             {
               label: <Upload />,
               tooltip: "Import Excel file",
               className: "actions-btn",
               onClick: () => setOpenImport(true),
+              hidden: hasVendor,
             },
             {
               label: <Download />,
               tooltip: "Export Excel file",
               className: "actions-btn",
               onClick: handleExportExcel,
+              hidden: hasVendor,
             },
             {
               label: <QrCode />,
               tooltip: "Export QR Excel file",
               className: "actions-btn",
               onClick: handleExportExcelQR,
+              hidden: hasVendor,
             },
             {
               label: (
@@ -746,6 +752,7 @@ export default function MaterialsContent() {
               tooltip: "Scan material image",
               className: "extra-actions-btn",
               onClick: () => setOpenCapture(true),
+              hidden: hasVendor,
             },
             {
               label: (
@@ -766,6 +773,7 @@ export default function MaterialsContent() {
 
                 setOpenUploadAttach(true);
               },
+              hidden: hasVendor,
             },
             {
               label: (
@@ -777,6 +785,7 @@ export default function MaterialsContent() {
               className: "extra-actions-btn",
               onClick: handleDownloadReport,
               disabled: !(selectedRow && selectedRow.FileName),
+              hidden: hasVendor,
             },
           ],
         }}

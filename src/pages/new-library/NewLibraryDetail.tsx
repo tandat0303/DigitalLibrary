@@ -26,6 +26,18 @@ export default function NewLibraryDetail() {
 
   const resetZoomRef = useRef<(() => void) | null>(null);
 
+  const getSeasonTitle = (season: string) => {
+    if (
+      !season ||
+      season === undefined ||
+      season === null ||
+      season.toLowerCase() === "null"
+    )
+      return "";
+
+    return season.length > 4 ? (season.split("-")[1] ?? "") : season;
+  };
+
   useEffect(() => {
     const fetchMaterialDetail = async () => {
       try {
@@ -425,7 +437,9 @@ export default function NewLibraryDetail() {
               </Col>
 
               <Col xs={24} sm={12} lg={8}>
-                <strong>SS26 Final Price USD</strong>
+                <strong>
+                  {getSeasonTitle(material.Season)} Final Price USD
+                </strong>
                 <div>{displayValue(material.SS26_Final_Price_USD)}</div>
               </Col>
 
