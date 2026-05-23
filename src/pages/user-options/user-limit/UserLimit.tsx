@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, Input, Button, Table, Row, Col, Form, Tabs } from "antd";
 import {
   columns,
@@ -98,12 +98,15 @@ export default function UserLimit() {
   const handleLevelChange = (key: string, value: number) => {
     setPermissionData((prev) =>
       prev.map((item) =>
-        item.PermissionID === key ? { ...item, LevelPermission: value } : item,
+        item.MenuID === key ? { ...item, LevelPermission: value } : item,
       ),
     );
   };
 
-  const rightColumns = getPermissionColumns(levelOptions, handleLevelChange);
+  const rightColumns = useMemo(
+    () => getPermissionColumns(levelOptions, handleLevelChange),
+    [permissionData],
+  );
 
   // const rightColumns = useMemo(() => {
   //   if (!selectedUser) return [];
@@ -143,17 +146,17 @@ export default function UserLimit() {
     try {
       setPermissionLoading(true);
 
-      const [modulesRes, permissionsRes] = await Promise.all([
-        moduleMgmtApi.getAllModules(),
-        userLimitApi.getUserPermissions({
-          userId: record.UserID,
-          moduleID: "85CC1EEC-F650-4AAE-A885-EA8ED02845FA",
-        }),
-      ]);
+      const modulesRes = await moduleMgmtApi.getAllModules();
+      const firstModuleID = modulesRes[0]?.ModuleID ?? "";
+
+      const permissionsRes = await userLimitApi.getUserPermissions({
+        userId: record.UserID,
+        moduleID: firstModuleID,
+      });
 
       setModules(modulesRes);
       setPermissionData(permissionsRes);
-      setActiveTab(modulesRes[0]?.ModuleID ?? "");
+      setActiveTab(firstModuleID);
       setSelectedUser(record);
     } catch (error) {
       console.log("Failed to load permissions: ", error);
@@ -170,7 +173,7 @@ export default function UserLimit() {
       setSaving(true);
 
       const permission = permissionData.find(
-        (p) => p.PermissionID === selectedPermissionKey,
+        (p) => p.MenuID === selectedPermissionKey,
       );
 
       if (!permission) return;
@@ -186,10 +189,11 @@ export default function UserLimit() {
 
       setSelectedPermissionKey(null);
 
-      await userLimitApi.getUserPermissions({
+      const refreshed = await userLimitApi.getUserPermissions({
         userId: selectedUser.UserID,
-        moduleID: "85CC1EEC-F650-4AAE-A885-EA8ED02845FA",
+        moduleID: activeTab,
       });
+      setPermissionData(refreshed);
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
     } finally {
@@ -234,12 +238,12 @@ export default function UserLimit() {
   };
 
   const renderPermissionTable = (moduleId: string) => (
-    <Table
+    <Table<UserPermissionsDataType>
       className="ul-perm-table"
       loading={permissionLoading}
       columns={rightColumns}
       dataSource={getPermissionsByModule(moduleId)}
-      rowKey="PermissionID"
+      rowKey="MenuID"
       pagination={false}
       scroll={{ x: "max-content" }}
       onRow={(record) => ({
@@ -252,12 +256,12 @@ export default function UserLimit() {
             return;
           }
           setSelectedPermissionKey((prev) =>
-            prev === record.PermissionID ? null : record.PermissionID,
+            prev === record.MenuID ? null : record.MenuID,
           );
         },
       })}
       rowClassName={(record) =>
-        record.PermissionID === selectedPermissionKey
+        record.MenuID === selectedPermissionKey
           ? "custom-selected-row cursor-pointer"
           : "cursor-pointer"
       }
@@ -401,9 +405,27 @@ export default function UserLimit() {
                 <Tabs
                   className="ul-tabs"
                   activeKey={activeTab}
-                  onChange={(key) => {
+                  onChange={async (key) => {
                     setActiveTab(key);
                     setSelectedPermissionKey(null);
+
+                    if (!selectedUser) return;
+                    try {
+                      setPermissionLoading(true);
+                      const permissionsRes =
+                        await userLimitApi.getUserPermissions({
+                          userId: selectedUser.UserID,
+                          moduleID: key,
+                        });
+                      setPermissionData(permissionsRes);
+                    } catch (error) {
+                      AppAlert({
+                        icon: "error",
+                        title: getApiErrorMessage(error),
+                      });
+                    } finally {
+                      setPermissionLoading(false);
+                    }
                   }}
                   tabBarGutter={4}
                   size="small"

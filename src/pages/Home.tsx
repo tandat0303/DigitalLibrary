@@ -76,13 +76,25 @@ import { useLoadingNavigate } from "../hooks/useLoadingNavigate";
 
 export default function Home() {
   const user = useAppSelector((s) => s.auth.user);
-  const hasVendor = Boolean(user?.vendorCode);
-
   const { handleNavigate, loading } = useLoadingNavigate();
 
-  const visibleButtons = hasVendor
-    ? buttons.filter((btn) => !btn.hiddenForVendor)
-    : buttons;
+  const hasVendor = Boolean(user?.vendorCode);
+
+  // Build map: menuNameEN -> permission object
+  const permissionMap = Object.fromEntries(
+    (user?.permission ?? []).map((p) => [p.menuNameEN, p]),
+  );
+
+  const visibleButtons = buttons.filter((btn) => {
+    if (hasVendor && btn.hiddenForVendor) return false;
+
+    const perm = permissionMap[btn.menuNameEN];
+    if (!perm) return false;
+
+    if (perm.level === 3) return false;
+
+    return true;
+  });
 
   return (
     <>
@@ -104,12 +116,11 @@ export default function Home() {
                 onClick={() => handleNavigate(btn.path)}
               >
                 <span className="home-card-dot" />
-
                 <div className="home-card-icon">
                   <img
                     src={btn.image}
                     alt={btn.label}
-                    className="w-[60px] h-[60px] object-contain home-card-img"
+                    className="w-15 h-15 object-contain home-card-img"
                     loading="lazy"
                     draggable={false}
                   />

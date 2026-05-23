@@ -81,7 +81,7 @@ export const getPermissionColumns = (
         value={record.LevelPermission}
         style={{ width: 110 }}
         options={levelOptions}
-        onChange={(value) => onLevelChange(record.PermissionID, Number(value))}
+        onChange={(value) => onLevelChange(record.MenuID, Number(value))}
         onMouseDown={(e) => e.stopPropagation()}
       />
     ),
@@ -246,6 +246,15 @@ export const menuColumns: ColumnsType<MenuType> = [
   },
 ];
 
+// User Permission
+export interface Permission {
+  menuid: string;
+  menuNameEN: string;
+  menuNameVN: string;
+  menuNameCN: string;
+  level: number;
+}
+
 {
   /* ---------- Users Module ---------- */
 }
@@ -348,4 +357,5 @@ export interface User {
   email: string;
   fullname: string;
   vendorCode: string | null;
+  permission: Permission[];
 }

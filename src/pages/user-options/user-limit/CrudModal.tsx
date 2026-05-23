@@ -194,7 +194,8 @@ function CrudModal<T extends CrudItem>({
             {fields.map((field) => {
               const disabled =
                 (isEditMode && field.disabledOnEdit) ||
-                (!isEditMode && field.disabledOnCreate);
+                (!isEditMode && field.disabledOnCreate) ||
+                (!isEditMode && field.name === "Status");
 
               return (
                 <Col span={12} key={field.name}>
