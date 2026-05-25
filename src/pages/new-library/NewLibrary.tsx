@@ -37,8 +37,11 @@ import scanQrApi from "../../api/scanQR.api";
 import QrScannerRedirect from "../../components/QrScannerRedirect";
 import ConfirmRemoveModal from "../../components/ui/ConfirmRemoveModal";
 import DataTableSection from "../../components/DataTableSection";
+import { useMenuPermission } from "../../hooks/useMenuPermission";
 
 export default function NewLibrary() {
+  const { canAction, canEdit } = useMenuPermission("NEW LIBRARY");
+
   const [form] = Form.useForm();
 
   const user = useAppSelector((state) => state.auth.user);
@@ -688,36 +691,42 @@ export default function NewLibrary() {
               tooltip: "Create new material",
               className: "add-btn",
               onClick: handleCreate,
+              hidden: !canAction,
             },
             {
               label: "EDIT MATERIAL",
               tooltip: "Update material information",
               className: "edit-btn",
               onClick: handleEdit,
+              hidden: !canEdit,
             },
             {
               label: "REMOVE MATERIAL",
               tooltip: "Delete material",
               className: "delete-btn",
               onClick: confirmRemove,
+              hidden: !canAction,
             },
             {
               label: <Upload />,
               tooltip: "Import Excel file",
               className: "actions-btn",
               onClick: () => setOpenImport(true),
+              hidden: !canAction,
             },
             {
               label: <Download />,
               tooltip: "Export Excel file",
               className: "actions-btn",
               onClick: handleExportExcel,
+              hidden: !canAction,
             },
             {
               label: <QrCode />,
               tooltip: "Export QR Excel file",
               className: "actions-btn",
               onClick: handleExportExcelQR,
+              hidden: !canAction,
             },
             {
               label: (
@@ -728,6 +737,7 @@ export default function NewLibrary() {
               tooltip: "Scan material image",
               className: "extra-actions-btn",
               onClick: () => setOpenCapture(true),
+              hidden: !canAction,
             },
             {
               label: (
@@ -748,6 +758,7 @@ export default function NewLibrary() {
 
                 setOpenUploadAttach(true);
               },
+              hidden: !canAction,
             },
             {
               label: (
@@ -759,6 +770,7 @@ export default function NewLibrary() {
               className: "extra-actions-btn",
               onClick: handleDownloadReport,
               disabled: !(selectedRow && selectedRow.FileName),
+              hidden: !canAction,
             },
           ],
         }}

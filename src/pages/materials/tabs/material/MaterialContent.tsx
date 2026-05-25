@@ -37,8 +37,11 @@ import { useQrScanner } from "../../../../hooks/useQrScanner";
 import scanQrApi from "../../../../api/scanQR.api";
 import ConfirmRemoveModal from "../../../../components/ui/ConfirmRemoveModal";
 import DataTableSection from "../../../../components/DataTableSection";
+import { useMenuPermission } from "../../../../hooks/useMenuPermission";
 
 export default function MaterialsContent() {
+  const { canAction, canEdit } = useMenuPermission("MATERIALS");
+
   const [form] = Form.useForm();
 
   const user = useAppSelector((state) => state.auth.user);
@@ -707,41 +710,42 @@ export default function MaterialsContent() {
               tooltip: "Create new material",
               className: "add-btn",
               onClick: handleCreate,
-              hidden: hasVendor,
+              hidden: hasVendor || !canAction,
             },
             {
               label: "EDIT MATERIAL",
               tooltip: "Update material information",
               className: "edit-btn",
               onClick: handleEdit,
+              hidden: !canEdit,
             },
             {
               label: "REMOVE MATERIAL",
               tooltip: "Delete material",
               className: "delete-btn",
               onClick: confirmRemove,
-              hidden: hasVendor,
+              hidden: hasVendor || !canAction,
             },
             {
               label: <Upload />,
               tooltip: "Import Excel file",
               className: "actions-btn",
               onClick: () => setOpenImport(true),
-              hidden: hasVendor,
+              hidden: hasVendor || !canAction,
             },
             {
               label: <Download />,
               tooltip: "Export Excel file",
               className: "actions-btn",
               onClick: handleExportExcel,
-              hidden: hasVendor,
+              hidden: hasVendor || !canAction,
             },
             {
               label: <QrCode />,
               tooltip: "Export QR Excel file",
               className: "actions-btn",
               onClick: handleExportExcelQR,
-              hidden: hasVendor,
+              hidden: hasVendor || !canAction,
             },
             {
               label: (
@@ -752,7 +756,7 @@ export default function MaterialsContent() {
               tooltip: "Scan material image",
               className: "extra-actions-btn",
               onClick: () => setOpenCapture(true),
-              hidden: hasVendor,
+              hidden: hasVendor || !canAction,
             },
             {
               label: (
@@ -773,7 +777,7 @@ export default function MaterialsContent() {
 
                 setOpenUploadAttach(true);
               },
-              hidden: hasVendor,
+              hidden: hasVendor || !canAction,
             },
             {
               label: (
@@ -785,7 +789,7 @@ export default function MaterialsContent() {
               className: "extra-actions-btn",
               onClick: handleDownloadReport,
               disabled: !(selectedRow && selectedRow.FileName),
-              hidden: hasVendor,
+              hidden: hasVendor || !canAction,
             },
           ],
         }}

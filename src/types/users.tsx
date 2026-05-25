@@ -250,8 +250,8 @@ export const menuColumns: ColumnsType<MenuType> = [
 export interface Permission {
   menuid: string;
   menuNameEN: string;
-  menuNameVN: string;
-  menuNameCN: string;
+  menuNameVN?: string;
+  menuNameCN?: string;
   level: number;
 }
 

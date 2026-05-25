@@ -6,7 +6,7 @@ export default function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-50 flex items-center justify-center p-3 sm:p-4">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-gray-50 to-blue-50 flex items-center justify-center p-3 sm:p-4">
       <div className="max-w-2xl w-full text-center">
         {/* 404 Animation */}
         <div className="flex items-center justify-center mb-6 sm:mb-8 select-none">

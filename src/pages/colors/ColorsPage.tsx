@@ -20,8 +20,11 @@ import { SwalLoading } from "../../components/ui/SwalLoading";
 import { SwalNotification } from "../../components/ui/SwalNotification";
 import ConfirmRemoveModal from "../../components/ui/ConfirmRemoveModal";
 import DataTableSection from "../../components/DataTableSection";
+import { useMenuPermission } from "../../hooks/useMenuPermission";
 
 export default function ColorsPage() {
+  const { canAction, canEdit } = useMenuPermission("COLORS");
+
   const [form] = Form.useForm();
 
   const [dynamicCount, setDynamicCount] = useState(0);
@@ -336,24 +339,28 @@ export default function ColorsPage() {
               tooltip: "Create new color",
               className: "add-btn",
               onClick: handleCreate,
+              hidden: !canAction,
             },
             {
               label: "EDIT COLOR",
               tooltip: "Update color information",
               className: "edit-btn",
               onClick: handleEdit,
+              hidden: !canEdit,
             },
             {
               label: "REMOVE COLOR",
               tooltip: "Delete color",
               className: "delete-btn",
               onClick: confirmRemove,
+              hidden: !canAction,
             },
             {
               label: <Upload />,
               tooltip: "Import Excel file",
               className: "actions-btn",
               onClick: () => setOpenImport(true),
+              hidden: !canAction,
             },
           ],
         }}

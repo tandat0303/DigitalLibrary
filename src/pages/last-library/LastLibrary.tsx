@@ -26,8 +26,11 @@ import ImportExcelModal from "../../components/ImportExcelModal";
 import ConfirmRemoveModal from "../../components/ui/ConfirmRemoveModal";
 
 import DataTableSection from "../../components/DataTableSection";
+import { useMenuPermission } from "../../hooks/useMenuPermission";
 
 export default function LastLibrary() {
+  const { canAction, canEdit } = useMenuPermission("LAST LIBRARY");
+
   const [form] = Form.useForm();
   const user = useAppSelector((state) => state.auth.user);
 
@@ -289,24 +292,28 @@ export default function LastLibrary() {
               tooltip: "Create new item",
               className: "add-btn",
               onClick: handleCreate,
+              hidden: !canAction,
             },
             {
               label: "EDIT ITEM",
               tooltip: "Update item information",
               className: "edit-btn",
               onClick: handleEdit,
+              hidden: !canEdit,
             },
             {
               label: "REMOVE ITEM",
               tooltip: "Delete item",
               className: "delete-btn",
               onClick: confirmRemove,
+              hidden: !canAction,
             },
             {
               label: <Upload />,
               tooltip: "Import Excel file",
               className: "actions-btn",
               onClick: () => setOpenImport(true),
+              hidden: !canAction,
             },
             // {
             //   label: <><FileBox className="w-4 h-4" /> Attach 3DM file</>,

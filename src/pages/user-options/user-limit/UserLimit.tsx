@@ -6,6 +6,7 @@ import {
   levelOptions,
   type UsersDataType,
   type UserPermissionsDataType,
+  type Permission,
 } from "../../../types/users";
 import ModuleMgmtModal from "./ModuleMgmtModal";
 import MenuMgmtModal from "./MenuMgmtModal";
@@ -26,6 +27,8 @@ import userApi from "../../../api/users.api";
 import { buildQueryFilters } from "../../../lib/buildQueryFilters";
 import moduleMgmtApi from "../../../api/moduleMgmt.api";
 import userLimitApi from "../../../api/userLimit.api";
+import { useAppDispatch, useAppSelector } from "../../../hooks/auth";
+import { updateUserInfo } from "../../../features/authSlice";
 
 const permissionLevels = [
   { num: 0, label: "Administrator", color: "#ef4444" },
@@ -36,6 +39,9 @@ const permissionLevels = [
 ];
 
 export default function UserLimit() {
+  const dispatch = useAppDispatch();
+  const loggedInUser = useAppSelector((s) => s.auth.user);
+
   const [form] = Form.useForm();
 
   const [userData, setUserData] = useState<UsersDataType[]>([]);
@@ -194,6 +200,30 @@ export default function UserLimit() {
         moduleID: activeTab,
       });
       setPermissionData(refreshed);
+
+      if (loggedInUser?.userid === selectedUser.UserID) {
+        const allModules = modules;
+        const allPermissions = await Promise.all(
+          allModules.map((mod) =>
+            userLimitApi.getUserPermissions({
+              userId: selectedUser.UserID,
+              moduleID: mod.ModuleID,
+            }),
+          ),
+        );
+
+        const mergedPermissions: Permission[] = allPermissions
+          .flat()
+          .map((p) => ({
+            menuid: p.MenuID,
+            menuNameEN: p.Menu,
+            // menuNameVN: p.Menu,
+            // menuNameCN: p.Menu,
+            level: p.LevelPermission,
+          }));
+
+        dispatch(updateUserInfo({ permission: mergedPermissions }));
+      }
     } catch (error) {
       AppAlert({ icon: "error", title: getApiErrorMessage(error) });
     } finally {
