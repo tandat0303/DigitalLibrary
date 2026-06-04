@@ -710,7 +710,7 @@ export default function MaterialsContent() {
               tooltip: "Create new material",
               className: "add-btn",
               onClick: handleCreate,
-              hidden: hasVendor || !canAction,
+              hidden: !canEdit,
             },
             {
               label: "EDIT MATERIAL",
